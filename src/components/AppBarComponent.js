@@ -8,6 +8,7 @@ import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import GiftIcon from '@material-ui/icons/CardGiftcard';
+import ProfileIcon from '@material-ui/icons/AccountCircleOutlined';
 import Exit from '@material-ui/icons/ExitToApp';
 import ListeIcon from '@material-ui/icons/FormatListBulleted';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
@@ -29,17 +30,17 @@ class AppBarComponent extends Component {
 
   menyValgTrykket(valg) {
     switch (valg) {
-      case 'venneLister':
-        this.props.onAapneVennersListerSide();
-        break;
-      case 'minListe':
-        this.props.onAapneMinOnskelisteSide();
+      case 'vennelister':
+      case 'minliste':
+      case 'profil':
+        this.props.onAapneNySide(valg);
         break;
       case 'loggUt':
         this.props.onLogOut();
         break;
       default:
-      //doNothing
+        console.log('ERROR_NO_MATCH');
+        //doNothing
     }
     this.setState({ drawerOpen: false })
   }
@@ -55,7 +56,7 @@ class AppBarComponent extends Component {
             <MenuIcon />
           </IconButton>
           }
-          <Typography variant="h6" color="inherit" className={classes.grow}>
+          <Typography variant="h6" color="inherit" className={`${classes.grow} toppmeny-side-navn` }>
             {this.props.headerTekst}
           </Typography>
         </Toolbar>
@@ -63,18 +64,25 @@ class AppBarComponent extends Component {
                          disableBackdropTransition={!iOS} disableDiscovery={iOS}>
           <div className={classes.list}>
             <List>
-              <ListItem button onClick={() => this.menyValgTrykket('minListe')} key='minListe'>
+              <ListItem button onClick={() => this.menyValgTrykket('minliste')} key='minliste'>
                 <ListItemIcon>
                   <div><ListeIcon /></div>
                 </ListItemIcon>
                 <ListItemText primary='Min ønskeliste' />
               </ListItem>
               <Divider />
-              <ListItem button onClick={() => this.menyValgTrykket('venneLister')} key='venneLister'>
+              <ListItem button onClick={() => this.menyValgTrykket('vennelister')} key='vennelister'>
                 <ListItemIcon>
                   <div><GiftIcon /></div>
                 </ListItemIcon>
                 <ListItemText primary='Venners lister' />
+              </ListItem>
+              <Divider />
+              <ListItem button onClick={() => this.menyValgTrykket('profil')} key='profil'>
+                <ListItemIcon>
+                  <div><ProfileIcon /></div>
+                </ListItemIcon>
+                <ListItemText primary='Profil' />
               </ListItem>
               <Divider />
               <ListItem button onClick={() => this.menyValgTrykket('loggUt')} key='loggUt'>
@@ -114,8 +122,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  onAapneVennersListerSide: () => dispatch(push('vennelister')),
-  onAapneMinOnskelisteSide: () => dispatch(push('minliste')),
+  onAapneNySide: (id) => dispatch(push(id)),
   onLogOut: () => dispatch(logOut()),
 });
 

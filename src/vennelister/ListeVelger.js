@@ -6,7 +6,6 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
 import { fetdhOnskelisteForUid } from '../Api';
-import { setValgtVenn } from '../actions/actions';
 
 const styles = theme => ({
   root: {
@@ -15,11 +14,11 @@ const styles = theme => ({
     justifyContent: 'center',
   },
   formControl: {
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
     minWidth: 120,
   },
   selectEmpty: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
 });
 
@@ -34,14 +33,13 @@ class ListeVelger extends Component {
     const valgtBrukerUid = event.target.value;
     if (valgtBrukerUid !== '') {
       this.setState({ valgtVennUid: event.target.value });
-      this.props.onHentValgtVennsListe(valgtBrukerUid);
-      this.props.onSettValgtVenn(this.finnValgtVennObjekt(valgtBrukerUid)[0]);
+      this.props.onHentValgtVennsListe(valgtBrukerUid, this.finnValgtVennObjekt(valgtBrukerUid)[0]);
     }
-  }
+  };
 
   finnValgtVennObjekt = (valgtUid) => {
     return this.props.allUsers.filter(x => x.uid === valgtUid)
-  }
+  };
 
   render() {
     const { classes, allUsers, allowedListsForMe } = this.props;
@@ -78,8 +76,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  onHentValgtVennsListe: (uid) => dispatch(fetdhOnskelisteForUid(uid)),
-  onSettValgtVenn: (venn) => dispatch(setValgtVenn(venn)),
+  onHentValgtVennsListe: (uid, venn) => dispatch(fetdhOnskelisteForUid(uid, venn)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(ListeVelger));

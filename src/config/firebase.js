@@ -23,4 +23,4 @@ export const allowedViewsRef = databaseRef.child('allowedViewers');
 
 // Authentication/signed in user
 export const auth = firebase.auth();
-export const myUid = () => firebase.auth().currentUser.uid;
+export const myUid = () => firebase.auth().currentUser && firebase.auth().currentUser.uid;

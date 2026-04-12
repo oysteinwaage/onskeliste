@@ -1,134 +1,138 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import TextField from '@material-ui/core/TextField';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
-import AddIcon from '@material-ui/icons/Add';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import IconButton from '@material-ui/core/IconButton';
+import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
 import Grid from '@material-ui/core/Grid';
 import DeleteIcon from '@material-ui/icons/Delete';
-import WebLinkIcon from '@material-ui/icons/Link';
 import EditIcon from '@material-ui/icons/Edit'
 import Divider from '@material-ui/core/Divider';
 import Tooltip from '@material-ui/core/Tooltip';
+import StarBorderIcon from '@material-ui/icons/StarBorder';
+import StarIcon from '@material-ui/icons/Star';
 
-import { fetdhMinOnskeliste, addWishToMyList, removeWishFromMyList, fetchViewersToMyList } from '../Api';
-import { toggleLenkeDialog, endreHeaderTekst } from '../actions/actions';
-import LenkeDialog from './LeggTilLenkeDialog';
-import AddAllowedFriends from './AddViewersToMyListComponent';
+import {removeWishFromMyList, updateFavorittOnMyWish} from '../Api';
+import {toggleLenkeDialog, endreHeaderTekst} from '../actions/actions';
+import OnskeDialog from './LeggTilOnskeDialog';
 
 class MinListe extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { nyttOnskeTekst: '' }
-  }
-
-  componentDidMount() {
-    this.props.onEndreHeaderTekst('Rediger ønskeliste');
-    this.props.onAbonnerPaaMinOnskeliste();
-    this.props.onSubscribeToMyAllowedViewers();
-  }
-
-  lagreOnske() {
-    const { nyttOnskeTekst } = this.state;
-    if (nyttOnskeTekst) {
-      addWishToMyList({ onskeTekst: nyttOnskeTekst });
+    constructor(props) {
+        super(props);
     }
-    this.setState({ nyttOnskeTekst: '' })
-  }
 
-  slettOnske(onske) {
-    removeWishFromMyList(onske.key);
-  }
-
-  onKeyPressed = event => {
-    if (event.keyCode === 13) {
-      this.lagreOnske();
+    componentDidMount() {
+        const {onEndreHeaderTekst} = this.props;
+        onEndreHeaderTekst('Rediger ønskeliste');
     }
-  };
 
-  populerMinListe() {
-    const { mineOnsker, onToggleLenkeDialog } = this.props;
-    return mineOnsker.map(value =>
-      <div key={value.onskeTekst + mineOnsker.indexOf(value)}>
-        <ListItem>
-          <ListItemText
-            className='wishText'
-            primary={value.onskeTekst}
-            secondary={value.url && <a href={value.url} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>}
-          />
-          <ListItemSecondaryAction className='wishIconMenu'>
-            <Tooltip title='Endre ønske'>
-              <IconButton aria-label="Edit" onClick={() => onToggleLenkeDialog(value)}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title='Slett'>
-              <IconButton aria-label="Delete" onClick={() => this.slettOnske(value)}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </ListItemSecondaryAction>
-        </ListItem>
-        <Divider />
-      </div>,
-    );
-  }
+    slettOnske(onske) {
+        removeWishFromMyList(onske.key);
+    }
 
-  render() {
-    const { innloggetBrukerNavn, mineOnsker } = this.props;
-    return (
-      <div className="minListe">
-        <p>
-          Velkommen {innloggetBrukerNavn}
-        </p>
-        <AddAllowedFriends />
-        <div className="addNewWish">
-          <TextField
-            id="addNewWishField"
-            label="Legg til nytt ønske"
-            className="addNewWishField"
-            value={this.state.nyttOnskeTekst}
-            onChange={(e) => this.setState({ nyttOnskeTekst: e.target.value })}
-            margin="normal"
-            variant="outlined"
-            onKeyDown={this.onKeyPressed}
-          />
-          <Button className="addNewWishButton" onClick={() => this.lagreOnske()} variant="fab" color="primary" aria-label="Add">
-            <AddIcon />
-          </Button>
-        </div>
+    settFavoritt(onske, erFavoritt) {
+        updateFavorittOnMyWish(onske.key, erFavoritt);
+    }
 
-        <div>
-          <Grid>
-            <h2>Min ønskeliste</h2>
-            <div className="minOnskeliste">
-              <List dense={false}>
-                {mineOnsker.length > 0 && <Divider />}
-                {this.populerMinListe()}
-              </List>
-              <LenkeDialog />
+    lagAntallOgStrlKomponent = (onske) => {
+        let res = (onske.antall && onske.antall > 1) ? `Antall: ${onske.antall}` : "";
+        if(onske.onskeSize) {
+            res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
+        }
+        return res;
+    };
+
+    populerMinListe() {
+        const {mineOnsker, onToggleLenkeDialog} = this.props;
+        mineOnsker.sort((a, b) => !a.favoritt - !b.favoritt);
+        return mineOnsker.map(onske =>
+            <div key={onske.onskeTekst + mineOnsker.indexOf(onske)}>
+                <ListItem
+                    className={onske.antall > 1 ? 'fjernPaddingUnder fjernPaddingVenstre' : 'fjernPaddingVenstre'}>
+                    {onske.favoritt ?
+                        <StarIcon className="stjerne favoritt" onClick={() => this.settFavoritt(onske, false)}/> :
+                        <StarBorderIcon className="stjerne" onClick={() => this.settFavoritt(onske, true)}/>
+                    }
+                    <ListItemText
+                        className='wishText'
+                        primary={onske.onskeTekst}
+                        secondary={onske.url &&
+                        <a href={onske.url} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>
+                        }
+                    />
+                    <ListItemSecondaryAction className='wishIconMenu'>
+                        <Tooltip title='Endre ønske'>
+                            <IconButton aria-label="Edit" onClick={() => onToggleLenkeDialog(onske)}>
+                                <EditIcon/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Slett'>
+                            <IconButton aria-label="Delete" onClick={() => this.slettOnske(onske)}>
+                                <DeleteIcon/>
+                            </IconButton>
+                        </Tooltip>
+                    </ListItemSecondaryAction>
+                </ListItem>
+                {((onske.antall && onske.antall > 1) || onske.onskeSize) &&
+                <ListItemText
+                    className='antallOnskerTatt'
+                    secondary={this.lagAntallOgStrlKomponent(onske)}
+                />
+                }
+                <Divider/>
+            </div>,
+        );
+    }
+
+    render() {
+        const {innloggetBrukerNavn, mineOnsker, onToggleLenkeDialog} = this.props;
+        return (
+            <div className="minListe">
+                <p>
+                    Velkommen {innloggetBrukerNavn}
+                </p>
+                <div className="addNewWish">
+                    <Button className="addNewWishButton" variant="contained" color="default"
+                            onClick={() => onToggleLenkeDialog(null)} startIcon={<PlaylistAddIcon/>}>Legg til
+                        ønske </Button>
+                </div>
+
+                <div>
+                    <Grid>
+                        <h2>Min ønskeliste</h2>
+                        <div className="minOnskeliste">
+                            <List dense={false}>
+                                {mineOnsker.length > 0 && <Divider/>}
+                                {this.populerMinListe()}
+                            </List>
+                            <OnskeDialog/>
+                        </div>
+                    </Grid>
+                </div>
             </div>
-          </Grid>
-        </div>
-      </div>
-    );
-  }
+        );
+    }
 }
 
+MinListe.propTypes = {
+    onToggleLenkeDialog: PropTypes.func,
+    onEndreHeaderTekst: PropTypes.func,
+    innloggetBrukerNavn: PropTypes.string,
+    mineOnsker: PropTypes.array
+};
+
 const mapStateToProps = state => ({
-  innloggetBrukerNavn: state.innloggetBruker.navn,
-  mineOnsker: state.innloggetBruker.mineOnsker,
+    innloggetBrukerNavn: state.innloggetBruker.navn,
+    mineOnsker: state.innloggetBruker.mineOnsker,
 });
 
 const mapDispatchToProps = dispatch => ({
-  onAbonnerPaaMinOnskeliste: () => dispatch(fetdhMinOnskeliste()),
-  onSubscribeToMyAllowedViewers: () => dispatch(fetchViewersToMyList()),
-  onToggleLenkeDialog: (index) => dispatch(toggleLenkeDialog(index)),
-  onEndreHeaderTekst: (nyTekst) => dispatch(endreHeaderTekst(nyTekst)),
+    onToggleLenkeDialog: (index) => dispatch(toggleLenkeDialog(index)),
+    onEndreHeaderTekst: (nyTekst) => dispatch(endreHeaderTekst(nyTekst)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MinListe);

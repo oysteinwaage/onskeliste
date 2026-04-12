@@ -1,0 +1,66 @@
+.ProfilSide {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  &__standard-profil-box {
+    margin: 10px 20px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 15px;
+    padding: 0 15px 15px 15px;
+    box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
+    max-width: 1000px;
+  }
+  &__viewers-list {
+    background-color: rgba(121, 211, 249, 0.46);
+  }
+
+  &__egne-maal {
+    background-color: rgba(208, 249, 204, 0.47);
+
+    &__infotekst {
+      font-size: small;
+    }
+  }
+
+  &__mine-kjoep {
+    display: flex;
+    background-color: rgba(249, 162, 144, 0.47);
+    // hvis du vil at den skal ta hele plassen i rekke1 og være like lang som de to andre til sammen
+    //max-width: 2070px;
+    width: 100%;
+    text-align: left;
+    flex-wrap: wrap;
+
+    &__overskrift {
+      width: 100%;
+      text-align: center;
+    }
+
+    &__liste {
+      display: flex;
+      width: 100%;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(128, 128, 128, 0.5);
+    }
+    &__onsker {
+      width: 100%;
+      border-left: 1px solid rgba(128, 128, 128, 0.5);
+    }
+    &__liste-eier {
+      margin-right: 15px;
+      align-self: center;
+      font-weight: 500;
+      width: 150px;
+
+      @media only screen and (max-width: 400px) {
+        width: 40%;
+      margin-right: 10px;
+      }
+    }
+    &__ingen-kjoep {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

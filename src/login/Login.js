@@ -1,10 +1,13 @@
 import React, {Component} from 'react';
+import PropTypes from "prop-types";
+import {push} from "connected-react-router";
 import connect from 'react-redux/es/connect/connect';
+import firebase from "firebase";
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button';
 import logo from '../img/logo.svg';
 import {loggInn, opprettNyBruker, resetPassord} from '../Api';
-import {endreHeaderTekst, toggleVisOpprettBruker} from '../actions/actions';
+import {endreHeaderTekst, lasterData, toggleVisOpprettBruker} from '../actions/actions';
 
 const initState = {
     username: '',
@@ -22,22 +25,32 @@ class Login extends Component {
     constructor(props) {
         super(props);
         this.state = initState;
+
+        const {onSendTilHovedside} = this.props;
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+                onSendTilHovedside();
+            }
+        });
     }
 
     innsendigKnappTrykket() {
-        if (this.state.resettPassordVisning) {
-            this.props.onSendResettPassordMail(this.state.username);
-        } else if (this.props.visOpprettNyBruker) {
-            let firstNameMissing = this.state.firstName === '';
-            let lastNameMissing = this.state.lastName === '';
+        const {onSettLasterData, onSendResettPassordMail, visOpprettNyBruker, onRegistrerNyBruker, onLoggInn} = this.props;
+        const {resettPassordVisning, username, firstName, lastName, password} = this.state;
+        if (resettPassordVisning) {
+            onSendResettPassordMail(username);
+        } else if (visOpprettNyBruker) {
+            let firstNameMissing = firstName === '';
+            let lastNameMissing = lastName === '';
             if (firstNameMissing || lastNameMissing) {
                 this.setState({firstNameMissing: firstNameMissing, lastNameMissing: lastNameMissing})
             } else {
-                const suksess = this.props.onRegistrerNyBruker(this.state.username, this.state.password, this.state.firstName, this.state.lastName);
+                const suksess = onRegistrerNyBruker(username, password, firstName, lastName);
                 if (suksess) this.setState(initState);
             }
         } else {
-            this.props.onLoggInn(this.state.username, this.state.password);
+            onSettLasterData(true);
+            onLoggInn(username, password);
         }
     }
 
@@ -141,6 +154,19 @@ const style = {
     margin: 15,
 };
 
+
+Login.propTypes = {
+    onLoggInn: PropTypes.func,
+    onRegistrerNyBruker: PropTypes.func,
+    onEndreHeaderTekst: PropTypes.func,
+    onToggleVisOpprettBruker: PropTypes.func,
+    onSendResettPassordMail: PropTypes.func,
+    onSendTilHovedside: PropTypes.func,
+    onSettLasterData: PropTypes.func,
+    visOpprettNyBruker: PropTypes.bool,
+    infoResettMailSendt: PropTypes.string
+};
+
 const mapStateToProps = state => ({
     visOpprettNyBruker: state.config.visOpprettNyBruker,
     infoResettMailSendt: state.config.infoResettMailSendt,
@@ -152,6 +178,8 @@ const mapDispatchToProps = dispatch => ({
     onEndreHeaderTekst: (nyTekst) => dispatch(endreHeaderTekst(nyTekst)),
     onToggleVisOpprettBruker: () => dispatch(toggleVisOpprettBruker()),
     onSendResettPassordMail: (mail) => dispatch(resetPassord(mail)),
+    onSendTilHovedside: () => dispatch(push('/minliste')),
+    onSettLasterData: (isLoading) => dispatch(lasterData(isLoading))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

@@ -47,20 +47,21 @@ export function brukerLoggetInn(user) {
   };
 }
 
-// vennelister
-export const MOTTA_VALGT_VENNS_LISTE = 'MOTTA_VALGT_VENNS_LISTE';
-export function mottaValgtVennsListe(nyListe) {
+export const SET_LAST_SEEN_VERSION = 'SET_LAST_SEEN_VERSION';
+export function setLastSeenVersion(newVersion) {
   return {
-    type: MOTTA_VALGT_VENNS_LISTE,
-    nyListe,
+    type: SET_LAST_SEEN_VERSION,
+    newVersion,
   };
 }
 
-export const SETTE_VALGT_VENN = 'SETTE_VALGT_VENN';
-export function setValgtVenn(venn) {
+// vennelister
+export const MOTTA_VALGT_VENNS_LISTE = 'MOTTA_VALGT_VENNS_LISTE';
+export function mottaValgtVennsListe(nyListe, venn) {
   return {
-    type: SETTE_VALGT_VENN,
-    venn,
+    type: MOTTA_VALGT_VENNS_LISTE,
+    nyListe,
+    venn
   };
 }
 
@@ -96,3 +97,20 @@ export function resettPassordMailSendt(infoText) {
   };
 }
 
+export const SETT_IS_LOADING = 'SETT_IS_LOADING';
+export function lasterData(isLoading) {
+  return {
+    type: SETT_IS_LOADING,
+      isLoading,
+  };
+}
+
+//Profil
+export const OPPDATER_MINE_KJOEP = 'OPPDATER_MINE_KJOEP';
+export function oppdaterMineKjoep(brukerUid, onskerTatt) {
+  return {
+    type: OPPDATER_MINE_KJOEP,
+      brukerUid,
+      onskerTatt
+  };
+}
