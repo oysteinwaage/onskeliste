@@ -103,10 +103,12 @@ class LeggTilOnskeDialog extends Component {
         const defaultAntall = (openLenkeDialogOnske && openLenkeDialogOnske.antall) || '';
         const erNyttOnske = !(openLenkeDialogOnske && openLenkeDialogOnske.key);
 
+        const isMobile = window.matchMedia('(max-width: 599px)').matches;
         return (
             <div>
                 <Dialog
                     open={openLenkeDialog}
+                    fullScreen={isMobile}
                     onClose={(event, reason) => {
                         if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
                             onToggleLenkeDialog();
