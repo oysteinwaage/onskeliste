@@ -2,12 +2,13 @@ import React, {Component} from 'react';
 import PropTypes from "prop-types";
 import {push} from "connected-react-router";
 import connect from 'react-redux/es/connect/connect';
-import firebase from "firebase";
+import firebase from "firebase/compat/app";
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button';
-const logo = process.env.PUBLIC_URL + '/logo.svg';
 import {loggInn, opprettNyBruker, resetPassord} from '../Api';
 import {endreHeaderTekst, lasterData, toggleVisOpprettBruker} from '../actions/actions';
+
+const logo = process.env.PUBLIC_URL + '/logo.svg';
 
 const initState = {
     username: '',

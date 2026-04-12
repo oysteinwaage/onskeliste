@@ -3,7 +3,7 @@ import {connect} from "react-redux";
 import {push} from 'connected-react-router';
 import PropTypes from 'prop-types';
 import {Route, Switch} from 'react-router';
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import Login from './login/Login';
 import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
