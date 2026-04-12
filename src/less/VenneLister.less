@@ -1,3 +1,30 @@
+.vennerliste-side {
+
+  &__measurements-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__measurements {
+    text-align: left;
+    margin: 10px 10px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 15px;
+    background-color: rgba(208, 249, 204, 0.47);
+    padding: 0 20px;
+    box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
+    max-width: 400px;
+
+    &__label {
+      font-weight: 600;
+    }
+  }
+
+  &__liste {
+    display: flex;
+    justify-content: center;
+  }
+}
 
 .onskeKjopt {
   background: @onskeKjoptBakgrunn;
@@ -9,5 +36,35 @@
   .onskeKjoptTekst {
     font-style: italic;
   }
+}
+
+.onskeTekstDialog {
+  font-style: italic;
+  font-weight: bold;
+}
+
+.onskeTekstDialogLiten {
+  font-size: small;
+}
+
+.antallOnskerTatt {
+  display: flex;
+  align-self: flex-start;
+  padding: 0 0 10px 16px;
+  margin-top: 0!important;
+  margin-bottom: 0!important;
+
+  &.erFavoritt {
+    padding: 0 0 10px 29px;
+  }
+}
+
+.fjernPaddingUnder {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.fjernPaddingVenstre {
+  padding-left: 0 !important;
 }
 
