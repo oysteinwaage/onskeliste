@@ -6,7 +6,8 @@ import {
     RESET_ALL_DATA,
     RESETT_PASSORD_MAIL_SENDT,
     SETT_IS_LOADING,
-    MOTTA_MIN_ONSKELISTE
+    MOTTA_MIN_ONSKELISTE,
+    SET_SLETT_KJOPTE_ONSKER_ENABLED
 } from '../actions/actions';
 
 export default function config(state = initialState.config, action) {
@@ -39,6 +40,11 @@ export default function config(state = initialState.config, action) {
             return {
                 ...state,
                 isLoading: false
+            };
+        case SET_SLETT_KJOPTE_ONSKER_ENABLED:
+            return {
+                ...state,
+                slettKjopteOnskerEnabled: action.enabled,
             };
         default:
             return state;

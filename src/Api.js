@@ -1,5 +1,6 @@
 import {push} from 'connected-react-router';
 import {
+    adminConfigRef,
     allowedViewsRef,
     auth,
     myAllowedViewersRef,
@@ -17,7 +18,9 @@ import {
     resetAllData,
     updateAllowedViewers,
     resettPassordMailSendt,
-    setLastSeenVersion, oppdaterMineKjoep
+    setLastSeenVersion,
+    oppdaterMineKjoep,
+    setSlettKjopteOnskerEnabled,
 } from "./actions/actions";
 import {opprettUrlAv} from "./utils/util";
 
@@ -169,6 +172,39 @@ export const updateMyMeasumentOnProfile = (userDbKey, newSize, sizeKey) => {
     if (userDbKey) {
         usersRef.child(userDbKey).child("measurements").update({[sizeKey]: newSize});
     }
+};
+
+/*
+ADMIN
+ */
+export const fetchAdminConfig = () => async dispatch => {
+    adminConfigRef.on('value', snapshot => {
+        const config = snapshot.val() || {};
+        dispatch(setSlettKjopteOnskerEnabled(!!config.slettKjopteOnskerEnabled));
+    });
+};
+
+export const setSlettKjopteOnskerEnabledApi = (enabled) => {
+    adminConfigRef.update({ slettKjopteOnskerEnabled: enabled });
+};
+
+export const slettKjopteOnsker = (mineOnsker) => {
+    mineOnsker.forEach(onske => {
+        const kjoptAvListe = onske.kjoptAvListe || [];
+        if (kjoptAvListe.length === 0) return;
+
+        const totalKjopt = kjoptAvListe.reduce((sum, k) => sum + (k.antallKjopt || 1), 0);
+        const antall = onske.antall || 1;
+
+        if (totalKjopt >= antall) {
+            myWishlistRef().child(onske.key).remove();
+        } else {
+            myWishlistRef().child(onske.key).update({
+                antall: antall - totalKjopt,
+                kjoptAvListe: null,
+            });
+        }
+    });
 };
 
 export const logOut = () => async dispatch => {

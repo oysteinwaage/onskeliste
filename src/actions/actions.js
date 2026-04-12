@@ -105,6 +105,12 @@ export function lasterData(isLoading) {
   };
 }
 
+// Admin
+export const SET_SLETT_KJOPTE_ONSKER_ENABLED = 'SET_SLETT_KJOPTE_ONSKER_ENABLED';
+export function setSlettKjopteOnskerEnabled(enabled) {
+  return { type: SET_SLETT_KJOPTE_ONSKER_ENABLED, enabled };
+}
+
 //Profil
 export const OPPDATER_MINE_KJOEP = 'OPPDATER_MINE_KJOEP';
 export function oppdaterMineKjoep(brukerUid, onskerTatt) {

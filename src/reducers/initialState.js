@@ -18,6 +18,7 @@ const initialState = {
     brukere: [],
     infoResettMailSendt: '',
     isLoading: false,
+    slettKjopteOnskerEnabled: false,
   },
   vennersLister: {
     allowedListsForMe: [],

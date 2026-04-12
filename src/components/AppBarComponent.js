@@ -10,6 +10,7 @@ import GiftIcon from '@mui/icons-material/CardGiftcard';
 import ProfileIcon from '@mui/icons-material/AccountCircleOutlined';
 import Exit from '@mui/icons-material/ExitToApp';
 import ListeIcon from '@mui/icons-material/FormatListBulleted';
+import AdminIcon from '@mui/icons-material/AdminPanelSettings';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -31,6 +32,7 @@ class AppBarComponent extends Component {
       case 'vennelister':
       case 'minliste':
       case 'profil':
+      case 'admin':
         this.props.onAapneNySide(valg);
         break;
       case 'loggUt':
@@ -44,7 +46,7 @@ class AppBarComponent extends Component {
   }
 
   render() {
-    const { headerTekst } = this.props;
+    const { headerTekst, erAdmin } = this.props;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
     return (
       <AppBar position="static">
@@ -82,6 +84,17 @@ class AppBarComponent extends Component {
                 <ListItemText primary='Profil' />
               </ListItem>
               <Divider />
+              {erAdmin && (
+                <>
+                  <ListItem button onClick={() => this.menyValgTrykket('admin')} key='admin'>
+                    <ListItemIcon>
+                      <div><AdminIcon /></div>
+                    </ListItemIcon>
+                    <ListItemText primary='Admin' />
+                  </ListItem>
+                  <Divider />
+                </>
+              )}
               <ListItem button onClick={() => this.menyValgTrykket('loggUt')} key='loggUt'>
                 <ListItemIcon>
                   <div><Exit /></div>
@@ -99,6 +112,7 @@ class AppBarComponent extends Component {
 
 const mapStateToProps = state => ({
   headerTekst: state.config.headerTekst,
+  erAdmin: state.innloggetBruker.erAdmin,
 });
 
 const mapDispatchToProps = dispatch => ({

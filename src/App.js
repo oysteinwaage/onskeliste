@@ -8,20 +8,22 @@ import Login from './login/Login';
 import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
 import Profil from './profil/Profil';
+import Admin from './admin/Admin';
 import AppBar from './components/AppBarComponent';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import {brukerLoggetInn, lasterData} from "./actions/actions";
-import {fetchListsIAmAllowedToView, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste} from "./Api";
+import {fetchAdminConfig, fetchListsIAmAllowedToView, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste} from "./Api";
 import ChangesSinceLastLogin from "./utils/ChangesSinceLastLogin";
 
 class App extends Component {
 
     componentDidMount() {
         const {onSendTilLogin, onBrukerLoggetInn, onAbonnerPaaMinOnskeliste, onSubscribeToMyAllowedViewers,
-            onFetchListsICanView, onFetchAllUsers, onSettLasterData} = this.props;
+            onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig} = this.props;
         onSettLasterData(true);
+        onFetchAdminConfig();
         firebase.auth().onAuthStateChanged(function (user) {
             if (user) {
                 onBrukerLoggetInn(user);
@@ -54,6 +56,7 @@ class App extends Component {
                         <Route path="/minliste" component={MinListe}/>
                         <Route path="/vennelister" component={Vennelister}/>
                         <Route path="/profil" component={Profil}/>
+                        <Route path="/admin" component={Admin}/>
                     </Switch>
                 </div>
             </div>
@@ -83,7 +86,8 @@ const mapDispatchToProps = dispatch => ({
     onFetchListsICanView: () => dispatch(fetchListsIAmAllowedToView()),
     onFetchAllUsers: () => dispatch(fetchUsers()),
     onSendTilLogin: () => dispatch(push('/')),
-    onSettLasterData: (isLoading) => dispatch(lasterData(isLoading))
+    onSettLasterData: (isLoading) => dispatch(lasterData(isLoading)),
+    onFetchAdminConfig: () => dispatch(fetchAdminConfig()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

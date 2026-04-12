@@ -16,7 +16,7 @@ import Tooltip from '@mui/material/Tooltip';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 
-import {removeWishFromMyList, updateFavorittOnMyWish} from '../Api';
+import {removeWishFromMyList, updateFavorittOnMyWish, slettKjopteOnsker} from '../Api';
 import {toggleLenkeDialog, endreHeaderTekst} from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
 
@@ -85,7 +85,7 @@ class MinListe extends Component {
     }
 
     render() {
-        const {innloggetBrukerNavn, mineOnsker, onToggleLenkeDialog} = this.props;
+        const {innloggetBrukerNavn, mineOnsker, onToggleLenkeDialog, slettKjopteOnskerEnabled} = this.props;
         return (
             <div className="minListe">
                 <p>
@@ -95,6 +95,12 @@ class MinListe extends Component {
                     <Button className="addNewWishButton" variant="contained" color="inherit"
                             onClick={() => onToggleLenkeDialog(null)} startIcon={<PlaylistAddIcon/>}>Legg til
                         ønske </Button>
+                    {slettKjopteOnskerEnabled && (
+                        <Button variant="outlined" color="error" style={{ marginLeft: 8 }}
+                                onClick={() => slettKjopteOnsker(mineOnsker)}>
+                            Slett kjøpte ønsker
+                        </Button>
+                    )}
                 </div>
 
                 <div>
@@ -124,6 +130,7 @@ MinListe.propTypes = {
 const mapStateToProps = state => ({
     innloggetBrukerNavn: state.innloggetBruker.navn,
     mineOnsker: state.innloggetBruker.mineOnsker,
+    slettKjopteOnskerEnabled: state.config.slettKjopteOnskerEnabled,
 });
 
 const mapDispatchToProps = dispatch => ({

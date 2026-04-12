@@ -21,6 +21,9 @@ export const allowedViewersRef = listId => db.ref('allowedViewers/' + listId);
 export const myAllowedViewersRef = () => db.ref('allowedViewers/' + myUid());
 export const allowedViewsRef = databaseRef.child('allowedViewers');
 
+// Admin config
+export const adminConfigRef = db.ref('config');
+
 // Authentication/signed in user
 export const auth = firebase.auth();
 export const myUid = () => firebase.auth().currentUser && firebase.auth().currentUser.uid;
