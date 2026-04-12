@@ -20,7 +20,7 @@ import Divider from '@material-ui/core/Divider';
 
 import { logOut } from '../Api';
 
-const iOS = process.browser && /iPad|iPhone|iPod/.test(navigator.userAgent);
+const iOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 class AppBarComponent extends Component {
   constructor(props) {

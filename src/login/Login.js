@@ -5,7 +5,7 @@ import connect from 'react-redux/es/connect/connect';
 import firebase from "firebase";
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button';
-import logo from '../img/logo.svg';
+const logo = process.env.PUBLIC_URL + '/logo.svg';
 import {loggInn, opprettNyBruker, resetPassord} from '../Api';
 import {endreHeaderTekst, lasterData, toggleVisOpprettBruker} from '../actions/actions';
 

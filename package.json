@@ -2,7 +2,7 @@
   "name": "my-wishlist",
   "version": "0.1.0",
   "engines": {
-    "node": "10.16.3",
+    "node": "^24.12.2",
     "npm": "6.9.0",
     "yarn": "1.19.1"
   },
@@ -14,7 +14,7 @@
     "@material-ui/lab": "^4.0.0-alpha.56",
     "classnames": "^2.2.6",
     "connected-react-router": "^4.5.0",
-    "firebase": "^5.5.8",
+    "firebase": "^8.10.1",
     "history": "^4.7.2",
     "less": "^3.8.1",
     "less-watch-compiler": "^1.13.0",
@@ -23,7 +23,7 @@
     "react-dom": "^16.6.1",
     "react-redux": "^5.1.0",
     "react-router": "^4.3.1",
-    "react-scripts": "2.1.1",
+    "react-scripts": "^5.0.1",
     "react-select": "^2.1.2",
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0"
