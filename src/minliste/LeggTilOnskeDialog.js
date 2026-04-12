@@ -54,7 +54,8 @@ class LeggTilOnskeDialog extends Component {
     onKeyPressed = event => {
         const {openLenkeDialogOnske} = this.props;
         const harTekst = this.state.text || (openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst);
-        if (event.keyCode === 13 && harTekst) {
+        if (event.key === 'Enter' && harTekst) {
+            event.preventDefault();
             this.saveChanges();
         }
     };
