@@ -10,7 +10,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 import {updateLastSeenVersion} from '../Api';
 
-const currentVersion = 2.3;
+const currentVersion = 2.6;
 
 const changes = [
     {
@@ -41,6 +41,28 @@ const changes = [
         changes: [
             "Wenche-bug: Hver gang Wenche tok et ønske ble det registrert som 'tatt av undefined', dette skal nå være fikset",
         ]
+    },
+    {
+        version: 2.4,
+        releaseDate: "19.11.2021",
+        changes: [
+            "Kan nå legge inn størrelse (på klær, sko osv) i eget felt på hvert enkelt ønske, så vises det på samme måte som 'Antall' i ønskelisten din. Kan også oppdatere eksisterende ønsker med størrelse ved å trykke på blyanten på ønsket du vil endre på",
+        ]
+    },
+    {
+        version: 2.5,
+        releaseDate: "19.11.2021",
+        changes: [
+            "Kan nå legge inn dine generelle størrelser (på klær, sko osv) inne på din egen Profil-side (Hamburgermeny -> Profil -> Mine generelle mål). Disse generelle målene vil bli vist samtidig som folk ser på din ønskeliste, og vil gjøre det enklere for alle å kjøpe riktige størrelser på både konkrete ønsker du har i listen din, men også om noen vil gå off-list og prøve seg på egen hånd :)",
+            "Har flyttet listen hvor man legger til de som kan se på ønskelisten din inn til Profil-siden"
+        ]
+    },
+    {
+        version: 2.6,
+        releaseDate: "27.11.2021",
+        changes: [
+            "Mine kjøp: Her blir det listet opp alle ønsker du har krysset ut fra noen andres ønskelister. Denne oversikten finner du inne på din Profil side. Dette er en første versjon og vil utvides etterhvert med flere funksjoner."
+        ]
     }
 ];
 
@@ -57,7 +79,7 @@ class ChangesSinceLastLogin extends Component {
                 aria-labelledby="scroll-dialog-title"
                 aria-describedby="scroll-dialog-description"
             >
-                <DialogTitle id="scroll-dialog-title">Endringer siden sist!</DialogTitle>
+                <DialogTitle id="scroll-dialog-title">Endringer siden sist du logget inn!</DialogTitle>
                 <DialogContent dividers={true}>
                     {changes.map(change => change.version > lastSeenVersion &&
                         <DialogContentText

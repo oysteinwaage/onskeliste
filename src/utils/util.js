@@ -17,3 +17,37 @@ export const totalValgt = onske => kjoptListe(onske).reduce((total, kjopt) => to
 // TODO ja, det ble jo issue som forventet om noen skrur ned antall etter det allerede er kjøpt alt...
 export const alleOnskerTatt = onske => totalValgt(onske) === onske.antall;
 export const antallAlleredeKjoptAvMeg = onske => (kjoptListe(onske).find(k => k.kjoptAv === myWishlistId()) || {}).antallKjopt || 0;
+
+export const measurementKeys = {
+  SKO: "sko",
+  BUKSE: "bukse",
+  GENSER_TSKJORTE: "genser_tskjorte",
+  SKJORTE: "skjorte",
+  BH: "bh",
+  HANSKER: "hansker",
+  BOKSER: "boksershorts",
+  HATT: "hatt"
+};
+
+export const finnLabelForStrl = strlKey => {
+  switch (strlKey) {
+    case measurementKeys.SKO:
+      return "Sko";
+    case measurementKeys.BUKSE:
+      return "Bukse";
+    case measurementKeys.GENSER_TSKJORTE:
+      return "Genser/T-skjorte";
+    case measurementKeys.SKJORTE:
+      return "Skjorte";
+    case measurementKeys.BH:
+      return "BH";
+    case measurementKeys.HANSKER:
+      return "Hansker";
+    case measurementKeys.BOKSER:
+      return "Boksershorts";
+    case measurementKeys.HATT:
+      return "Hodemål"
+  }
+};
+
+export const finnNavnFraUid = (uid, brukere) => (brukere.find(bruker => bruker.uid === uid) || {}).navn;

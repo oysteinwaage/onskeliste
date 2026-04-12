@@ -7,7 +7,9 @@ export default {
     openLenkeDialogOnske: {},
     allowedViewers: [],
     lastSeenVersion: 0,
-    userDbKey: ''
+    userDbKey: '',
+    measurements: {},
+    mineKjoep: {}
   },
   brukere: {},
   config: {

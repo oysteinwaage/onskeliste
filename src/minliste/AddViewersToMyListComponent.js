@@ -69,7 +69,7 @@ class AddViewersToMyListComponent extends Component {
                 }
                 style={{marginBottom: 15}}
                 renderInput={(params) => (
-                    <TextField {...params} variant="standard" label="Hvem skal kunne se denne listen:"
+                    <TextField {...params} variant="standard"
                                placeholder="Søk etter navn"/>
                 )}
                 fullWidth={true}

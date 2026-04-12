@@ -26,7 +26,7 @@ import {endreHeaderTekst} from '../actions/actions';
 import {updateWishOnListWith} from '../Api';
 import {
     alleOnskerTatt, antallAlleredeKjoptAvMeg,
-    erInnloggetBrukersUid,
+    erInnloggetBrukersUid, finnLabelForStrl,
     inneholderInnloggetBrukersUid, kjoptListe,
     myName,
     myWishlistId,
@@ -99,12 +99,21 @@ class VenneLister extends Component {
         this.resetLocalState();
     };
 
+    lagAntallOgStrlTekst = (onske) => {
+        let res = (onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) ? `Antall tatt: ${totalValgt(onske)}/${onske.antall}` : "";
+        if (onske.onskeSize) {
+            res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
+        }
+        return res;
+    };
+
     populerOnskeliste = (onskeliste) =>
         onskeliste.sort((a, b) => !a.favoritt - !b.favoritt).map(onske =>
             <div key={onske.onskeTekst + onskeliste.indexOf(onske)}>
-                <ListItem className={this.kjoptAlleOnskerClassname(onske) + this.onskeErFavoritt(onske) + (!alleOnskerTatt(onske) && onske.antall > 1 ? ' fjernPaddingUnder' : '')}>
+                <ListItem
+                    className={this.kjoptAlleOnskerClassname(onske) + this.onskeErFavoritt(onske) + (!alleOnskerTatt(onske) && onske.antall > 1 ? ' fjernPaddingUnder' : '')}>
                     {onske.favoritt &&
-                        <StarIcon className={alleOnskerTatt(onske) ? "stjerne favorittTatt" : "stjerne favoritt"} />
+                    <StarIcon className={alleOnskerTatt(onske) ? "stjerne favorittTatt" : "stjerne favoritt"}/>
                     }
                     <ListItemText
                         className={alleOnskerTatt(onske) ? 'onskeKjoptTekst ' : onske.antall > 1 ? 'fjernPaddingUnder' : ''}
@@ -117,12 +126,17 @@ class VenneLister extends Component {
                                       disabled={alleOnskerTatt(onske) && !antallAlleredeKjoptAvMeg(onske)}
                                       onChange={this.onMarkerOnskeSomKjopt(onske)}/>
                         </Tooltip>
+                        {/*<Tooltip title='Slett'>*/}
+                        {/*    <IconButton aria-label="Delete" onClick={() => removeWishFromCurrentList(this.props.valgtVenn.uid, onske.key)}>*/}
+                        {/*        <DeleteIcon/>*/}
+                        {/*    </IconButton>*/}
+                        {/*</Tooltip>*/}
                     </ListItemSecondaryAction>
                 </ListItem>
-                {onske.antall && onske.antall > 1 && !alleOnskerTatt(onske) &&
+                {(onske.antall && onske.antall > 1 && !alleOnskerTatt(onske) || onske.onskeSize) &&
                 <ListItemText
-                    className={onske.favoritt ? 'antallOnskerTatt erFavoritt' : 'antallOnskerTatt'}
-                    secondary={"Antall tatt: " + totalValgt(onske) + "/" + onske.antall}
+                    className={`${this.kjoptAlleOnskerClassname(onske)} ${onske.favoritt ? 'antallOnskerTatt erFavoritt' : 'antallOnskerTatt'}`}
+                    secondary={this.lagAntallOgStrlTekst(onske)}
                 />}
                 <Divider/>
             </div>,
@@ -174,18 +188,37 @@ class VenneLister extends Component {
 
     render() {
         const {valgtVenn, valgtVennsListe} = this.props;
+        const harGenerelleMaal = valgtVenn.measurements && Object.values(valgtVenn.measurements).some(k => !!k);
         return (
-            <div className="VennersListeSide">
+            <div className="vennerliste-side">
                 <ListeVelger/>
-                <Grid item xs={12} md={6}>
-                    <h2>{valgtVenn && valgtVenn.navn && `Ønskelisten til ${valgtVenn.navn}`}</h2>
-                    <div className="minOnskeliste">
-                        <List dense={false}>
-                            {valgtVennsListe.length > 0 && <Divider/>}
-                            {this.populerOnskeliste(valgtVennsListe)}
-                        </List>
+                <div className="vennerliste-side__liste">
+                    <Grid item xs={12} md={6}>
+                        <h2>{valgtVenn && valgtVenn.navn && `Ønskelisten til ${valgtVenn.navn}`}</h2>
+                        <div className="minOnskeliste">
+                            <List dense={false}>
+                                {valgtVennsListe.length > 0 && <Divider/>}
+                                {this.populerOnskeliste(valgtVennsListe)}
+                            </List>
+                        </div>
+                    </Grid>
+                </div>
+                {harGenerelleMaal &&
+                <div className="vennerliste-side__measurements-container">
+                    <div className="vennerliste-side__measurements">
+                        <h4 style={{textAlign: "center"}}>{`Generelle mål - ${valgtVenn.firstName}`}</h4>
+                        {Object.keys(valgtVenn.measurements)
+                            .filter(key => !!valgtVenn.measurements[key]).map(key => {
+                                return (
+                                    <p key={key}>
+                                    <span
+                                        className="vennerliste-side__measurements__label">{finnLabelForStrl(key)}</span>
+                                        {`: ${valgtVenn.measurements[key]}`}
+                                    </p>);
+                            })}
                     </div>
-                </Grid>
+                </div>
+                }
                 {this.state.dialogOpen && this.velgeAntallDialog()}
             </div>
         );

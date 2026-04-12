@@ -56,7 +56,7 @@ class AppBarComponent extends Component {
             <MenuIcon />
           </IconButton>
           }
-          <Typography variant="h6" color="inherit" className={classes.grow}>
+          <Typography variant="h6" color="inherit" className={`${classes.grow} toppmeny-side-navn` }>
             {this.props.headerTekst}
           </Typography>
         </Toolbar>

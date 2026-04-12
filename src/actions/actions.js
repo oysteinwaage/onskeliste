@@ -105,3 +105,12 @@ export function lasterData(isLoading) {
   };
 }
 
+//Profil
+export const OPPDATER_MINE_KJOEP = 'OPPDATER_MINE_KJOEP';
+export function oppdaterMineKjoep(brukerUid, onskerTatt) {
+  return {
+    type: OPPDATER_MINE_KJOEP,
+      brukerUid,
+      onskerTatt
+  };
+}

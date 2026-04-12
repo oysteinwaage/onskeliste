@@ -27,6 +27,27 @@
     transform: rotate(360deg);
   }
 }
+.vennerliste-side__measurements-container {
+  display: flex;
+  justify-content: center;
+}
+.vennerliste-side__measurements {
+  text-align: left;
+  margin: 10px 10px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 15px;
+  background-color: rgba(208, 249, 204, 0.47);
+  padding: 0 20px;
+  box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
+  max-width: 400px;
+}
+.vennerliste-side__measurements__label {
+  font-weight: 600;
+}
+.vennerliste-side__liste {
+  display: flex;
+  justify-content: center;
+}
 .onskeKjopt {
   background: #d3b6b3;
 }
@@ -47,16 +68,18 @@
   display: flex;
   align-self: flex-start;
   padding: 0 0 10px 16px;
+  margin-top: 0!important;
+  margin-bottom: 0!important;
 }
 .antallOnskerTatt.erFavoritt {
   padding: 0 0 10px 29px;
 }
 .fjernPaddingUnder {
-  padding-bottom: 0!important;
-  margin-bottom: 0!important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
 }
 .fjernPaddingVenstre {
-  padding-left: 0!important;
+  padding-left: 0 !important;
 }
 .minListe {
   margin: 0 10px;
@@ -114,6 +137,65 @@
 .changesContent .changesText .header {
   font-style: italic;
 }
+.ProfilSide {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.ProfilSide__standard-profil-box {
+  margin: 10px 20px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 15px;
+  padding: 0 15px 15px 15px;
+  box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
+  max-width: 1000px;
+}
+.ProfilSide__viewers-list {
+  background-color: rgba(121, 211, 249, 0.46);
+}
+.ProfilSide__egne-maal {
+  background-color: rgba(208, 249, 204, 0.47);
+}
+.ProfilSide__egne-maal__infotekst {
+  font-size: small;
+}
+.ProfilSide__mine-kjoep {
+  display: flex;
+  background-color: rgba(249, 162, 144, 0.47);
+  width: 100%;
+  text-align: left;
+  flex-wrap: wrap;
+}
+.ProfilSide__mine-kjoep__overskrift {
+  width: 100%;
+  text-align: center;
+}
+.ProfilSide__mine-kjoep__liste {
+  display: flex;
+  width: 100%;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.5);
+}
+.ProfilSide__mine-kjoep__onsker {
+  width: 100%;
+  border-left: 1px solid rgba(128, 128, 128, 0.5);
+}
+.ProfilSide__mine-kjoep__liste-eier {
+  margin-right: 15px;
+  align-self: center;
+  font-weight: 500;
+  width: 150px;
+}
+@media only screen and (max-width: 400px) {
+  .ProfilSide__mine-kjoep__liste-eier {
+    width: 40%;
+    margin-right: 10px;
+  }
+}
+.ProfilSide__mine-kjoep__ingen-kjoep {
+  width: 100%;
+  text-align: center;
+}
 body {
   min-height: 100vh;
   margin: 0;
@@ -142,4 +224,7 @@ html,
 }
 .backDrop {
   z-index: 999999999999999!important;
+}
+.toppmeny-side-navn {
+  margin-left: -50px !important;
 }

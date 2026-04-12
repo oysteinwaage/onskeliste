@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
@@ -13,12 +14,26 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
 
-import {addWishToMyList, updateAntallOnMyList, updateLinkOnWishOnMyList, updateWishTextOnMyList} from "../Api";
+import {
+    addWishToMyList,
+    updateAntallOnMyList,
+    updateLinkOnWishOnMyList, updateSizeOnMyList,
+    updateWishTextOnMyList
+} from "../Api";
 import connect from "react-redux/es/connect/connect";
 import {toggleLenkeDialog} from '../actions/actions';
 import {opprettUrlAv} from "../utils/util";
 
-const initState = {url: null, text: null, antall: '', antallChanged: false, urlChanged: false, textChanged: false};
+const initState = {
+    url: null,
+    text: null,
+    size: null,
+    antall: '',
+    antallChanged: false,
+    urlChanged: false,
+    sizeChanged: false,
+    textChanged: false
+};
 const antallOnskerValg = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 class LeggTilOnskeDialog extends Component {
@@ -38,7 +53,9 @@ class LeggTilOnskeDialog extends Component {
     };
 
     onKeyPressed = event => {
-        if (event.keyCode === 13 && this.state.text) {
+        const {openLenkeDialogOnske} = this.props;
+        const harTekst = this.state.text || (openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst);
+        if (event.keyCode === 13 && harTekst) {
             this.saveChanges();
         }
     };
@@ -50,7 +67,8 @@ class LeggTilOnskeDialog extends Component {
                 {
                     onskeTekst: this.state.text,
                     url: opprettUrlAv(this.state.url),
-                    antall: this.state.antall || 1
+                    antall: this.state.antall || 1,
+                    onskeSize: this.state.size
                 }
             )
         } else {
@@ -64,6 +82,9 @@ class LeggTilOnskeDialog extends Component {
             if (this.state.antallChanged) {
                 updateAntallOnMyList(this.state.antall, openLenkeDialogOnske.key);
             }
+            if (this.state.sizeChanged) {
+                updateSizeOnMyList(this.state.size, openLenkeDialogOnske.key);
+            }
         }
         onToggleLenkeDialog();
         this.resettState();
@@ -75,9 +96,10 @@ class LeggTilOnskeDialog extends Component {
 
     render() {
         const {openLenkeDialog, onToggleLenkeDialog, openLenkeDialogOnske} = this.props;
-        const {text, url, urlChanged, antall} = this.state;
+        const {text, url, urlChanged, antall, size} = this.state;
         const defaultUrl = openLenkeDialogOnske && openLenkeDialogOnske.url;
         const defaultText = openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst;
+        const defaultSize = openLenkeDialogOnske && openLenkeDialogOnske.onskeSize;
         const defaultAntall = openLenkeDialogOnske && openLenkeDialogOnske.antall || '';
         const erNyttOnske = !(openLenkeDialogOnske && openLenkeDialogOnske.key);
 
@@ -95,8 +117,7 @@ class LeggTilOnskeDialog extends Component {
                     </DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            {erNyttOnske ? "Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn " +
-                                "jo mer sannsynlig er det at du får det du faktisk ønsker deg! :)"
+                            {erNyttOnske ? "Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn jo bedre!"
                                 : "Har du lagt inn en lenke og ønsker å fjerne den igjen, bare tøm feltet og trykk lagre."
                             }
                         </DialogContentText>
@@ -125,6 +146,19 @@ class LeggTilOnskeDialog extends Component {
                                                                           value={antall}>{antall}</MenuItem>)}
                             </Select>
                         </FormControl>
+                        <FormControl style={{margin: 5, width: 100,}}>
+                            <TextField
+                                margin="dense"
+                                id="size"
+                                label='Størrelse'
+                                value={size !== null ? size : defaultSize}
+                                type="text"
+                                onChange={(e) => {
+                                    this.setState({size: e.target.value, sizeChanged: true})
+                                }}
+                                onKeyDown={this.onKeyPressed}
+                            />
+                        </FormControl>
                         <TextField
                             margin="dense"
                             id="link"
@@ -152,6 +186,12 @@ class LeggTilOnskeDialog extends Component {
         );
     }
 }
+
+LeggTilOnskeDialog.propTypes = {
+    openLenkeDialog: PropTypes.bool,
+    openLenkeDialogOnske: PropTypes.object,
+    onToggleLenkeDialog: PropTypes.func
+};
 
 const mapStateToProps = state => ({
     openLenkeDialog: state.innloggetBruker.openLenkeDialog,
