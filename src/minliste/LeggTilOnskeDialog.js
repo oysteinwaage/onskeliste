@@ -1,17 +1,17 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 
 import {
@@ -107,10 +107,12 @@ class LeggTilOnskeDialog extends Component {
             <div>
                 <Dialog
                     open={openLenkeDialog}
-                    onClose={onToggleLenkeDialog}
+                    onClose={(event, reason) => {
+                        if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                            onToggleLenkeDialog();
+                        }
+                    }}
                     aria-labelledby="form-dialog-title"
-                    disableBackdropClick
-                    disableEscapeKeyDown
                 >
                     <DialogTitle id="form-dialog-title">
                         {erNyttOnske ? "Legg til ønske" : "Oppdater ønske"}
@@ -134,21 +136,22 @@ class LeggTilOnskeDialog extends Component {
                             }}
                             onKeyDown={this.onKeyPressed}
                         />
-                        <FormControl style={{margin: 10, minWidth: 80,}}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 8 }}>
+                        <FormControl style={{minWidth: 80}}>
                             <InputLabel id="antall-onsker-label">Antall</InputLabel>
                             <Select
                                 labelId="antall-onsker-label"
                                 id="antall-onsker"
                                 value={antall || defaultAntall}
                                 onChange={this.endreAntall}
+                                label="Antall"
                             >
                                 {antallOnskerValg.map(antall => <MenuItem key={antall}
                                                                           value={antall}>{antall}</MenuItem>)}
                             </Select>
                         </FormControl>
-                        <FormControl style={{margin: 5, width: 100,}}>
+                        <FormControl style={{width: 100}}>
                             <TextField
-                                margin="dense"
                                 id="size"
                                 label='Størrelse'
                                 value={size !== null ? size : defaultSize}
@@ -159,6 +162,7 @@ class LeggTilOnskeDialog extends Component {
                                 onKeyDown={this.onKeyPressed}
                             />
                         </FormControl>
+                        </div>
                         <TextField
                             margin="dense"
                             id="link"

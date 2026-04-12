@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import {push} from "connected-react-router";
 import connect from 'react-redux/es/connect/connect';
 import firebase from "firebase/compat/app";
-import TextField from '@material-ui/core/TextField'
-import Button from '@material-ui/core/Button';
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button';
 import {loggInn, opprettNyBruker, resetPassord} from '../Api';
 import {endreHeaderTekst, lasterData, toggleVisOpprettBruker} from '../actions/actions';
 

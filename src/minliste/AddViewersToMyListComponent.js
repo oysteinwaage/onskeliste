@@ -3,12 +3,12 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
-import Checkbox from '@material-ui/core/Checkbox';
-import TextField from '@material-ui/core/TextField';
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import Chip from '@material-ui/core/Chip';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import Checkbox from '@mui/material/Checkbox';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from '@mui/material/Chip';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 
 import {addViewersToMyList} from '../Api';
 import {myUid} from "../config/firebase";
@@ -51,8 +51,8 @@ class AddViewersToMyListComponent extends Component {
                 value={myAllowedViewers}
                 disableCloseOnSelect
                 getOptionLabel={(option) => option.label}
-                renderOption={(option) => (
-                    <div style={{width: '100%'}} onClick={() => this.handleChange(option)}>
+                renderOption={(props, option) => (
+                    <li {...props} style={{width: '100%'}} onClick={() => this.handleChange(option)}>
                         <Checkbox
                             icon={icon}
                             checkedIcon={checkedIcon}
@@ -60,7 +60,7 @@ class AddViewersToMyListComponent extends Component {
                             checked={!!myAllowedViewers.find(v => v.value === option.value)}
                         />
                         {option.label}
-                    </div>
+                    </li>
                 )}
                 renderTags={(value, getTagProps) =>
                     value.map((option, index) => (

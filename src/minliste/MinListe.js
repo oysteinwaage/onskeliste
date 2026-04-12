@@ -1,20 +1,20 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import ListItemText from '@material-ui/core/ListItemText';
-import IconButton from '@material-ui/core/IconButton';
-import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
-import Grid from '@material-ui/core/Grid';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit'
-import Divider from '@material-ui/core/Divider';
-import Tooltip from '@material-ui/core/Tooltip';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
-import StarIcon from '@material-ui/icons/Star';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import ListItemText from '@mui/material/ListItemText';
+import IconButton from '@mui/material/IconButton';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import Grid from '@mui/material/Grid';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit'
+import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
 
 import {removeWishFromMyList, updateFavorittOnMyWish} from '../Api';
 import {toggleLenkeDialog, endreHeaderTekst} from '../actions/actions';
@@ -92,7 +92,7 @@ class MinListe extends Component {
                     Velkommen {innloggetBrukerNavn}
                 </p>
                 <div className="addNewWish">
-                    <Button className="addNewWishButton" variant="contained" color="default"
+                    <Button className="addNewWishButton" variant="contained" color="inherit"
                             onClick={() => onToggleLenkeDialog(null)} startIcon={<PlaylistAddIcon/>}>Legg til
                         ønske </Button>
                 </div>

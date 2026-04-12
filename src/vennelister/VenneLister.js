@@ -1,25 +1,24 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import ListItemText from '@material-ui/core/ListItemText';
-import Grid from '@material-ui/core/Grid';
-import Divider from '@material-ui/core/Divider';
-import Tooltip from '@material-ui/core/Tooltip';
-import Checkbox from '@material-ui/core/Checkbox';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
-import Button from '@material-ui/core/Button';
-import InputLabel from '@material-ui/core/InputLabel';
-import Input from '@material-ui/core/Input';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import Slide from '@material-ui/core/Slide';
-import StarIcon from '@material-ui/icons/Star';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
+import Checkbox from '@mui/material/Checkbox';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import InputLabel from '@mui/material/InputLabel';
+import Input from '@mui/material/Input';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Slide from '@mui/material/Slide';
+import StarIcon from '@mui/icons-material/Star';
 
 import ListeVelger from './ListeVelger';
 import {endreHeaderTekst} from '../actions/actions';
@@ -193,7 +192,7 @@ class VenneLister extends Component {
             <div className="vennerliste-side">
                 <ListeVelger/>
                 <div className="vennerliste-side__liste">
-                    <Grid item xs={12} md={6}>
+                    <div className="vennerliste-side__liste-inner">
                         <h2>{valgtVenn && valgtVenn.navn && `Ønskelisten til ${valgtVenn.navn}`}</h2>
                         <div className="minOnskeliste">
                             <List dense={false}>
@@ -201,7 +200,7 @@ class VenneLister extends Component {
                                 {this.populerOnskeliste(valgtVennsListe)}
                             </List>
                         </div>
-                    </Grid>
+                    </div>
                 </div>
                 {harGenerelleMaal &&
                 <div className="vennerliste-side__measurements-container">

@@ -1,26 +1,24 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
-import { withStyles } from '@material-ui/styles'
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import GiftIcon from '@material-ui/icons/CardGiftcard';
-import ProfileIcon from '@material-ui/icons/AccountCircleOutlined';
-import Exit from '@material-ui/icons/ExitToApp';
-import ListeIcon from '@material-ui/icons/FormatListBulleted';
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import GiftIcon from '@mui/icons-material/CardGiftcard';
+import ProfileIcon from '@mui/icons-material/AccountCircleOutlined';
+import Exit from '@mui/icons-material/ExitToApp';
+import ListeIcon from '@mui/icons-material/FormatListBulleted';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
 
 import { logOut } from '../Api';
 
-const iOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 class AppBarComponent extends Component {
   constructor(props) {
@@ -46,23 +44,22 @@ class AppBarComponent extends Component {
   }
 
   render() {
-    const { classes, headerTekst } = this.props;
+    const { headerTekst } = this.props;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
     return (
       <AppBar position="static">
         <Toolbar>
           {visHamburgerMeny &&
-          <IconButton className={classes.menuButton} onClick={() => this.setState({ drawerOpen: true })} color="inherit" aria-label="Menu">
+          <IconButton sx={{ ml: '-12px', mr: '20px' }} onClick={() => this.setState({ drawerOpen: true })} color="inherit" aria-label="Menu">
             <MenuIcon />
           </IconButton>
           }
-          <Typography variant="h6" color="inherit" className={`${classes.grow} toppmeny-side-navn` }>
+          <Typography variant="h6" color="inherit" sx={{ flexGrow: 1 }} className="toppmeny-side-navn">
             {this.props.headerTekst}
           </Typography>
         </Toolbar>
-        <SwipeableDrawer open={this.state.drawerOpen} onOpen={() => this.setState({ drawerOpen: true })} onClose={() => this.setState({ drawerOpen: false })}
-                         disableBackdropTransition={!iOS} disableDiscovery={iOS}>
-          <div className={classes.list}>
+        <Drawer open={this.state.drawerOpen} onClose={() => this.setState({ drawerOpen: false })}>
+          <div style={{ width: 250 }}>
             <List>
               <ListItem button onClick={() => this.menyValgTrykket('minliste')} key='minliste'>
                 <ListItemIcon>
@@ -94,28 +91,11 @@ class AppBarComponent extends Component {
               <Divider />
             </List>
           </div>
-        </SwipeableDrawer>
+        </Drawer>
       </AppBar>
     );
   }
 }
-
-
-const styles = {
-  root: {
-    flexGrow: 1,
-  },
-  grow: {
-    flexGrow: 1,
-  },
-  menuButton: {
-    marginLeft: -12,
-    marginRight: 20,
-  },
-  list: {
-    width: 250,
-  },
-};
 
 const mapStateToProps = state => ({
   headerTekst: state.config.headerTekst,
@@ -126,4 +106,4 @@ const mapDispatchToProps = dispatch => ({
   onLogOut: () => dispatch(logOut()),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(AppBarComponent));
+export default connect(mapStateToProps, mapDispatchToProps)(AppBarComponent);

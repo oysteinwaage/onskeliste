@@ -9,8 +9,8 @@ import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
 import Profil from './profil/Profil';
 import AppBar from './components/AppBarComponent';
-import Backdrop from '@material-ui/core/Backdrop';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import {brukerLoggetInn, lasterData} from "./actions/actions";
 import {fetchListsIAmAllowedToView, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste} from "./Api";

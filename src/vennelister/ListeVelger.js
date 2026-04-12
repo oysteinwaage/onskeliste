@@ -1,27 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core/styles';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 import { fetdhOnskelisteForUid } from '../Api';
-
-const styles = theme => ({
-  root: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120,
-  },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
-});
-
 
 class ListeVelger extends Component {
   constructor(props) {
@@ -42,18 +25,19 @@ class ListeVelger extends Component {
   };
 
   render() {
-    const { classes, allUsers, allowedListsForMe } = this.props;
+    const { allUsers, allowedListsForMe } = this.props;
     const venneliste = allUsers
       .filter(user => allowedListsForMe.includes(user.uid))
       .sort((a, b) => a.navn.localeCompare(b.navn));
     return (
-      <div className={classes.root}>
-        <FormControl className={classes.formControl}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <FormControl sx={{ m: 1, minWidth: 120 }}>
           <InputLabel htmlFor="navn-native-simple">Velg ønskeliste</InputLabel>
           <Select
             native
             value={this.state.valgtVennUid}
             onChange={this.handleChange()}
+            label="Velg ønskeliste"
             inputProps={{
               name: 'navn',
               id: 'navn-native-simple',
@@ -79,4 +63,4 @@ const mapDispatchToProps = dispatch => ({
   onHentValgtVennsListe: (uid, venn) => dispatch(fetdhOnskelisteForUid(uid, venn)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(ListeVelger));
+export default connect(mapStateToProps, mapDispatchToProps)(ListeVelger);

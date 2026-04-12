@@ -48,6 +48,14 @@
   display: flex;
   justify-content: center;
 }
+.vennerliste-side__liste-inner {
+  width: 100%;
+}
+@media (min-width: 600px) {
+  .vennerliste-side__liste-inner {
+    width: 50%;
+  }
+}
 .onskeKjopt {
   background: #d3b6b3;
 }

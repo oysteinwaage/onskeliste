@@ -2,14 +2,14 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
 import {endreHeaderTekst} from '../actions/actions';
-import TextField from '@material-ui/core/TextField/TextField';
-import FormControl from '@material-ui/core/FormControl';
+import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
 import {updateMyMeasumentOnProfile} from '../Api';
 import {finnLabelForStrl, finnNavnFraUid, measurementKeys} from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText/ListItemText";
-import Divider from "@material-ui/core/Divider";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Divider from "@mui/material/Divider";
 
 class Profil extends Component {
     constructor(props) {
