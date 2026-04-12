@@ -100,7 +100,7 @@ class LeggTilOnskeDialog extends Component {
         const defaultUrl = openLenkeDialogOnske && openLenkeDialogOnske.url;
         const defaultText = openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst;
         const defaultSize = openLenkeDialogOnske && openLenkeDialogOnske.onskeSize;
-        const defaultAntall = openLenkeDialogOnske && openLenkeDialogOnske.antall || '';
+        const defaultAntall = (openLenkeDialogOnske && openLenkeDialogOnske.antall) || '';
         const erNyttOnske = !(openLenkeDialogOnske && openLenkeDialogOnske.key);
 
         return (
@@ -176,7 +176,7 @@ class LeggTilOnskeDialog extends Component {
                         <Button onClick={() => this.cancel()} color="primary">
                             Avbryt
                         </Button>
-                        <Button disabled={!text && !openLenkeDialogOnske.onskeTekst || text === ""}
+                        <Button disabled={(!text && !openLenkeDialogOnske.onskeTekst) || text === ""}
                                 onClick={() => this.saveChanges()} color="primary">
                             Lagre
                         </Button>

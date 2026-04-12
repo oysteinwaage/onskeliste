@@ -142,9 +142,9 @@ class Login extends Component {
                 <br/>
                 <br/>
                 {!resettPassordVisning && !visOpprettNyBruker &&
-                <a className="glemt-passord-lenke" onClick={() => this.glemtPassorTrykket()}>
+                <button className="glemt-passord-lenke" onClick={() => this.glemtPassorTrykket()}>
                     Glemt passord?
-                </a>
+                </button>
                 }
             </div>
         );

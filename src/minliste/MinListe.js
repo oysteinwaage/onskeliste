@@ -21,10 +21,6 @@ import {toggleLenkeDialog, endreHeaderTekst} from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
 
 class MinListe extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount() {
         const {onEndreHeaderTekst} = this.props;
         onEndreHeaderTekst('Rediger ønskeliste');

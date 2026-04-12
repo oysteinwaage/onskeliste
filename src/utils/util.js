@@ -46,7 +46,9 @@ export const finnLabelForStrl = strlKey => {
     case measurementKeys.BOKSER:
       return "Boksershorts";
     case measurementKeys.HATT:
-      return "Hodemål"
+      return "Hodemål";
+    default:
+      return strlKey;
   }
 };
 

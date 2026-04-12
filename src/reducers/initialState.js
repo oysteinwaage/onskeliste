@@ -1,4 +1,4 @@
-export default {
+const initialState = {
   innloggetBruker: {
     email: '',
     navn: '',
@@ -25,3 +25,5 @@ export default {
     valgtVenn: {},
   }
 };
+
+export default initialState;

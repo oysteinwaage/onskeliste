@@ -133,7 +133,7 @@ class VenneLister extends Component {
                         {/*</Tooltip>*/}
                     </ListItemSecondaryAction>
                 </ListItem>
-                {(onske.antall && onske.antall > 1 && !alleOnskerTatt(onske) || onske.onskeSize) &&
+                {((onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) || onske.onskeSize) &&
                 <ListItemText
                     className={`${this.kjoptAlleOnskerClassname(onske)} ${onske.favoritt ? 'antallOnskerTatt erFavoritt' : 'antallOnskerTatt'}`}
                     secondary={this.lagAntallOgStrlTekst(onske)}
