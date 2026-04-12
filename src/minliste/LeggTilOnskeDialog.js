@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -177,16 +176,16 @@ class LeggTilOnskeDialog extends Component {
                             }}
                             onKeyDown={this.onKeyPressed}
                         />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                            <Button onClick={() => this.cancel()} color="primary">
+                                Avbryt
+                            </Button>
+                            <Button disabled={(!text && !openLenkeDialogOnske.onskeTekst) || text === ""}
+                                    onClick={() => this.saveChanges()} color="primary">
+                                Lagre
+                            </Button>
+                        </div>
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => this.cancel()} color="primary">
-                            Avbryt
-                        </Button>
-                        <Button disabled={(!text && !openLenkeDialogOnske.onskeTekst) || text === ""}
-                                onClick={() => this.saveChanges()} color="primary">
-                            Lagre
-                        </Button>
-                    </DialogActions>
                 </Dialog>
             </div>
         );
