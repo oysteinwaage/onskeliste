@@ -6,10 +6,10 @@
   },
   "private": true,
   "dependencies": {
-    "@mui/material": "^5.16.14",
-    "@mui/icons-material": "^5.16.14",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
+    "@mui/icons-material": "^5.16.14",
+    "@mui/material": "^5.16.14",
     "classnames": "^2.2.6",
     "connected-react-router": "^4.5.0",
     "firebase": "^10.9.0",
@@ -23,7 +23,7 @@
     "react-router": "^4.3.1",
     "react-scripts": "^5.0.1",
     "react-select": "^2.1.2",
-    "redux": "^4.0.1",
+    "redux": "^4.2.1",
     "redux-thunk": "^2.3.0"
   },
   "scripts": {
@@ -44,5 +44,16 @@
     "not ie <= 11",
     "not op_mini all"
   ],
-  "heroku-run-build-script": true
+  "heroku-run-build-script": true,
+  "devDependencies": {
+    "@types/history": "^4.7.11",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^18.19.0",
+    "@types/react": "^17.0.80",
+    "@types/react-dom": "^17.0.25",
+    "@types/react-redux": "^7.1.33",
+    "@types/redux": "^3.6.0",
+    "@types/redux-thunk": "^2.1.0",
+    "typescript": "^4.9.5"
+  }
 }

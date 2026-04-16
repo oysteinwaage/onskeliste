@@ -7,7 +7,7 @@ import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import App from './App';
 import { configureStore, history } from './store/configureStore';
-window.__MUI_USE_NEXT_TYPOGRAPHY_VARIANTS__ = true;
+(window as any).__MUI_USE_NEXT_TYPOGRAPHY_VARIANTS__ = true;
 
 const store = configureStore();
 ReactDOM.render(

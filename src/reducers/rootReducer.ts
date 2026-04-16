@@ -7,7 +7,6 @@ const rootReducer = combineReducers({
   innloggetBruker,
   config,
   vennersLister,
-
 });
 
 export default rootReducer;

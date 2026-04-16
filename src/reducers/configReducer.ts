@@ -1,4 +1,6 @@
 import initialState from './initialState';
+import { ConfigState } from '../types';
+import { AppAction } from '../actions/actions';
 import {
     ENDRE_HEADER_TEKST,
     TOGGLE_VIS_OPPRETT_BRUKER,
@@ -10,7 +12,10 @@ import {
     SET_SLETT_KJOPTE_ONSKER_ENABLED
 } from '../actions/actions';
 
-export default function config(state = initialState.config, action) {
+export default function config(
+    state: ConfigState = initialState.config,
+    action: AppAction
+): ConfigState {
     switch (action.type) {
         case ENDRE_HEADER_TEKST:
             return Object.assign({}, state, {

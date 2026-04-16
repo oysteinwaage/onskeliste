@@ -1,4 +1,6 @@
 import initialState from './initialState';
+import { InnloggetBrukerState } from '../types';
+import { AppAction } from '../actions/actions';
 import {
     BRUKER_LOGGET_INN,
     MOTTA_BRUKERE,
@@ -10,7 +12,10 @@ import {
     OPPDATER_MINE_KJOEP
 } from '../actions/actions';
 
-export default function innloggetBruker(state = initialState.innloggetBruker, action) {
+export default function innloggetBruker(
+    state: InnloggetBrukerState = initialState.innloggetBruker,
+    action: AppAction
+): InnloggetBrukerState {
     switch (action.type) {
         case BRUKER_LOGGET_INN:
             return Object.assign({}, state, {
@@ -45,14 +50,14 @@ export default function innloggetBruker(state = initialState.innloggetBruker, ac
             };
         case RESET_ALL_DATA:
             return initialState.innloggetBruker;
-      case OPPDATER_MINE_KJOEP:
-        return {
-          ...state,
-          mineKjoep: {
-            ...state.mineKjoep,
-            [action.brukerUid]: action.onskerTatt
-          }
-        };
+        case OPPDATER_MINE_KJOEP:
+            return {
+                ...state,
+                mineKjoep: {
+                    ...state.mineKjoep,
+                    [action.brukerUid]: action.onskerTatt
+                }
+            };
         default:
             return state;
     }

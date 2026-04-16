@@ -1,4 +1,13 @@
-const initialState = {
+import { InnloggetBrukerState, ConfigState, VennersListerState } from '../types';
+
+interface InitialState {
+  innloggetBruker: InnloggetBrukerState;
+  brukere: Record<string, never>;
+  config: ConfigState;
+  vennersLister: VennersListerState;
+}
+
+const initialState: InitialState = {
   innloggetBruker: {
     email: '',
     navn: '',

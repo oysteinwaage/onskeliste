@@ -2,17 +2,29 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import { fetdhOnskelisteForUid } from '../Api';
+import { RootState, Bruker } from '../types';
+import { Dispatch } from 'redux';
 
-class ListeVelger extends Component {
-  constructor(props) {
+interface ListeVelgerState {
+  valgtVennUid: string;
+}
+
+interface ListeVelgerProps {
+  allUsers: Bruker[];
+  allowedListsForMe: string[];
+  onHentValgtVennsListe: (uid: string, venn: Bruker) => void;
+}
+
+class ListeVelger extends Component<ListeVelgerProps, ListeVelgerState> {
+  constructor(props: ListeVelgerProps) {
     super(props);
-    this.state = { valgtVennUid: '' }
+    this.state = { valgtVennUid: '' };
   }
 
-  handleChange = () => event => {
+  handleChange = () => (event: SelectChangeEvent<string>): void => {
     const valgtBrukerUid = event.target.value;
     if (valgtBrukerUid !== '') {
       this.setState({ valgtVennUid: event.target.value });
@@ -20,8 +32,8 @@ class ListeVelger extends Component {
     }
   };
 
-  finnValgtVennObjekt = (valgtUid) => {
-    return this.props.allUsers.filter(x => x.uid === valgtUid)
+  finnValgtVennObjekt = (valgtUid: string): Bruker[] => {
+    return this.props.allUsers.filter(x => x.uid === valgtUid);
   };
 
   render() {
@@ -54,13 +66,13 @@ class ListeVelger extends Component {
   }
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state: RootState) => ({
   allUsers: state.config.brukere,
   allowedListsForMe: state.vennersLister.allowedListsForMe,
 });
 
-const mapDispatchToProps = dispatch => ({
-  onHentValgtVennsListe: (uid, venn) => dispatch(fetdhOnskelisteForUid(uid, venn)),
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+  onHentValgtVennsListe: (uid: string, venn: Bruker) => dispatch(fetdhOnskelisteForUid(uid, venn) as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ListeVelger);
