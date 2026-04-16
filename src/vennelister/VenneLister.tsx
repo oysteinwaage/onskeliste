@@ -98,7 +98,19 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
       }, '').slice(0, -2);
       return 'Tatt av ' + (onske.antall === 1 ? erInnloggetBrukersUid(onske.kjoptAvListe![0].kjoptAv) ? 'deg' : onske.kjoptAvListe![0].kjoptAvNavn : tattAvNavn);
     }
-    return onske.url && (<a href={onske.url} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>);
+    const allUrls = onske.urls || (onske.url ? [onske.url] : []);
+    if (allUrls.length === 0) return null;
+    if (allUrls.length === 1) return <a href={allUrls[0]} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>;
+    return (
+      <span>
+        {allUrls.map((url, i) => (
+          <React.Fragment key={i}>
+            <a href={url} target="_blank" rel="noopener noreferrer">Lenke {i + 1}</a>
+            {i < allUrls.length - 1 && ' · '}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   }
 
   onMarkerOnskerSomKjopt = (): void => {

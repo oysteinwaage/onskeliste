@@ -9,11 +9,14 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import IconButton from '@mui/material/IconButton';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
   addWishToMyList,
   updateAntallOnMyList,
-  updateLinkOnWishOnMyList,
+  updateUrlsOnWishOnMyList,
   updateSizeOnMyList,
   updateWishTextOnMyList
 } from "../Api";
@@ -24,23 +27,23 @@ import { RootState, Onske } from '../types';
 import { Dispatch } from 'redux';
 
 interface DialogState {
-  url: string | null;
+  urls: string[] | null;
   text: string | null;
   size: string | null;
   antall: number | string;
   antallChanged: boolean;
-  urlChanged: boolean;
+  urlsChanged: boolean;
   sizeChanged: boolean;
   textChanged: boolean;
 }
 
 const initState: DialogState = {
-  url: null,
+  urls: null,
   text: null,
   size: null,
   antall: '',
   antallChanged: false,
-  urlChanged: false,
+  urlsChanged: false,
   sizeChanged: false,
   textChanged: false
 };
@@ -78,21 +81,48 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
     }
   };
 
+  getEffectiveUrls = (): string[] => {
+    const { openLenkeDialogOnske } = this.props;
+    const { urls } = this.state;
+    if (urls !== null) return urls;
+    return openLenkeDialogOnske.urls ||
+      (openLenkeDialogOnske.url ? [openLenkeDialogOnske.url] : []);
+  };
+
+  addUrl = (): void => {
+    const current = this.getEffectiveUrls();
+    this.setState({ urls: [...current, ''], urlsChanged: true });
+  };
+
+  removeUrl = (index: number): void => {
+    const current = this.getEffectiveUrls();
+    const updated = current.filter((_, i) => i !== index);
+    this.setState({ urls: updated, urlsChanged: true });
+  };
+
+  updateUrl = (index: number, value: string): void => {
+    const current = this.getEffectiveUrls();
+    const updated = current.map((u, i) => i === index ? value : u);
+    this.setState({ urls: updated, urlsChanged: true });
+  };
+
   saveChanges = (): void => {
     const { openLenkeDialogOnske, onToggleLenkeDialog } = this.props;
+    const effectiveUrls = this.getEffectiveUrls().filter(u => u.trim());
+    const cleanedUrls = effectiveUrls.map(u => opprettUrlAv(u) as string).filter(Boolean);
+
     if (!openLenkeDialogOnske.key) {
       addWishToMyList(
         {
           onskeTekst: this.state.text || '',
-          url: opprettUrlAv(this.state.url) as string | undefined,
+          urls: cleanedUrls.length > 0 ? cleanedUrls : undefined,
           antall: (this.state.antall as number) || 1,
           onskeSize: this.state.size as string | undefined
         }
       );
     } else {
-      // TODO undersøk om det heller kan være én funksjon som oppdaterer alle felter?
-      if (this.state.urlChanged) {
-        updateLinkOnWishOnMyList(this.state.url, openLenkeDialogOnske.key);
+      if (this.state.urlsChanged) {
+        updateUrlsOnWishOnMyList(effectiveUrls, openLenkeDialogOnske.key);
       }
       if (this.state.textChanged && this.state.text) {
         updateWishTextOnMyList(this.state.text, openLenkeDialogOnske.key);
@@ -114,12 +144,12 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
 
   render() {
     const { openLenkeDialog, onToggleLenkeDialog, openLenkeDialogOnske } = this.props;
-    const { text, url, urlChanged, antall, size } = this.state;
-    const defaultUrl = openLenkeDialogOnske && openLenkeDialogOnske.url;
+    const { text, size, antall } = this.state;
     const defaultText = openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst;
     const defaultSize = openLenkeDialogOnske && openLenkeDialogOnske.onskeSize;
     const defaultAntall = (openLenkeDialogOnske && openLenkeDialogOnske.antall) || '';
     const erNyttOnske = !(openLenkeDialogOnske && openLenkeDialogOnske.key);
+    const effectiveUrls = this.getEffectiveUrls();
 
     const isMobile = window.matchMedia('(max-width: 599px)').matches;
     return (
@@ -140,7 +170,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
           <DialogContent>
             <DialogContentText>
               {erNyttOnske ? "Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn jo bedre!"
-                : "Har du lagt inn en lenke og ønsker å fjerne den igjen, bare tøm feltet og trykk lagre."
+                : "Du kan legge til og fjerne lenker ved å bruke knappene under."
               }
             </DialogContentText>
             <TextField
@@ -182,18 +212,34 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
                 />
               </FormControl>
             </div>
-            <TextField
-              margin="dense"
-              id="link"
-              label="lenke - http://www.eksempel.com"
-              type="url"
-              value={url || (!urlChanged && defaultUrl) || ''}
-              fullWidth
-              onChange={(e) => {
-                this.setState({ url: e.target.value, urlChanged: true });
-              }}
-              onKeyDown={this.onKeyPressed}
-            />
+
+            <div style={{ marginTop: 12 }}>
+              {effectiveUrls.map((url, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <TextField
+                    margin="dense"
+                    label={effectiveUrls.length > 1 ? `Lenke ${index + 1}` : "Lenke - http://www.eksempel.com"}
+                    type="url"
+                    value={url}
+                    fullWidth
+                    onChange={(e) => this.updateUrl(index, e.target.value)}
+                    onKeyDown={this.onKeyPressed}
+                  />
+                  <IconButton size="small" onClick={() => this.removeUrl(index)} aria-label="Fjern lenke">
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              ))}
+              <Button
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={this.addUrl}
+                style={{ marginTop: 4 }}
+              >
+                Legg til lenke
+              </Button>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
               <Button onClick={() => this.cancel()} color="primary">
                 Avbryt

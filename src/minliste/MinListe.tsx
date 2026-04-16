@@ -65,9 +65,21 @@ class MinListe extends Component<MinListeProps> {
           <ListItemText
             className='wishText'
             primary={onske.onskeTekst}
-            secondary={onske.url &&
-              <a href={onske.url} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>
-            }
+            secondary={(() => {
+              const allUrls = onske.urls || (onske.url ? [onske.url] : []);
+              if (allUrls.length === 0) return null;
+              if (allUrls.length === 1) return <a href={allUrls[0]} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>;
+              return (
+                <span>
+                  {allUrls.map((url, i) => (
+                    <React.Fragment key={i}>
+                      <a href={url} target="_blank" rel="noopener noreferrer">Lenke {i + 1}</a>
+                      {i < allUrls.length - 1 && ' · '}
+                    </React.Fragment>
+                  ))}
+                </span>
+              );
+            })()}
           />
           <ListItemSecondaryAction className='wishIconMenu'>
             <Tooltip title='Endre ønske'>

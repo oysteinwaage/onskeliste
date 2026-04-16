@@ -10,6 +10,7 @@ export interface Onske {
   key: string;
   onskeTekst: string;
   url?: string;
+  urls?: string[];
   antall?: number;
   onskeSize?: string;
   favoritt?: boolean;

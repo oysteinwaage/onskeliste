@@ -53,6 +53,12 @@ export const updateLinkOnWishOnMyList = (newLink: string | null, wishId: string)
     wishRef.update({ url: opprettUrlAv(newLink) });
 };
 
+export const updateUrlsOnWishOnMyList = (urls: string[], wishId: string): void => {
+    const wishRef = myWishlistRef().child(wishId);
+    const cleaned = urls.map(u => opprettUrlAv(u) as string).filter(Boolean);
+    wishRef.update({ urls: cleaned.length > 0 ? cleaned : null, url: null });
+};
+
 export const updateWishTextOnMyList = (newText: string, wishId: string): void => {
     const wishRef = myWishlistRef().child(wishId);
     wishRef.update({ onskeTekst: newText });
