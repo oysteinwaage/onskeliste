@@ -3,6 +3,10 @@ import { connect } from 'react-redux';
 import { endreHeaderTekst } from '../actions/actions';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { updateMyMeasumentOnProfile } from '../Api';
 import { finnLabelForStrl, finnNavnFraUid, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
@@ -70,21 +74,25 @@ class Profil extends Component<ProfilProps, ProfilState> {
   render() {
     const { measurements, mineKjoep, alleBrukere } = this.props;
     let harNoenKjoep = false;
+    const ingenMaalFyltInn = !measurements || Object.values(measurements).every(v => !v);
     return (
       <div className="ProfilSide">
-        <div className="ProfilSide__standard-profil-box ProfilSide__mine-kjoep">
-          <h3 className="ProfilSide__mine-kjoep__overskrift">Mine kjøp</h3>
-          {Object.keys(mineKjoep).map(brukerUid => {
-            const kjoepListe = mineKjoep[brukerUid];
-            if (kjoepListe && kjoepListe.length > 0) {
-              harNoenKjoep = true;
-              return (
-                <div className="ProfilSide__mine-kjoep__liste" key={brukerUid}>
-                  <div
-                    className="ProfilSide__mine-kjoep__liste-eier">{finnNavnFraUid(brukerUid, alleBrukere)}</div>
-                  <div className="ProfilSide__mine-kjoep__onsker">
-                    {kjoepListe.map((kjoep, idx) => {
-                      return (
+        <Accordion defaultExpanded sx={{ width: '100%' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <h3 style={{ margin: 0 }}>Mine kjøp</h3>
+          </AccordionSummary>
+          <AccordionDetails>
+            {Object.keys(mineKjoep).map((brukerUid, colorIndex) => {
+              const kjoepListe = mineKjoep[brukerUid];
+              const groupColors = ['#e8f4f8', '#f0f4e8', '#f8f0e8', '#f4e8f4', '#e8f4f0', '#f8f4e0'];
+              const bgColor = groupColors[colorIndex % groupColors.length];
+              if (kjoepListe && kjoepListe.length > 0) {
+                harNoenKjoep = true;
+                return (
+                  <div className="ProfilSide__mine-kjoep__liste" key={brukerUid} style={{ backgroundColor: bgColor, borderRadius: 8, marginBottom: 8, padding: '8px 12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+                    <div className="ProfilSide__mine-kjoep__liste-eier">{finnNavnFraUid(brukerUid, alleBrukere)}</div>
+                    <div className="ProfilSide__mine-kjoep__onsker">
+                      {kjoepListe.map((kjoep, idx) => (
                         <div key={kjoep.onskeTekst + idx}>
                           <ListItem className="ProfilSide__mine-kjoep__liste-kjoep">
                             <ListItemText
@@ -96,22 +104,24 @@ class Profil extends Component<ProfilProps, ProfilState> {
                           {kjoepListe.length > (idx + 1) &&
                             <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            }
-            return null;
-          })}
-          {!harNoenKjoep && <span className="ProfilSide__mine-kjoep__ingen-kjoep">Du har ikke tatt noen ønsker enda</span>}
-        </div>
-        <div className="ProfilSide__standard-profil-box ProfilSide__egne-maal">
-          <h3>Mine generelle mål</h3>
-          <p className="ProfilSide__egne-maal__infotekst">Fyll inn de mål som passer for deg, de du lar
-            stå tomme vil ikke bli vist for andre</p>
-          {Object.values(measurementKeys).map(sizeKey => {
-            return (
+                );
+              }
+              return null;
+            })}
+            {!harNoenKjoep && <span className="ProfilSide__mine-kjoep__ingen-kjoep">Du har ikke tatt noen ønsker enda</span>}
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion defaultExpanded={ingenMaalFyltInn}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <h3 style={{ margin: 0 }}>Mine generelle mål</h3>
+          </AccordionSummary>
+          <AccordionDetails>
+            <p className="ProfilSide__egne-maal__infotekst">Fyll inn de mål som passer for deg, de du lar stå tomme vil ikke bli vist for andre</p>
+            {Object.values(measurementKeys).map(sizeKey => (
               <FormControl style={{ marginRight: 15 }} key={sizeKey}>
                 <TextField
                   margin="dense"
@@ -125,13 +135,18 @@ class Profil extends Component<ProfilProps, ProfilState> {
                   onBlur={(e) => this.lagreNyttMaal(sizeKey, e.target.value)}
                 />
               </FormControl>
-            );
-          })}
-        </div>
-        <div className="ProfilSide__standard-profil-box ProfilSide__viewers-list">
-          <h3>Hvem skal kunne se listen din?</h3>
-          <AddViewersToMyListComponent />
-        </div>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <h3 style={{ margin: 0 }}>Hvem skal kunne se listen din?</h3>
+          </AccordionSummary>
+          <AccordionDetails>
+            <AddViewersToMyListComponent />
+          </AccordionDetails>
+        </Accordion>
       </div>
     );
   }

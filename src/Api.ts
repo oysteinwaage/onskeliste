@@ -173,6 +173,15 @@ export const updateLastSeenVersion = (newVersion: number, userDbKey: string) => 
 export const updateMyMeasumentOnProfile = (userDbKey: string, newSize: string, sizeKey: string): void => {
     if (userDbKey) {
         usersRef.child(userDbKey).child("measurements").update({ [sizeKey]: newSize });
+    } else {
+        const uid = myUid();
+        if (!uid) return;
+        usersRef.orderByChild('uid').equalTo(uid).once('value', snapshot => {
+            if (snapshot.exists()) {
+                const key = Object.keys(snapshot.val())[0];
+                usersRef.child(key).child("measurements").update({ [sizeKey]: newSize });
+            }
+        });
     }
 };
 
