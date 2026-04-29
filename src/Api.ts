@@ -3,7 +3,9 @@ import {
     adminConfigRef,
     allowedViewsRef,
     auth,
+    ekstraKjoepRef,
     myAllowedViewersRef,
+    myEkstraKjoepRef,
     myUid,
     myWishlistRef,
     usersRef,
@@ -20,6 +22,7 @@ import {
     resettPassordMailSendt,
     setLastSeenVersion,
     oppdaterMineKjoep,
+    settMineEkstraKjoep,
     setSlettKjopteOnskerEnabled,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
@@ -112,6 +115,18 @@ export const fetchViewersToMyList = () => async (dispatch: Dispatch) => {
         });
 };
 
+export const addEkstraKjoepForBruker = (targetUid: string, kjoep: { onskeTekst: string; antall: number; url?: string }): void => {
+    const uid = myUid();
+    if (!uid) return;
+    ekstraKjoepRef(uid, targetUid).push().set(kjoep);
+};
+
+export const removeEkstraKjoepForBruker = (targetUid: string, kjoepKey: string): void => {
+    const uid = myUid();
+    if (!uid) return;
+    ekstraKjoepRef(uid, targetUid).child(kjoepKey).remove();
+};
+
 export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
     allowedViewsRef.once('value', res => {
         const allLists = res.val();
@@ -129,6 +144,18 @@ export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
                     .map(key => onsker[key]);
                 dispatch(oppdaterMineKjoep(key, onskerTatt));
             });
+        });
+
+        myEkstraKjoepRef().on('value', snapshot => {
+            const data = snapshot.val() || {};
+            const ekstraKjoep: Record<string, Onske[]> = {};
+            Object.keys(data).forEach(targetUid => {
+                const items = data[targetUid];
+                ekstraKjoep[targetUid] = items
+                    ? Object.keys(items).map(k => ({ ...items[k], key: k }))
+                    : [];
+            });
+            dispatch(settMineEkstraKjoep(ekstraKjoep));
         });
 
         return myLists;

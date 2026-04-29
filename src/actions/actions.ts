@@ -123,6 +123,14 @@ export function oppdaterMineKjoep(brukerUid: string, onskerTatt: Onske[]) {
   };
 }
 
+export const SETT_MINE_EKSTRA_KJOEP = 'SETT_MINE_EKSTRA_KJOEP';
+export function settMineEkstraKjoep(ekstraKjoep: Record<string, Onske[]>) {
+  return {
+    type: SETT_MINE_EKSTRA_KJOEP as typeof SETT_MINE_EKSTRA_KJOEP,
+    ekstraKjoep,
+  };
+}
+
 // Union type of all actions
 export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
@@ -139,4 +147,5 @@ export type AppAction =
   | ReturnType<typeof resettPassordMailSendt>
   | ReturnType<typeof lasterData>
   | ReturnType<typeof setSlettKjopteOnskerEnabled>
-  | ReturnType<typeof oppdaterMineKjoep>;
+  | ReturnType<typeof oppdaterMineKjoep>
+  | ReturnType<typeof settMineEkstraKjoep>;

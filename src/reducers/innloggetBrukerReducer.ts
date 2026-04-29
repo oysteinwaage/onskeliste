@@ -9,7 +9,8 @@ import {
     TOGGLE_LENKE_DIALOG,
     UPDATE_ALLOWED_VIEWERS,
     SET_LAST_SEEN_VERSION,
-    OPPDATER_MINE_KJOEP
+    OPPDATER_MINE_KJOEP,
+    SETT_MINE_EKSTRA_KJOEP
 } from '../actions/actions';
 
 export default function innloggetBruker(
@@ -57,6 +58,11 @@ export default function innloggetBruker(
                     ...state.mineKjoep,
                     [action.brukerUid]: action.onskerTatt
                 }
+            };
+        case SETT_MINE_EKSTRA_KJOEP:
+            return {
+                ...state,
+                mineEkstraKjoep: action.ekstraKjoep,
             };
         default:
             return state;

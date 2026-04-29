@@ -18,7 +18,8 @@ const initialState: InitialState = {
     lastSeenVersion: 0,
     userDbKey: '',
     measurements: {},
-    mineKjoep: {}
+    mineKjoep: {},
+    mineEkstraKjoep: {}
   },
   brukere: {},
   config: {

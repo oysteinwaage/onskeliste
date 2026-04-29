@@ -49,6 +49,7 @@ export interface InnloggetBrukerState {
   userDbKey: string;
   measurements: Record<string, string>;
   mineKjoep: Record<string, Onske[]>;
+  mineEkstraKjoep: Record<string, Onske[]>;
   erAdmin?: boolean;
 }
 

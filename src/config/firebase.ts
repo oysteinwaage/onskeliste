@@ -21,6 +21,10 @@ export const allowedViewersRef = (listId: string) => db.ref('allowedViewers/' + 
 export const myAllowedViewersRef = () => db.ref('allowedViewers/' + myUid());
 export const allowedViewsRef = databaseRef.child('allowedViewers');
 
+// Ekstra kjøp (purchases outside the wishlist)
+export const ekstraKjoepRef = (ownerUid: string, targetUid: string) => db.ref(`ekstraKjoep/${ownerUid}/${targetUid}`);
+export const myEkstraKjoepRef = () => db.ref(`ekstraKjoep/${myUid()}`);
+
 // Admin config
 export const adminConfigRef = db.ref('config');
 
