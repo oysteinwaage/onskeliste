@@ -127,6 +127,16 @@ export const removeEkstraKjoepForBruker = (targetUid: string, kjoepKey: string):
     ekstraKjoepRef(uid, targetUid).child(kjoepKey).remove();
 };
 
+export const updateEkstraKjoepPris = (targetUid: string, itemKey: string, pris: number | null): void => {
+    const uid = myUid();
+    if (!uid) return;
+    ekstraKjoepRef(uid, targetUid).child(itemKey).update({ pris: pris ?? null });
+};
+
+export const updateVanligKjoepPris = (targetUid: string, itemKey: string, pris: number | null): void => {
+    wishlistRef(targetUid).child(itemKey).update({ pris: pris ?? null });
+};
+
 export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
     allowedViewsRef.once('value', res => {
         const allLists = res.val();
@@ -136,13 +146,13 @@ export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
             }) : [];
         dispatch(receiveMyFriendLists(myLists));
 
-        myLists.forEach(key => {
-            wishlistRef(key).on("value", snapshot => {
+        myLists.forEach(brukerUid => {
+            wishlistRef(brukerUid).on("value", snapshot => {
                 const onsker = snapshot.val();
                 const onskerTatt = Object.keys(onsker || {})
-                    .filter(key => onsker[key].kjoptAvListe && onsker[key].kjoptAvListe.find((i: any) => i.kjoptAv === myUid()))
-                    .map(key => onsker[key]);
-                dispatch(oppdaterMineKjoep(key, onskerTatt));
+                    .filter(k => onsker[k].kjoptAvListe && onsker[k].kjoptAvListe.find((i: any) => i.kjoptAv === myUid()))
+                    .map(k => ({ ...onsker[k], key: k }));
+                dispatch(oppdaterMineKjoep(brukerUid, onskerTatt));
             });
         });
 
@@ -157,6 +167,7 @@ export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
             });
             dispatch(settMineEkstraKjoep(ekstraKjoep));
         });
+
 
         return myLists;
     });

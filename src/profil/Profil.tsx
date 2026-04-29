@@ -18,7 +18,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { updateMyMeasumentOnProfile, addEkstraKjoepForBruker, removeEkstraKjoepForBruker } from '../Api';
+import { updateMyMeasumentOnProfile, addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris } from '../Api';
 import { finnLabelForStrl, finnNavnFraUid, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
 import ListItem from "@mui/material/ListItem";
@@ -38,12 +38,13 @@ interface ProfilState {
   hansker: string | null;
   boksershorts: string | null;
   hatt: string | null;
-  [key: string]: string | null | boolean | number;
+  [key: string]: any;
   addKjoepDialogOpen: boolean;
   addKjoepForUid: string;
   addKjoepTekst: string;
   addKjoepAntall: number;
   addKjoepUrl: string;
+  prisInput: Record<string, string>;
 }
 
 interface ProfilProps {
@@ -73,6 +74,7 @@ class Profil extends Component<ProfilProps, ProfilState> {
       addKjoepTekst: '',
       addKjoepAntall: 1,
       addKjoepUrl: '',
+      prisInput: {},
     };
   }
 
@@ -173,11 +175,55 @@ class Profil extends Component<ProfilProps, ProfilState> {
     );
   };
 
+  getPrisValue = (brukerUid: string, itemKey: string, currentPris: number | undefined): string => {
+    const { prisInput } = this.state;
+    const editKey = `${brukerUid}_${itemKey}`;
+    if (editKey in prisInput) return prisInput[editKey];
+    return currentPris != null ? String(currentPris) : '';
+  };
+
+  onPrisChange = (brukerUid: string, itemKey: string, value: string): void => {
+    const editKey = `${brukerUid}_${itemKey}`;
+    this.setState(prev => ({ prisInput: { ...prev.prisInput, [editKey]: value } }));
+  };
+
+  onPrisBlur = (brukerUid: string, itemKey: string, erEkstraKjoep: boolean): void => {
+    const editKey = `${brukerUid}_${itemKey}`;
+    const value = this.state.prisInput[editKey];
+    if (value === undefined) return;
+    const pris = value.trim() === '' ? null : Number(value.replace(',', '.'));
+    if (erEkstraKjoep) {
+      updateEkstraKjoepPris(brukerUid, itemKey, pris);
+    } else {
+      updateVanligKjoepPris(brukerUid, itemKey, pris);
+    }
+    this.setState(prev => {
+      const { [editKey]: _, ...rest } = prev.prisInput;
+      return { prisInput: rest };
+    });
+  };
+
+  renderPrisInput = (brukerUid: string, itemKey: string, currentPris: number | undefined, erEkstraKjoep: boolean): React.ReactNode => (
+    <TextField
+      size="small"
+      label="Pris"
+      value={this.getPrisValue(brukerUid, itemKey, currentPris)}
+      onChange={(e) => this.onPrisChange(brukerUid, itemKey, e.target.value)}
+      onBlur={() => this.onPrisBlur(brukerUid, itemKey, erEkstraKjoep)}
+      inputProps={{ inputMode: 'numeric', style: { width: 60, padding: '4px 6px' } }}
+      InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
+      style={{ width: 90, flexShrink: 0, display: 'block' }}
+      variant="standard"
+    />
+  );
+
   renderPersonGruppe = (brukerUid: string, bgColor: string): React.ReactNode => {
     const { mineKjoep, mineEkstraKjoep, alleBrukere } = this.props;
     const kjoepListe = mineKjoep[brukerUid] || [];
     const ekstraListe = mineEkstraKjoep[brukerUid] || [];
     const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0;
+
+    const sum = [...kjoepListe, ...ekstraListe].reduce((acc, kjoep) => acc + (kjoep.pris || 0), 0);
 
     return harNoe && (
       <div
@@ -188,6 +234,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 3 }}>
             <div className="ProfilSide__mine-kjoep__liste-eier" style={{ textAlign: 'center', wordBreak: 'break-word', whiteSpace: 'normal', fontSize: '1rem' }}>{finnNavnFraUid(brukerUid, alleBrukere)}</div>
+            {sum > 0 && (
+              <div style={{ fontSize: '0.8rem', color: 'gray', marginTop: 4 }}>{sum} kr</div>
+            )}
             <IconButton
               size="small"
               onClick={() => this.openAddKjoepDialog(brukerUid)}
@@ -206,6 +255,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
                     secondary={this.visLenkeOgAntall(kjoep)}
                   />
                 </ListItem>
+                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -20 }}>
+                  {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, false)}
+                </div>
                 {(kjoepListe.length > idx + 1 || ekstraListe.length > 0) &&
                   <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
               </div>
@@ -227,6 +279,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </ListItem>
+                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -20 }}>
+                  {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, true)}
+                </div>
                 {ekstraListe.length > idx + 1 &&
                   <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
               </div>

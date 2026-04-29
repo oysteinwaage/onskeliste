@@ -15,6 +15,7 @@ export interface Onske {
   onskeSize?: string;
   favoritt?: boolean;
   kjoptAvListe?: KjoptAv[];
+  pris?: number;
 }
 
 export interface Bruker {

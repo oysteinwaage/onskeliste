@@ -25,6 +25,7 @@ export const allowedViewsRef = databaseRef.child('allowedViewers');
 export const ekstraKjoepRef = (ownerUid: string, targetUid: string) => db.ref(`ekstraKjoep/${ownerUid}/${targetUid}`);
 export const myEkstraKjoepRef = () => db.ref(`ekstraKjoep/${myUid()}`);
 
+
 // Admin config
 export const adminConfigRef = db.ref('config');
 

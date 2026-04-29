@@ -131,6 +131,7 @@ export function settMineEkstraKjoep(ekstraKjoep: Record<string, Onske[]>) {
   };
 }
 
+
 // Union type of all actions
 export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
