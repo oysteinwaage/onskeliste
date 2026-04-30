@@ -16,6 +16,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Input from '@mui/material/Input';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
 import Slide from '@mui/material/Slide';
 import StarIcon from '@mui/icons-material/Star';
 import { TransitionProps } from '@mui/material/transitions';
@@ -27,7 +28,6 @@ import {
   alleOnskerTatt, antallAlleredeKjoptAvMeg,
   erInnloggetBrukersUid, finnLabelForStrl,
   inneholderInnloggetBrukersUid, kjoptListe,
-  myName,
   myWishlistId,
   totalValgt
 } from '../utils/util';
@@ -45,9 +45,12 @@ interface VenneListerLocalState {
   dialogOpen: boolean;
   valgtOnske: Partial<Onske>;
   antallValgt: number;
+  prisDialogOpen: boolean;
+  prisInput: string;
+  prisPerStk: number | null;
 }
 
-const initLocalState: VenneListerLocalState = { dialogOpen: false, valgtOnske: {}, antallValgt: 0 };
+const initLocalState: VenneListerLocalState = { dialogOpen: false, valgtOnske: {}, antallValgt: 0, prisDialogOpen: false, prisInput: '', prisPerStk: null };
 
 interface VenneListerProps {
   valgtVenn: Partial<Bruker>;
@@ -70,22 +73,34 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
     onske.antall === totalValgt(onske) ? inneholderInnloggetBrukersUid(onske.kjoptAvListe) ? 'onskeKjopt kjoptAvDeg' : 'onskeKjopt' : '';
   onskeErFavoritt = (onske: Onske): string => onske.favoritt ? ' fjernPaddingVenstre' : '';
 
-  onMarkerOnskeSomKjopt = (onske: Onske) => (event: React.ChangeEvent<HTMLInputElement>): void => {
+  onMarkerOnskeSomKjopt = (onske: Onske) => (_event: React.ChangeEvent<HTMLInputElement>): void => {
     const { valgtVenn } = this.props;
 
     if (onske.antall && onske.antall > 1) {
-      this.setState({ dialogOpen: true, valgtOnske: onske, antallValgt: antallAlleredeKjoptAvMeg(onske) });
+      const currentAntall = antallAlleredeKjoptAvMeg(onske);
+      const currentPris = onske.pris;
+      const prisPerStk = (currentPris != null && currentAntall > 0) ? currentPris / currentAntall : null;
+      const prisInput = currentPris != null && currentAntall > 0 ? String(currentPris) : '';
+      this.setState({ dialogOpen: true, valgtOnske: onske, antallValgt: currentAntall, prisInput, prisPerStk });
     } else {
-      const newValues = alleOnskerTatt(onske) ? { kjoptAvListe: [] } :
-        {
-          kjoptAvListe: [{
-            antallKjopt: 1,
-            kjoptAv: event.target.checked ? myWishlistId() : '',
-            kjoptAvNavn: event.target.checked ? myName() || '' : '',
-          }]
-        };
-      updateWishOnListWith(newValues, onske, valgtVenn.uid as string);
+      if (alleOnskerTatt(onske)) {
+        updateWishOnListWith({ kjoptAvListe: [], pris: null as any }, onske, valgtVenn.uid as string);
+      } else {
+        this.setState({ prisDialogOpen: true, valgtOnske: onske, prisInput: '' });
+      }
     }
+  };
+
+  saveSingleKjoep = (): void => {
+    const { valgtVenn, mittNavn } = this.props;
+    const { valgtOnske, prisInput } = this.state;
+    const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
+    const newValues: Partial<Onske> = {
+      kjoptAvListe: [{ antallKjopt: 1, kjoptAv: myWishlistId(), kjoptAvNavn: mittNavn }],
+      ...(parsedPris !== undefined && !isNaN(parsedPris) ? { pris: parsedPris } : {}),
+    };
+    updateWishOnListWith(newValues, valgtOnske as Onske, valgtVenn.uid as string);
+    this.resetLocalState();
   };
 
   lenkeEllerKjoptAv(onske: Onske): React.ReactNode {
@@ -115,14 +130,18 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 
   onMarkerOnskerSomKjopt = (): void => {
     const { valgtVenn, mittNavn } = this.props;
-    const { antallValgt, valgtOnske } = this.state;
+    const { antallValgt, valgtOnske, prisInput } = this.state;
 
     const newKjoptAvListe = [...((valgtOnske.kjoptAvListe || []).filter(vo => vo.kjoptAv !== myWishlistId()))];
 
     if (antallValgt > 0) {
       newKjoptAvListe.push({ kjoptAv: myWishlistId(), antallKjopt: antallValgt, kjoptAvNavn: mittNavn });
     }
-    const newValues = { kjoptAvListe: newKjoptAvListe };
+    const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
+    const newValues: Partial<Onske> = {
+      kjoptAvListe: newKjoptAvListe,
+      ...(parsedPris !== undefined && !isNaN(parsedPris) ? { pris: parsedPris } : {}),
+    };
 
     updateWishOnListWith(newValues, valgtOnske as Onske, valgtVenn.uid as string);
     this.resetLocalState();
@@ -193,7 +212,14 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
             labelId="antall-dialog-select-label"
             id="dialog-select"
             value={antallValgt}
-            onChange={(e: SelectChangeEvent<number>) => this.setState({ antallValgt: e.target.value as number })}
+            onChange={(e: SelectChangeEvent<number>) => {
+              const newAntall = e.target.value as number;
+              const { prisPerStk } = this.state;
+              const newPris = prisPerStk != null && newAntall > 0
+                ? String(Math.round(prisPerStk * newAntall))
+                : this.state.prisInput;
+              this.setState({ antallValgt: newAntall, prisInput: newPris });
+            }}
             input={<Input />}
           >
             <MenuItem value={0}>{0}</MenuItem>
@@ -201,10 +227,57 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
               <MenuItem key={nr + 1} value={nr + 1}>{nr + 1}</MenuItem>
             )}
           </Select>
+          <div style={{ marginTop: 16 }}>
+            <TextField
+              label={antallValgt > 1 ? 'Totalpris (valgfritt)' : 'Pris (valgfritt)'}
+              value={this.state.prisInput}
+              inputProps={{ inputMode: 'numeric' }}
+              InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9,.]/g, '');
+                const { antallValgt } = this.state;
+                const parsed = Number(val.replace(',', '.'));
+                const prisPerStk = val && !isNaN(parsed) && antallValgt > 0 ? parsed / antallValgt : null;
+                this.setState({ prisInput: val, prisPerStk });
+              }}
+              variant="standard"
+            />
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={this.resetLocalState}>Avbryt</Button>
           <Button onClick={this.onMarkerOnskerSomKjopt}>Lagre</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  prisDialog = (): React.ReactNode => {
+    const { prisDialogOpen, valgtOnske, prisInput } = this.state;
+    return (
+      <Dialog open={prisDialogOpen} onClose={this.resetLocalState} TransitionComponent={Transition}>
+        <DialogTitle>
+          Kjøpt: <span className="onskeTekstDialog">{valgtOnske.onskeTekst}</span>
+          <div style={{ fontSize: '0.75rem', fontStyle: 'italic', fontWeight: 'normal', marginTop: 4, color: 'gray' }}>
+            På den nye Mine Kjøp siden din kan du nå i tillegg til å se alle kjøpene dine også se hvor mye du har brukt pr person og totalt
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            label="Pris (valgfritt)"
+            value={prisInput}
+            inputProps={{ inputMode: 'numeric' }}
+            InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
+            onChange={(e) => this.setState({ prisInput: e.target.value.replace(/[^0-9,.]/g, '') })}
+            onKeyDown={(e) => { if (e.key === 'Enter') this.saveSingleKjoep(); }}
+            variant="standard"
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={this.resetLocalState}>Avbryt</Button>
+          <Button onClick={this.saveSingleKjoep} variant="contained">Lagre</Button>
         </DialogActions>
       </Dialog>
     );
@@ -242,6 +315,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
           </div>
         }
         {this.state.dialogOpen && this.velgeAntallDialog()}
+        {this.state.prisDialogOpen && this.prisDialog()}
       </div>
     );
   }

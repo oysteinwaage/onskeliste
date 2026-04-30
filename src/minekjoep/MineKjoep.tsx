@@ -18,7 +18,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris } from '../Api';
-import { finnNavnFraUid } from '../utils/util';
+import { finnNavnFraUid, antallAlleredeKjoptAvMeg } from '../utils/util';
 import { RootState, Bruker, Onske } from '../types';
 import { Dispatch } from 'redux';
 
@@ -112,13 +112,16 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     });
   };
 
-  visLenkeOgAntall = (kjoep: Onske): React.ReactNode => (
-    <>
-      <span>Antall: {kjoep.antall}</span>
-      {kjoep.url && ' - '}
-      {kjoep.url && <a href={kjoep.url} target="_blank" rel="noopener noreferrer">Lenke</a>}
-    </>
-  );
+  visLenkeOgAntall = (kjoep: Onske): React.ReactNode => {
+    const antallKjopt = antallAlleredeKjoptAvMeg(kjoep) || kjoep.antall || 1;
+    return (
+      <>
+        <span>Antall: {antallKjopt}</span>
+        {kjoep.url && ' - '}
+        {kjoep.url && <a href={kjoep.url} target="_blank" rel="noopener noreferrer">Lenke</a>}
+      </>
+    );
+  };
 
   renderPrisInput = (brukerUid: string, itemKey: string, currentPris: number | undefined, erEkstraKjoep: boolean, antall?: number): React.ReactNode => (
     <TextField
@@ -232,7 +235,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                     secondary={this.visLenkeOgAntall(kjoep)}
                   />
                 </ListItem>
-                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -20 }}>
+                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
                   {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, false, kjoep.antall)}
                 </div>
                 {(kjoepListe.length > idx + 1 || ekstraListe.length > 0) &&
@@ -256,7 +259,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </ListItem>
-                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -20 }}>
+                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
                   {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, true, kjoep.antall)}
                 </div>
                 {ekstraListe.length > idx + 1 &&
@@ -279,10 +282,30 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
       (mineEkstraKjoep[uid] && mineEkstraKjoep[uid].length > 0)
     );
 
+    const totalSum = allUids.reduce((total, uid) => {
+      const kjoepListe = mineKjoep[uid] || [];
+      const ekstraListe = mineEkstraKjoep[uid] || [];
+      return total + [...kjoepListe, ...ekstraListe].reduce((acc, kjoep) => acc + (kjoep.pris || 0), 0);
+    }, 0);
+
     return (
-      <div className="ProfilSide" style={{ padding: '16px' }}>
+      <div className="ProfilSide" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '0.9rem', color: 'gray', fontStyle: 'italic', marginBottom: 12 }}>
+          Her har du oversikt over alle ønsker du har tatt fra venners lister, du kan også legge til ting du har kjøpt/skaffet utenfor ønskelisten til folk og i tillegg få oversikt over hvor mye du har brukt pr person og totalt
+        </div>
+        {totalSum > 0 && (
+          <hr style={{ width: '100%', border: 'none', borderTop: '1px solid rgba(0,0,0,0.12)', margin: '0 0 12px 0' }} />
+        )}
+        {totalSum > 0 && (
+          <div style={{ textAlign: 'center', fontWeight: 500, marginBottom: 12 }}>
+            Totalsum: {totalSum} kr
+          </div>
+        )}
+        {totalSum > 0 && (
+          <hr style={{ width: '100%', border: 'none', borderTop: '1px solid rgba(0,0,0,0.12)', margin: '0 0 12px 0' }} />
+        )}
         {allowedListsForMe.length > 0 && (
-          <FormControl size="small" style={{ marginBottom: 12, minWidth: 220 }}>
+          <FormControl size="small" style={{ marginBottom: 12, minWidth: 220, alignSelf: 'center' }}>
             <Select
               displayEmpty
               value=""
