@@ -6,6 +6,7 @@ import firebase from "firebase/compat/app";
 import Login from './login/Login';
 import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
+import MineKjoep from './minekjoep/MineKjoep';
 import Profil from './profil/Profil';
 import Admin from './admin/Admin';
 import AppBar from './components/AppBarComponent';
@@ -68,6 +69,7 @@ class App extends Component<AppProps> {
             <Route exact path="/" component={Login} />
             <Route path="/minliste" component={MinListe} />
             <Route path="/vennelister" component={Vennelister} />
+            <Route path="/minekjoep" component={MineKjoep} />
             <Route path="/profil" component={Profil} />
             <Route path="/admin" component={Admin} />
           </Switch>

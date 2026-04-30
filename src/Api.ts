@@ -115,7 +115,7 @@ export const fetchViewersToMyList = () => async (dispatch: Dispatch) => {
         });
 };
 
-export const addEkstraKjoepForBruker = (targetUid: string, kjoep: { onskeTekst: string; antall: number; url?: string }): void => {
+export const addEkstraKjoepForBruker = (targetUid: string, kjoep: { onskeTekst: string; antall: number; url?: string; pris?: number }): void => {
     const uid = myUid();
     if (!uid) return;
     ekstraKjoepRef(uid, targetUid).push().set(kjoep);

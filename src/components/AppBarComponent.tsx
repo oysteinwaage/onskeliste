@@ -10,6 +10,7 @@ import GiftIcon from '@mui/icons-material/CardGiftcard';
 import ProfileIcon from '@mui/icons-material/AccountCircleOutlined';
 import Exit from '@mui/icons-material/ExitToApp';
 import ListeIcon from '@mui/icons-material/FormatListBulleted';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AdminIcon from '@mui/icons-material/AdminPanelSettings';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -44,6 +45,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
       case 'vennelister':
       case 'minliste':
       case 'profil':
+      case 'minekjoep':
       case 'admin':
         this.props.onAapneNySide(valg);
         break;
@@ -87,6 +89,13 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                   <div><GiftIcon /></div>
                 </ListItemIcon>
                 <ListItemText primary='Venners lister' />
+              </ListItem>
+              <Divider />
+              <ListItem button onClick={() => this.menyValgTrykket('minekjoep')} key='minekjoep'>
+                <ListItemIcon>
+                  <div><ShoppingCartIcon /></div>
+                </ListItemIcon>
+                <ListItemText primary='Mine kjøp' />
               </ListItem>
               <Divider />
               <ListItem button onClick={() => this.menyValgTrykket('profil')} key='profil'>
