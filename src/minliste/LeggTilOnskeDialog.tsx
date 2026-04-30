@@ -112,14 +112,12 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
     const cleanedUrls = effectiveUrls.map(u => opprettUrlAv(u) as string).filter(Boolean);
 
     if (!openLenkeDialogOnske.key) {
-      addWishToMyList(
-        {
-          onskeTekst: this.state.text || '',
-          urls: cleanedUrls.length > 0 ? cleanedUrls : undefined,
-          antall: (this.state.antall as number) || 1,
-          onskeSize: this.state.size as string | undefined
-        }
-      );
+      addWishToMyList({
+        onskeTekst: this.state.text || '',
+        ...(cleanedUrls.length > 0 ? { urls: cleanedUrls } : {}),
+        antall: (this.state.antall as number) || 1,
+        onskeSize: this.state.size as string | undefined
+      });
     } else {
       if (this.state.urlsChanged) {
         updateUrlsOnWishOnMyList(effectiveUrls, openLenkeDialogOnske.key);
