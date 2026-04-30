@@ -226,11 +226,11 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
               <div style={{ fontSize: '0.8rem', color: 'gray', marginTop: 4 }}>{sum} kr</div>
             )}
             <IconButton
-              size="small"
               onClick={() => this.openAddKjoepDialog(brukerUid)}
               aria-label={`Legg til kjøp for ${finnNavnFraUid(brukerUid, alleBrukere)}`}
+              style={{ marginTop: 4, border: '1px solid rgba(0,0,0,0.23)', borderRadius: '50%', padding: 6 }}
             >
-              <AddIcon fontSize="small" />
+              <AddIcon />
             </IconButton>
           </div>
           <div style={{ flex: 7, minWidth: 0 }} className="ProfilSide__mine-kjoep__onsker">
