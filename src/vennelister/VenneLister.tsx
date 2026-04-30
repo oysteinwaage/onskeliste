@@ -31,7 +31,7 @@ import {
   myWishlistId,
   totalValgt
 } from '../utils/util';
-import { RootState, Onske, Bruker } from '../types';
+import { RootState, Onske, Bruker, KjoptAv } from '../types';
 import { Dispatch } from 'redux';
 
 const Transition = React.forwardRef(function Transition(
@@ -78,13 +78,14 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 
     if (onske.antall && onske.antall > 1) {
       const currentAntall = antallAlleredeKjoptAvMeg(onske);
-      const currentPris = onske.pris;
+      const myEntry = (onske.kjoptAvListe || []).find(e => erInnloggetBrukersUid(e.kjoptAv));
+      const currentPris = myEntry?.pris ?? null;
       const prisPerStk = (currentPris != null && currentAntall > 0) ? currentPris / currentAntall : null;
       const prisInput = currentPris != null && currentAntall > 0 ? String(currentPris) : '';
       this.setState({ dialogOpen: true, valgtOnske: onske, antallValgt: currentAntall, prisInput, prisPerStk });
     } else {
       if (alleOnskerTatt(onske)) {
-        updateWishOnListWith({ kjoptAvListe: [], pris: null as any }, onske, valgtVenn.uid as string);
+        updateWishOnListWith({ kjoptAvListe: [] }, onske, valgtVenn.uid as string);
       } else {
         this.setState({ prisDialogOpen: true, valgtOnske: onske, prisInput: '' });
       }
@@ -95,11 +96,9 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
     const { valgtVenn, mittNavn } = this.props;
     const { valgtOnske, prisInput } = this.state;
     const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
-    const newValues: Partial<Onske> = {
-      kjoptAvListe: [{ antallKjopt: 1, kjoptAv: myWishlistId(), kjoptAvNavn: mittNavn }],
-      ...(parsedPris !== undefined && !isNaN(parsedPris) ? { pris: parsedPris } : {}),
-    };
-    updateWishOnListWith(newValues, valgtOnske as Onske, valgtVenn.uid as string);
+    const entry: KjoptAv = { antallKjopt: 1, kjoptAv: myWishlistId(), kjoptAvNavn: mittNavn };
+    if (parsedPris !== undefined && !isNaN(parsedPris)) entry.pris = parsedPris;
+    updateWishOnListWith({ kjoptAvListe: [entry] }, valgtOnske as Onske, valgtVenn.uid as string);
     this.resetLocalState();
   };
 
@@ -134,16 +133,14 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 
     const newKjoptAvListe = [...((valgtOnske.kjoptAvListe || []).filter(vo => vo.kjoptAv !== myWishlistId()))];
 
-    if (antallValgt > 0) {
-      newKjoptAvListe.push({ kjoptAv: myWishlistId(), antallKjopt: antallValgt, kjoptAvNavn: mittNavn });
-    }
     const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
-    const newValues: Partial<Onske> = {
-      kjoptAvListe: newKjoptAvListe,
-      ...(parsedPris !== undefined && !isNaN(parsedPris) ? { pris: parsedPris } : {}),
-    };
+    if (antallValgt > 0) {
+      const entry: KjoptAv = { kjoptAv: myWishlistId(), antallKjopt: antallValgt, kjoptAvNavn: mittNavn };
+      if (parsedPris !== undefined && !isNaN(parsedPris)) entry.pris = parsedPris;
+      newKjoptAvListe.push(entry);
+    }
 
-    updateWishOnListWith(newValues, valgtOnske as Onske, valgtVenn.uid as string);
+    updateWishOnListWith({ kjoptAvListe: newKjoptAvListe }, valgtOnske as Onske, valgtVenn.uid as string);
     this.resetLocalState();
   };
 

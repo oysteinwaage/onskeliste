@@ -4,6 +4,7 @@ export interface KjoptAv {
   kjoptAv: string;
   kjoptAvNavn: string;
   antallKjopt: number;
+  pris?: number;
 }
 
 export interface Onske {

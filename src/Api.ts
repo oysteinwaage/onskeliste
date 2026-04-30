@@ -133,8 +133,13 @@ export const updateEkstraKjoepPris = (targetUid: string, itemKey: string, pris: 
     ekstraKjoepRef(uid, targetUid).child(itemKey).update({ pris: pris ?? null });
 };
 
-export const updateVanligKjoepPris = (targetUid: string, itemKey: string, pris: number | null): void => {
-    wishlistRef(targetUid).child(itemKey).update({ pris: pris ?? null });
+export const updateVanligKjoepPris = (targetUid: string, wish: Onske, pris: number | null): void => {
+    const uid = myUid();
+    if (!uid) return;
+    const updatedKjoptAvListe = (wish.kjoptAvListe || []).map(entry =>
+        entry.kjoptAv === uid ? { ...entry, pris: pris !== null ? pris : undefined } : entry
+    );
+    wishlistRef(targetUid).child(wish.key).update({ kjoptAvListe: updatedKjoptAvListe });
 };
 
 export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {

@@ -18,7 +18,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris } from '../Api';
-import { finnNavnFraUid, antallAlleredeKjoptAvMeg } from '../utils/util';
+import { finnNavnFraUid, antallAlleredeKjoptAvMeg, myWishlistId } from '../utils/util';
 import { RootState, Bruker, Onske } from '../types';
 import { Dispatch } from 'redux';
 
@@ -96,15 +96,15 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     this.setState(prev => ({ prisInput: { ...prev.prisInput, [editKey]: this.filtrerPris(value) } }));
   };
 
-  onPrisBlur = (brukerUid: string, itemKey: string, erEkstraKjoep: boolean): void => {
-    const editKey = `${brukerUid}_${itemKey}`;
+  onPrisBlur = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean): void => {
+    const editKey = `${brukerUid}_${kjoep.key}`;
     const value = this.state.prisInput[editKey];
     if (value === undefined) return;
     const pris = value.trim() === '' ? null : Number(value.replace(',', '.'));
     if (erEkstraKjoep) {
-      updateEkstraKjoepPris(brukerUid, itemKey, pris);
+      updateEkstraKjoepPris(brukerUid, kjoep.key, pris);
     } else {
-      updateVanligKjoepPris(brukerUid, itemKey, pris);
+      updateVanligKjoepPris(brukerUid, kjoep, pris);
     }
     this.setState(prev => {
       const { [editKey]: _, ...rest } = prev.prisInput;
@@ -123,19 +123,25 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     );
   };
 
-  renderPrisInput = (brukerUid: string, itemKey: string, currentPris: number | undefined, erEkstraKjoep: boolean, antall?: number): React.ReactNode => (
-    <TextField
-      size="small"
-      label={antall && antall > 1 ? 'Totalpris' : 'Pris'}
-      value={this.getPrisValue(brukerUid, itemKey, currentPris)}
-      onChange={(e) => this.onPrisChange(brukerUid, itemKey, e.target.value)}
-      onBlur={() => this.onPrisBlur(brukerUid, itemKey, erEkstraKjoep)}
-      inputProps={{ inputMode: 'numeric', style: { width: 60, padding: '4px 6px' } }}
-      InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
-      style={{ width: 90, flexShrink: 0, display: 'block' }}
-      variant="standard"
-    />
-  );
+  renderPrisInput = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean): React.ReactNode => {
+    const currentPris = erEkstraKjoep
+      ? kjoep.pris
+      : (kjoep.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris;
+    const antall = erEkstraKjoep ? kjoep.antall : antallAlleredeKjoptAvMeg(kjoep);
+    return (
+      <TextField
+        size="small"
+        label={antall && antall > 1 ? 'Totalpris' : 'Pris'}
+        value={this.getPrisValue(brukerUid, kjoep.key, currentPris)}
+        onChange={(e) => this.onPrisChange(brukerUid, kjoep.key, e.target.value)}
+        onBlur={() => this.onPrisBlur(brukerUid, kjoep, erEkstraKjoep)}
+        inputProps={{ inputMode: 'numeric', style: { width: 60, padding: '4px 6px' } }}
+        InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
+        style={{ width: 90, flexShrink: 0, display: 'block' }}
+        variant="standard"
+      />
+    );
+  };
 
   renderAddKjoepDialog = (): React.ReactNode => {
     const { alleBrukere } = this.props;
@@ -201,7 +207,9 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     const ekstraListe = mineEkstraKjoep[brukerUid] || [];
     const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0;
 
-    const sum = [...kjoepListe, ...ekstraListe].reduce((acc, kjoep) => acc + (kjoep.pris || 0), 0);
+    const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
+    const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
+    const sum = kjoepSum + ekstraSum;
 
     return harNoe && (
       <div
@@ -236,7 +244,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                   />
                 </ListItem>
                 <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
-                  {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, false, kjoep.antall)}
+                  {this.renderPrisInput(brukerUid, kjoep, false)}
                 </div>
                 {(kjoepListe.length > idx + 1 || ekstraListe.length > 0) &&
                   <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
@@ -260,7 +268,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                   </IconButton>
                 </ListItem>
                 <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
-                  {this.renderPrisInput(brukerUid, kjoep.key, kjoep.pris, true, kjoep.antall)}
+                  {this.renderPrisInput(brukerUid, kjoep, true)}
                 </div>
                 {ekstraListe.length > idx + 1 &&
                   <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
@@ -285,7 +293,9 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     const totalSum = allUids.reduce((total, uid) => {
       const kjoepListe = mineKjoep[uid] || [];
       const ekstraListe = mineEkstraKjoep[uid] || [];
-      return total + [...kjoepListe, ...ekstraListe].reduce((acc, kjoep) => acc + (kjoep.pris || 0), 0);
+      const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
+      const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
+      return total + kjoepSum + ekstraSum;
     }, 0);
 
     return (
