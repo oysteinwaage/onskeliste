@@ -6,17 +6,13 @@ export interface PrisjaktProdukt {
   pris?: number;
 }
 
-const CORS_PROXY = 'https://corsproxy.io/?';
-const PRISJAKT_SUGGESTIONS_URL = 'https://www.prisjakt.no/api/search-suggestions';
-
 export async function sokPrisjakt(sokeord: string): Promise<PrisjaktProdukt[]> {
   if (!sokeord || sokeord.trim().length < 2) return [];
 
   try {
-    const prisjaktUrl = `${PRISJAKT_SUGGESTIONS_URL}?q=${encodeURIComponent(sokeord.trim())}`;
-    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(prisjaktUrl)}`, {
-      headers: { 'Accept': 'application/json' },
-    });
+    const response = await fetch(
+      `/api/prisjakt-suggestions?q=${encodeURIComponent(sokeord.trim())}`
+    );
     if (!response.ok) return [];
 
     const data = await response.json();

@@ -11,7 +11,7 @@ import { updateLastSeenVersion } from '../Api';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
 
-const currentVersion = 2.6;
+const currentVersion = 3.0;
 
 interface ChangeEntry {
   version: number;
@@ -69,6 +69,14 @@ const changes: ChangeEntry[] = [
     releaseDate: "27.11.2021",
     changes: [
       "Mine kjøp: Her blir det listet opp alle ønsker du har krysset ut fra noen andres ønskelister. Denne oversikten finner du inne på din Profil side. Dette er en første versjon og vil utvides etterhvert med flere funksjoner."
+    ]
+  },
+  {
+    version: 3.0,
+    releaseDate: "02.05.2025",
+    changes: [
+      "Mine kjøp: Har fått eget menyvalg og egen side. I tillegg kan du nå registrere egne kjøp til folk som ikke er på deres ønskeliste, og registrere pris på dine kjøp for god oversikt over dine utgifter både pr person og totalt 💰",
+      "Prisjakt-søk: Når du legger til et nytt ønske kan du nå søke direkte etter produkter fra prisjakt.no i beskrivelses-feltet. Forslag vises med bilde og pris, og lenke til prisjakt legges automatisk til når du velger et produkt",
     ]
   }
 ];
