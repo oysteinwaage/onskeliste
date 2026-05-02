@@ -15,6 +15,7 @@ import AdminIcon from '@mui/icons-material/AdminPanelSettings';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
@@ -75,54 +76,56 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
           </Typography>
         </Toolbar>
         <Drawer open={this.state.drawerOpen} onClose={() => this.setState({ drawerOpen: false })}>
-          <div style={{ width: 250 }}>
+          <div style={{ width: 250, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <List>
-              <ListItem button onClick={() => this.menyValgTrykket('minliste')} key='minliste'>
-                <ListItemIcon>
-                  <div><ListeIcon /></div>
-                </ListItemIcon>
-                <ListItemText primary='Min ønskeliste' />
+              <ListItem key='minliste' disablePadding>
+                <ListItemButton onClick={() => this.menyValgTrykket('minliste')}>
+                  <ListItemIcon><ListeIcon /></ListItemIcon>
+                  <ListItemText primary='Min ønskeliste' />
+                </ListItemButton>
               </ListItem>
               <Divider />
-              <ListItem button onClick={() => this.menyValgTrykket('vennelister')} key='vennelister'>
-                <ListItemIcon>
-                  <div><GiftIcon /></div>
-                </ListItemIcon>
-                <ListItemText primary='Venners lister' />
+              <ListItem key='vennelister' disablePadding>
+                <ListItemButton onClick={() => this.menyValgTrykket('vennelister')}>
+                  <ListItemIcon><GiftIcon /></ListItemIcon>
+                  <ListItemText primary='Venners lister' />
+                </ListItemButton>
               </ListItem>
               <Divider />
-              <ListItem button onClick={() => this.menyValgTrykket('minekjoep')} key='minekjoep'>
-                <ListItemIcon>
-                  <div><ShoppingCartIcon /></div>
-                </ListItemIcon>
-                <ListItemText primary='Mine kjøp' />
+              <ListItem key='minekjoep' disablePadding>
+                <ListItemButton onClick={() => this.menyValgTrykket('minekjoep')}>
+                  <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
+                  <ListItemText primary='Mine kjøp' />
+                </ListItemButton>
               </ListItem>
               <Divider />
-              <ListItem button onClick={() => this.menyValgTrykket('profil')} key='profil'>
-                <ListItemIcon>
-                  <div><ProfileIcon /></div>
-                </ListItemIcon>
-                <ListItemText primary='Profil' />
+              <ListItem key='profil' disablePadding>
+                <ListItemButton onClick={() => this.menyValgTrykket('profil')}>
+                  <ListItemIcon><ProfileIcon /></ListItemIcon>
+                  <ListItemText primary='Profil' />
+                </ListItemButton>
               </ListItem>
+              <Divider />
+            </List>
+            <List style={{ marginTop: 'auto' }}>
               <Divider />
               {erAdmin && (
                 <>
-                  <ListItem button onClick={() => this.menyValgTrykket('admin')} key='admin'>
-                    <ListItemIcon>
-                      <div><AdminIcon /></div>
-                    </ListItemIcon>
-                    <ListItemText primary='Admin' />
+                  <ListItem key='admin' disablePadding>
+                    <ListItemButton onClick={() => this.menyValgTrykket('admin')}>
+                      <ListItemIcon><AdminIcon /></ListItemIcon>
+                      <ListItemText primary='Admin' />
+                    </ListItemButton>
                   </ListItem>
                   <Divider />
                 </>
               )}
-              <ListItem button onClick={() => this.menyValgTrykket('loggUt')} key='loggUt'>
-                <ListItemIcon>
-                  <div><Exit /></div>
-                </ListItemIcon>
-                <ListItemText primary='Logg ut' />
+              <ListItem key='loggUt' disablePadding>
+                <ListItemButton onClick={() => this.menyValgTrykket('loggUt')}>
+                  <ListItemIcon><Exit /></ListItemIcon>
+                  <ListItemText primary='Logg ut' />
+                </ListItemButton>
               </ListItem>
-              <Divider />
             </List>
           </div>
         </Drawer>
