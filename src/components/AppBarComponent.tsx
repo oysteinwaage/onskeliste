@@ -12,6 +12,7 @@ import Exit from '@mui/icons-material/ExitToApp';
 import ListeIcon from '@mui/icons-material/FormatListBulleted';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AdminIcon from '@mui/icons-material/AdminPanelSettings';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -21,6 +22,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 
 import { logOut } from '../Api';
+import { settOpprettListeDialogOpen } from '../actions/actions';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
 
@@ -33,6 +35,7 @@ interface AppBarComponentProps {
   erAdmin: boolean;
   onAapneNySide: (id: string) => void;
   onLogOut: () => void;
+  onOpprettNyListe: () => void;
 }
 
 class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
@@ -61,8 +64,9 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   }
 
   render() {
-    const { headerTekst, erAdmin } = this.props;
+    const { headerTekst, erAdmin, onOpprettNyListe } = this.props;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
+    const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
     return (
       <AppBar position="static">
         <Toolbar>
@@ -74,6 +78,11 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
           <Typography variant="h6" color="inherit" sx={{ flexGrow: 1 }} className="toppmeny-side-navn">
             {this.props.headerTekst}
           </Typography>
+          {erPaaMinListe && (
+            <IconButton color="inherit" onClick={onOpprettNyListe} aria-label="Ny liste">
+              <PlaylistAddIcon />
+            </IconButton>
+          )}
         </Toolbar>
         <Drawer open={this.state.drawerOpen} onClose={() => this.setState({ drawerOpen: false })}>
           <div style={{ width: 250, display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -142,6 +151,7 @@ const mapStateToProps = (state: RootState) => ({
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onAapneNySide: (id: string) => dispatch(push(id)),
   onLogOut: () => dispatch(logOut() as any),
+  onOpprettNyListe: () => dispatch(settOpprettListeDialogOpen(true)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppBarComponent);

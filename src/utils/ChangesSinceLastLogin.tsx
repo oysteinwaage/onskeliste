@@ -78,6 +78,13 @@ const changes: ChangeEntry[] = [
       "Mine kjøp: Har fått eget menyvalg og egen side. I tillegg kan du nå registrere egne kjøp til folk som ikke er på deres ønskeliste, og registrere pris på dine kjøp for god oversikt over dine utgifter både pr person og totalt 💰",
       "Prisjakt-søk: Når du legger til et nytt ønske kan du nå søke direkte etter produkter fra prisjakt.no i beskrivelses-feltet. Forslag vises med bilde og pris, og lenke til prisjakt legges automatisk til når du velger et produkt",
     ]
+  },
+  {
+    version: 3.1,
+    releaseDate: "09.05.2025",
+    changes: [
+      "Flere lister: Kan nå legge til flere ønskelister med angitt navn, disse kan også deles med andre brukere for å ha en delt ønskeliste",
+    ]
   }
 ];
 

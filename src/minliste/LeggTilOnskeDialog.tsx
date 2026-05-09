@@ -20,10 +20,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
   addWishToMyList,
+  addWishToExtraList,
   updateAntallOnMyList,
   updateUrlsOnWishOnMyList,
   updateSizeOnMyList,
-  updateWishTextOnMyList
+  updateWishTextOnMyList,
+  updateWishFieldsOnExtraList,
 } from "../Api";
 import { connect } from 'react-redux';
 import { toggleLenkeDialog } from '../actions/actions';
@@ -66,6 +68,7 @@ interface LeggTilOnskeDialogProps {
   openLenkeDialog: boolean;
   openLenkeDialogOnske: Partial<Onske>;
   onToggleLenkeDialog: () => void;
+  aktiveListeId: string | null;
 }
 
 class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState> {
@@ -157,29 +160,49 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
   };
 
   saveChanges = (): void => {
-    const { openLenkeDialogOnske, onToggleLenkeDialog } = this.props;
+    const { openLenkeDialogOnske, onToggleLenkeDialog, aktiveListeId } = this.props;
     const effectiveUrls = this.getEffectiveUrls().filter(u => u.trim());
     const cleanedUrls = effectiveUrls.map(u => opprettUrlAv(u) as string).filter(Boolean);
 
     if (!openLenkeDialogOnske.key) {
-      addWishToMyList({
+      const newWish = {
         onskeTekst: this.state.text || '',
         ...(cleanedUrls.length > 0 ? { urls: cleanedUrls } : {}),
         antall: (this.state.antall as number) || 1,
         onskeSize: this.state.size as string | undefined
-      });
+      };
+      if (aktiveListeId) {
+        addWishToExtraList(aktiveListeId, newWish);
+      } else {
+        addWishToMyList(newWish);
+      }
     } else {
-      if (this.state.urlsChanged) {
-        updateUrlsOnWishOnMyList(effectiveUrls, openLenkeDialogOnske.key);
-      }
-      if (this.state.textChanged && this.state.text) {
-        updateWishTextOnMyList(this.state.text, openLenkeDialogOnske.key);
-      }
-      if (this.state.antallChanged) {
-        updateAntallOnMyList(this.state.antall, openLenkeDialogOnske.key);
-      }
-      if (this.state.sizeChanged) {
-        updateSizeOnMyList(this.state.size, openLenkeDialogOnske.key);
+      if (aktiveListeId) {
+        const updates: any = {};
+        if (this.state.urlsChanged) {
+          const cleaned = effectiveUrls.map(u => opprettUrlAv(u) as string).filter(Boolean);
+          updates.urls = cleaned.length > 0 ? cleaned : null;
+          updates.url = null;
+        }
+        if (this.state.textChanged && this.state.text) updates.onskeTekst = this.state.text;
+        if (this.state.antallChanged) updates.antall = this.state.antall;
+        if (this.state.sizeChanged) updates.onskeSize = this.state.size;
+        if (Object.keys(updates).length > 0) {
+          updateWishFieldsOnExtraList(aktiveListeId, openLenkeDialogOnske.key, updates);
+        }
+      } else {
+        if (this.state.urlsChanged) {
+          updateUrlsOnWishOnMyList(effectiveUrls, openLenkeDialogOnske.key);
+        }
+        if (this.state.textChanged && this.state.text) {
+          updateWishTextOnMyList(this.state.text, openLenkeDialogOnske.key);
+        }
+        if (this.state.antallChanged) {
+          updateAntallOnMyList(this.state.antall, openLenkeDialogOnske.key);
+        }
+        if (this.state.sizeChanged) {
+          updateSizeOnMyList(this.state.size, openLenkeDialogOnske.key);
+        }
       }
     }
     onToggleLenkeDialog();
@@ -381,6 +404,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
 const mapStateToProps = (state: RootState) => ({
   openLenkeDialog: state.innloggetBruker.openLenkeDialog,
   openLenkeDialogOnske: state.innloggetBruker.openLenkeDialogOnske,
+  aktiveListeId: state.innloggetBruker.aktiveListeId,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

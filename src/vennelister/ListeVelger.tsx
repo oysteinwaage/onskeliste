@@ -4,7 +4,8 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
-import { fetdhOnskelisteForUid } from '../Api';
+import { fetdhOnskelisteForUid, fetchExtraListsForFriend } from '../Api';
+import { settValgtVennsListeId } from '../actions/actions';
 import { RootState, Bruker } from '../types';
 import { Dispatch } from 'redux';
 
@@ -16,6 +17,8 @@ interface ListeVelgerProps {
   allUsers: Bruker[];
   allowedListsForMe: string[];
   onHentValgtVennsListe: (uid: string, venn: Bruker) => void;
+  onFetchExtraLists: (uid: string) => void;
+  onResetVennsListeId: () => void;
 }
 
 class ListeVelger extends Component<ListeVelgerProps, ListeVelgerState> {
@@ -28,7 +31,10 @@ class ListeVelger extends Component<ListeVelgerProps, ListeVelgerState> {
     const valgtBrukerUid = event.target.value;
     if (valgtBrukerUid !== '') {
       this.setState({ valgtVennUid: event.target.value });
-      this.props.onHentValgtVennsListe(valgtBrukerUid, this.finnValgtVennObjekt(valgtBrukerUid)[0]);
+      const venn = this.finnValgtVennObjekt(valgtBrukerUid)[0];
+      this.props.onResetVennsListeId();
+      this.props.onHentValgtVennsListe(valgtBrukerUid, venn);
+      this.props.onFetchExtraLists(valgtBrukerUid);
     }
   };
 
@@ -73,6 +79,8 @@ const mapStateToProps = (state: RootState) => ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onHentValgtVennsListe: (uid: string, venn: Bruker) => dispatch(fetdhOnskelisteForUid(uid, venn) as any),
+  onFetchExtraLists: (uid: string) => dispatch(fetchExtraListsForFriend(uid) as any),
+  onResetVennsListeId: () => dispatch(settValgtVennsListeId(null)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ListeVelger);

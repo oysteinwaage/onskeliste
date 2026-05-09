@@ -10,7 +10,14 @@ import {
     UPDATE_ALLOWED_VIEWERS,
     SET_LAST_SEEN_VERSION,
     OPPDATER_MINE_KJOEP,
-    SETT_MINE_EKSTRA_KJOEP
+    SETT_MINE_EKSTRA_KJOEP,
+    OPPDATER_MINE_EKSTRA_LISTE_KJOEP,
+    MOTTA_MINE_EKSTRA_LISTER,
+    OPPDATER_EKSTRA_LISTE_METADATA,
+    SETT_AKTIV_LISTE_ID,
+    MOTTA_EKSTRA_LISTE_ONSKER,
+    FJERN_EKSTRA_LISTE_ONSKER,
+    SETT_OPPRETT_LISTE_DIALOG_OPEN,
 } from '../actions/actions';
 
 export default function innloggetBruker(
@@ -63,6 +70,55 @@ export default function innloggetBruker(
             return {
                 ...state,
                 mineEkstraKjoep: action.ekstraKjoep,
+            };
+        case OPPDATER_MINE_EKSTRA_LISTE_KJOEP: {
+            const eksisterende = state.mineEkstraListeKjoep[action.ownerUid] || [];
+            const uten = eksisterende.filter(e => e.listId !== action.listId);
+            const oppdatert = action.onsker.length > 0
+                ? [...uten, { listId: action.listId, listName: action.listName, sharedWithUid: action.sharedWithUid, onsker: action.onsker }]
+                : uten;
+            return {
+                ...state,
+                mineEkstraListeKjoep: {
+                    ...state.mineEkstraListeKjoep,
+                    [action.ownerUid]: oppdatert,
+                },
+            };
+        }
+        case MOTTA_MINE_EKSTRA_LISTER:
+            return {
+                ...state,
+                mineEkstraLister: action.lister,
+            };
+        case OPPDATER_EKSTRA_LISTE_METADATA:
+            return {
+                ...state,
+                mineEkstraLister: state.mineEkstraLister.map(l =>
+                    l.key === action.liste.key ? action.liste : l
+                ),
+            };
+        case SETT_AKTIV_LISTE_ID:
+            return {
+                ...state,
+                aktiveListeId: action.listId,
+            };
+        case MOTTA_EKSTRA_LISTE_ONSKER: {
+            return {
+                ...state,
+                alleEkstraListeOnsker: {
+                    ...state.alleEkstraListeOnsker,
+                    [action.listId]: action.onsker,
+                },
+            };
+        }
+        case FJERN_EKSTRA_LISTE_ONSKER: {
+            const { [action.listId]: _removed, ...rest } = state.alleEkstraListeOnsker;
+            return { ...state, alleEkstraListeOnsker: rest };
+        }
+        case SETT_OPPRETT_LISTE_DIALOG_OPEN:
+            return {
+                ...state,
+                opprettListeDialogOpen: action.open,
             };
         default:
             return state;

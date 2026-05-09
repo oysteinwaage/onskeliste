@@ -3,11 +3,16 @@ import {
     adminConfigRef,
     allowedViewsRef,
     auth,
+    db,
     ekstraKjoepRef,
+    extraListRef,
+    extraListWishesRef,
     myAllowedViewersRef,
     myEkstraKjoepRef,
     myUid,
+    myUserExtraListsRef,
     myWishlistRef,
+    userExtraListsRef,
     usersRef,
     wishlistRef
 } from "./config/firebase";
@@ -24,9 +29,18 @@ import {
     oppdaterMineKjoep,
     settMineEkstraKjoep,
     setSlettKjopteOnskerEnabled,
+    mottaMineEkstraLister,
+    oppdaterEkstraListeMetadata,
+    settAktivListeId,
+    mottaEkstraListeOnsker,
+    fjernEkstraListeOnsker,
+    mottaValgtVennsEkstraLister,
+    mottaValgtVennsEkstraListeOnsker,
+    settValgtVennsListeId,
+    oppdaterMineEkstraListeKjoep,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
-import { Onske, Viewer } from './types';
+import { Onske, Viewer, ExtraListMetadata, Bruker } from './types';
 import { Dispatch } from 'redux';
 
 const mapTolist = (res: firebase.default.database.DataSnapshot): any[] =>
@@ -173,9 +187,50 @@ export const fetchListsIAmAllowedToView = () => async (dispatch: Dispatch) => {
             dispatch(settMineEkstraKjoep(ekstraKjoep));
         });
 
+        dispatch(fetchEkstraListeKjoepForFriends(myLists) as any);
 
         return myLists;
     });
+};
+
+export const fetchEkstraListeKjoepForFriends = (friendUids: string[]) => async (dispatch: Dispatch) => {
+    const myUidValue = myUid();
+    if (!myUidValue) return;
+
+    for (const friendUid of friendUids) {
+        const snap = await userExtraListsRef(friendUid).once('value');
+        const listIds: string[] = snap.val() ? Object.keys(snap.val()) : [];
+
+        for (const listId of listIds) {
+            if (ekstraListeKjoepSubscriptions[listId]) continue;
+            ekstraListeKjoepSubscriptions[listId] = true;
+
+            const metaSnap = await extraListRef(listId).once('value');
+            const meta = metaSnap.val();
+            if (!meta) continue;
+
+            const ownerUid: string = meta.ownerUid;
+            const listName: string = meta.name;
+            const sharedWithUid: string | undefined = meta.sharedWithUid;
+
+            extraListWishesRef(listId).on('value', (wishSnap: any) => {
+                const alle = mapTolist(wishSnap);
+                const mine = alle.filter(w =>
+                    (w.kjoptAvListe || []).some((e: any) => e.kjoptAv === myUidValue)
+                );
+                dispatch(oppdaterMineEkstraListeKjoep(ownerUid, listId, listName, mine, sharedWithUid));
+            });
+        }
+    }
+};
+
+export const updateEkstraListeWishPris = (listId: string, wish: Onske, pris: number | null): void => {
+    const uid = myUid();
+    if (!uid) return;
+    const updatedKjoptAvListe = (wish.kjoptAvListe || []).map((entry: any) =>
+        entry.kjoptAv === uid ? { ...entry, pris: pris !== null ? pris : undefined } : entry
+    );
+    extraListWishesRef(listId).child(wish.key).update({ kjoptAvListe: updatedKjoptAvListe });
 };
 
 /*
@@ -257,6 +312,204 @@ export const slettKjopteOnsker = (mineOnsker: Onske[]): void => {
                 antall: antall - totalKjopt,
                 kjoptAvListe: null,
             });
+        }
+    });
+};
+
+/*
+EXTRA LISTS
+ */
+let currentVennsExtraListRef: any = null;
+const extraListSubscriptions: Record<string, boolean> = {};
+const extraListMetaSubscriptions: Record<string, boolean> = {};
+const vennsExtraListSubscriptions: Record<string, any> = {};
+const ekstraListeKjoepSubscriptions: Record<string, boolean> = {};
+
+export const fetchMineEkstraLister = () => async (dispatch: Dispatch) => {
+    const uid = myUid();
+    if (!uid) return;
+    userExtraListsRef(uid).on('value', async snapshot => {
+        const listIds = snapshot.val() ? Object.keys(snapshot.val()) : [];
+        if (listIds.length === 0) {
+            Object.keys(extraListSubscriptions).forEach(id => {
+                extraListWishesRef(id).off('value');
+                delete extraListSubscriptions[id];
+                dispatch(fjernEkstraListeOnsker(id));
+            });
+            dispatch(mottaMineEkstraLister([]));
+            return;
+        }
+        const lists = await Promise.all(listIds.map(id =>
+            extraListRef(id).once('value').then(snap =>
+                snap.val() ? { ...snap.val(), key: id } as ExtraListMetadata : null
+            )
+        ));
+        const validLists = lists.filter(Boolean) as ExtraListMetadata[];
+        dispatch(mottaMineEkstraLister(validLists));
+
+        // Subscribe to wishes and metadata for any new list
+        validLists.forEach(liste => {
+            if (!extraListSubscriptions[liste.key]) {
+                extraListSubscriptions[liste.key] = true;
+                extraListWishesRef(liste.key).on('value', (snap: any) => {
+                    dispatch(mottaEkstraListeOnsker(liste.key, mapTolist(snap)));
+                });
+            }
+            if (!extraListMetaSubscriptions[liste.key]) {
+                extraListMetaSubscriptions[liste.key] = true;
+                extraListRef(liste.key).on('value', (snap: any) => {
+                    if (snap.val()) {
+                        dispatch(oppdaterEkstraListeMetadata({ ...snap.val(), key: liste.key }));
+                    }
+                });
+            }
+        });
+
+        // Unsubscribe from lists no longer present
+        const validIds = validLists.map(l => l.key);
+        Object.keys(extraListSubscriptions).forEach(id => {
+            if (!validIds.includes(id)) {
+                extraListWishesRef(id).off('value');
+                delete extraListSubscriptions[id];
+                dispatch(fjernEkstraListeOnsker(id));
+            }
+        });
+        Object.keys(extraListMetaSubscriptions).forEach(id => {
+            if (!validIds.includes(id)) {
+                extraListRef(id).off('value');
+                delete extraListMetaSubscriptions[id];
+            }
+        });
+    });
+};
+
+export const opprettEkstraListe = (name: string, sharedWithUid?: string) => async (_dispatch: Dispatch) => {
+    const uid = myUid();
+    if (!uid) return;
+    const newListRef = db.ref('extraLists').push();
+    const listId = newListRef.key as string;
+    const metadata: Omit<ExtraListMetadata, 'key'> = { name, ownerUid: uid };
+    if (sharedWithUid) (metadata as any).sharedWithUid = sharedWithUid;
+    await extraListRef(listId).set(metadata);
+    await myUserExtraListsRef().update({ [listId]: true });
+    if (sharedWithUid) {
+        await userExtraListsRef(sharedWithUid).update({ [listId]: true });
+    }
+};
+
+export const slettEkstraListe = (listId: string, sharedWithUid?: string) => async (_dispatch: Dispatch) => {
+    const uid = myUid();
+    if (!uid) return;
+    if (extraListSubscriptions[listId]) {
+        extraListWishesRef(listId).off('value');
+        delete extraListSubscriptions[listId];
+    }
+    if (extraListMetaSubscriptions[listId]) {
+        extraListRef(listId).off('value');
+        delete extraListMetaSubscriptions[listId];
+    }
+    await extraListRef(listId).remove();
+    await myUserExtraListsRef().child(listId).remove();
+    if (sharedWithUid) {
+        await userExtraListsRef(sharedWithUid).child(listId).remove();
+    }
+};
+
+export const leggTilDelingspartner = async (listId: string, shareWithUid: string): Promise<void> => {
+    await extraListRef(listId).update({ sharedWithUid: shareWithUid });
+    await userExtraListsRef(shareWithUid).update({ [listId]: true });
+};
+
+export const fjernDelingspartner = async (listId: string, shareWithUid: string): Promise<void> => {
+    const snapshot = await extraListRef(listId).once('value');
+    const data = snapshot.val();
+    if (data) {
+        const { sharedWithUid: _removed, ...rest } = data;
+        await extraListRef(listId).set(rest);
+    }
+    await userExtraListsRef(shareWithUid).child(listId).remove();
+};
+
+export const addWishToExtraList = (listId: string, newWish: Omit<Onske, 'key'>): void => {
+    extraListWishesRef(listId).push().set(newWish);
+};
+
+export const removeWishFromExtraList = (listId: string, wishId: string): void => {
+    extraListWishesRef(listId).child(wishId).remove();
+};
+
+export const updateWishFieldsOnExtraList = (listId: string, wishId: string, updates: Partial<Omit<Onske, 'key'>>): void => {
+    extraListWishesRef(listId).child(wishId).update(updates);
+};
+
+export const updateWishOnExtraListWith = (newValues: Partial<Onske>, wish: Onske, listId: string): void => {
+    const wishKey = wish.key;
+    const wishWithoutKey = { ...wish };
+    delete (wishWithoutKey as any).key;
+    extraListWishesRef(listId).child(wishKey).update(Object.assign({}, wishWithoutKey, newValues));
+};
+
+
+export const fetchExtraListsForFriend = (friendUid: string) => async (dispatch: Dispatch) => {
+    Object.keys(vennsExtraListSubscriptions).forEach(id => {
+        vennsExtraListSubscriptions[id].off('value');
+        delete vennsExtraListSubscriptions[id];
+    });
+
+    const myUidValue = myUid();
+    const snapshot = await userExtraListsRef(friendUid).once('value');
+    const listIds = snapshot.val() ? Object.keys(snapshot.val()) : [];
+    if (listIds.length === 0) {
+        dispatch(mottaValgtVennsEkstraLister([]));
+        return;
+    }
+    const lists = await Promise.all(listIds.map(id =>
+        extraListRef(id).once('value').then(snap =>
+            snap.val() ? { ...snap.val(), key: id } as ExtraListMetadata : null
+        )
+    ));
+    const visible = lists.filter(
+        l => l && l.ownerUid !== myUidValue && l.sharedWithUid !== myUidValue
+    ) as ExtraListMetadata[];
+    dispatch(mottaValgtVennsEkstraLister(visible));
+
+    visible.forEach(liste => {
+        const ref = extraListWishesRef(liste.key);
+        vennsExtraListSubscriptions[liste.key] = ref;
+        ref.on('value', (snap: any) => {
+            dispatch(mottaValgtVennsEkstraListeOnsker(liste.key, mapTolist(snap)));
+        });
+    });
+};
+
+export const fetchVennsEkstraListeOnsker = (listId: string, venn: Partial<Bruker>) => async (dispatch: Dispatch) => {
+    if (currentVennsExtraListRef) {
+        currentVennsExtraListRef.off('value');
+        currentVennsExtraListRef = null;
+    }
+    currentVennsExtraListRef = extraListWishesRef(listId);
+    currentVennsExtraListRef.on('value', (snapshot: any) => {
+        dispatch(mottaValgtVennsListe(mapTolist(snapshot), venn));
+    });
+    dispatch(settValgtVennsListeId(listId));
+};
+
+export const forlateEkstraListe = async (listId: string): Promise<void> => {
+    const uid = myUid();
+    if (!uid) return;
+    await fjernDelingspartner(listId, uid);
+};
+
+export const slettKjopteOnskerPaaEkstraListe = (listId: string, onsker: Onske[]): void => {
+    onsker.forEach(onske => {
+        const kjoptAvListe = onske.kjoptAvListe || [];
+        if (kjoptAvListe.length === 0) return;
+        const totalKjopt = kjoptAvListe.reduce((sum, k) => sum + (k.antallKjopt || 1), 0);
+        const antall = onske.antall || 1;
+        if (totalKjopt >= antall) {
+            extraListWishesRef(listId).child(onske.key).remove();
+        } else {
+            extraListWishesRef(listId).child(onske.key).update({ antall: antall - totalKjopt, kjoptAvListe: null });
         }
     });
 };

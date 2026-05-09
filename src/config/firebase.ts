@@ -26,6 +26,12 @@ export const ekstraKjoepRef = (ownerUid: string, targetUid: string) => db.ref(`e
 export const myEkstraKjoepRef = () => db.ref(`ekstraKjoep/${myUid()}`);
 
 
+// Extra (named) lists
+export const extraListRef = (listId: string) => db.ref('extraLists/' + listId);
+export const extraListWishesRef = (listId: string) => db.ref('extraLists/' + listId + '/wishes');
+export const userExtraListsRef = (uid: string) => db.ref('userExtraLists/' + uid);
+export const myUserExtraListsRef = () => userExtraListsRef(myUid() as string);
+
 // Admin config
 export const adminConfigRef = db.ref('config');
 

@@ -14,7 +14,7 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
-import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste } from "./Api";
+import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste } from "./Api";
 import ChangesSinceLastLogin from "./utils/ChangesSinceLastLogin";
 import { RootState } from './types';
 import { Dispatch } from 'redux';
@@ -28,6 +28,7 @@ interface AppProps {
   onFetchAllUsers: () => void;
   onSettLasterData: (isLoading: boolean) => void;
   onFetchAdminConfig: () => void;
+  onFetchMineEkstraLister: () => void;
   isLoading: boolean;
 }
 
@@ -35,7 +36,7 @@ class App extends Component<AppProps> {
 
   componentDidMount() {
     const { onSendTilLogin, onBrukerLoggetInn, onAbonnerPaaMinOnskeliste, onSubscribeToMyAllowedViewers,
-      onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig } = this.props;
+      onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig, onFetchMineEkstraLister } = this.props;
     onSettLasterData(true);
     onFetchAdminConfig();
     firebase.auth().onAuthStateChanged(function (user) {
@@ -45,6 +46,7 @@ class App extends Component<AppProps> {
         onAbonnerPaaMinOnskeliste();
         onSubscribeToMyAllowedViewers();
         onFetchListsICanView();
+        onFetchMineEkstraLister();
       } else {
         if (window.location.pathname === "/") {
           onSettLasterData(false);
@@ -92,6 +94,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onSendTilLogin: () => dispatch(push('/')),
   onSettLasterData: (isLoading: boolean) => dispatch(lasterData(isLoading)),
   onFetchAdminConfig: () => dispatch(fetchAdminConfig() as any),
+  onFetchMineEkstraLister: () => dispatch(fetchMineEkstraLister() as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

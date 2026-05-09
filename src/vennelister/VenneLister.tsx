@@ -21,9 +21,11 @@ import Slide from '@mui/material/Slide';
 import StarIcon from '@mui/icons-material/Star';
 import { TransitionProps } from '@mui/material/transitions';
 
+import Typography from '@mui/material/Typography';
+
 import ListeVelger from './ListeVelger';
 import { endreHeaderTekst } from '../actions/actions';
-import { updateWishOnListWith } from '../Api';
+import { updateWishOnListWith, updateWishOnExtraListWith } from '../Api';
 import {
   alleOnskerTatt, antallAlleredeKjoptAvMeg,
   erInnloggetBrukersUid, finnLabelForStrl,
@@ -31,7 +33,7 @@ import {
   myWishlistId,
   totalValgt
 } from '../utils/util';
-import { RootState, Onske, Bruker, KjoptAv } from '../types';
+import { RootState, Onske, Bruker, KjoptAv, ExtraListMetadata } from '../types';
 import { Dispatch } from 'redux';
 
 const Transition = React.forwardRef(function Transition(
@@ -44,19 +46,23 @@ const Transition = React.forwardRef(function Transition(
 interface VenneListerLocalState {
   dialogOpen: boolean;
   valgtOnske: Partial<Onske>;
+  valgtListeId: string | null;
   antallValgt: number;
   prisDialogOpen: boolean;
   prisInput: string;
   prisPerStk: number | null;
 }
 
-const initLocalState: VenneListerLocalState = { dialogOpen: false, valgtOnske: {}, antallValgt: 0, prisDialogOpen: false, prisInput: '', prisPerStk: null };
+const initLocalState: VenneListerLocalState = { dialogOpen: false, valgtOnske: {}, valgtListeId: null, antallValgt: 0, prisDialogOpen: false, prisInput: '', prisPerStk: null };
 
 interface VenneListerProps {
   valgtVenn: Partial<Bruker>;
   valgtVennsListe: Onske[];
+  valgtVennsEkstraLister: ExtraListMetadata[];
+  valgtVennsAlleEkstraListeOnsker: Record<string, Onske[]>;
   onEndreHeaderTekst: (nyTekst: string) => void;
   mittNavn: string;
+  alleBrukere: Bruker[];
 }
 
 class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
@@ -69,36 +75,44 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
     onEndreHeaderTekst('Venners lister');
   }
 
+  updateWishKjoep = (newValues: Partial<Onske>, wish: Onske): void => {
+    const { valgtVenn } = this.props;
+    const { valgtListeId } = this.state;
+    if (valgtListeId) {
+      updateWishOnExtraListWith(newValues, wish, valgtListeId);
+    } else {
+      updateWishOnListWith(newValues, wish, valgtVenn.uid as string);
+    }
+  };
+
   kjoptAlleOnskerClassname = (onske: Onske): string =>
     onske.antall === totalValgt(onske) ? inneholderInnloggetBrukersUid(onske.kjoptAvListe) ? 'onskeKjopt kjoptAvDeg' : 'onskeKjopt' : '';
   onskeErFavoritt = (onske: Onske): string => onske.favoritt ? ' fjernPaddingVenstre' : '';
 
-  onMarkerOnskeSomKjopt = (onske: Onske) => (_event: React.ChangeEvent<HTMLInputElement>): void => {
-    const { valgtVenn } = this.props;
-
+  onMarkerOnskeSomKjopt = (onske: Onske, listId: string | null) => (_event: React.ChangeEvent<HTMLInputElement>): void => {
     if (onske.antall && onske.antall > 1) {
       const currentAntall = antallAlleredeKjoptAvMeg(onske);
       const myEntry = (onske.kjoptAvListe || []).find(e => erInnloggetBrukersUid(e.kjoptAv));
       const currentPris = myEntry?.pris ?? null;
       const prisPerStk = (currentPris != null && currentAntall > 0) ? currentPris / currentAntall : null;
       const prisInput = currentPris != null && currentAntall > 0 ? String(currentPris) : '';
-      this.setState({ dialogOpen: true, valgtOnske: onske, antallValgt: currentAntall, prisInput, prisPerStk });
+      this.setState({ dialogOpen: true, valgtOnske: onske, valgtListeId: listId, antallValgt: currentAntall, prisInput, prisPerStk });
     } else {
       if (alleOnskerTatt(onske)) {
-        updateWishOnListWith({ kjoptAvListe: [] }, onske, valgtVenn.uid as string);
+        this.setState({ valgtListeId: listId }, () => this.updateWishKjoep({ kjoptAvListe: [] }, onske));
       } else {
-        this.setState({ prisDialogOpen: true, valgtOnske: onske, prisInput: '' });
+        this.setState({ prisDialogOpen: true, valgtOnske: onske, valgtListeId: listId, prisInput: '' });
       }
     }
   };
 
   saveSingleKjoep = (): void => {
-    const { valgtVenn, mittNavn } = this.props;
+    const { mittNavn } = this.props;
     const { valgtOnske, prisInput } = this.state;
     const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
     const entry: KjoptAv = { antallKjopt: 1, kjoptAv: myWishlistId(), kjoptAvNavn: mittNavn };
     if (parsedPris !== undefined && !isNaN(parsedPris)) entry.pris = parsedPris;
-    updateWishOnListWith({ kjoptAvListe: [entry] }, valgtOnske as Onske, valgtVenn.uid as string);
+    this.updateWishKjoep({ kjoptAvListe: [entry] }, valgtOnske as Onske);
     this.resetLocalState();
   };
 
@@ -128,7 +142,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   }
 
   onMarkerOnskerSomKjopt = (): void => {
-    const { valgtVenn, mittNavn } = this.props;
+    const { mittNavn } = this.props;
     const { antallValgt, valgtOnske, prisInput } = this.state;
 
     const newKjoptAvListe = [...((valgtOnske.kjoptAvListe || []).filter(vo => vo.kjoptAv !== myWishlistId()))];
@@ -140,25 +154,25 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
       newKjoptAvListe.push(entry);
     }
 
-    updateWishOnListWith({ kjoptAvListe: newKjoptAvListe }, valgtOnske as Onske, valgtVenn.uid as string);
+    this.updateWishKjoep({ kjoptAvListe: newKjoptAvListe }, valgtOnske as Onske);
     this.resetLocalState();
   };
 
   lagAntallOgStrlTekst = (onske: Onske): string => {
-    let res = (onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) ? `Antall tatt: ${totalValgt(onske)}/${onske.antall}` : "";
+    let res = (onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) ? `Antall tatt: ${totalValgt(onske)}/${onske.antall}` : '';
     if (onske.onskeSize) {
       res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
     }
     return res;
   };
 
-  populerOnskeliste = (onskeliste: Onske[]): React.ReactNode =>
+  populerOnskeliste = (onskeliste: Onske[], listId: string | null = null): React.ReactNode =>
     onskeliste.sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0)).map(onske =>
       <div key={onske.onskeTekst + onskeliste.indexOf(onske)}>
         <ListItem
           className={this.kjoptAlleOnskerClassname(onske) + this.onskeErFavoritt(onske) + (!alleOnskerTatt(onske) && onske.antall && onske.antall > 1 ? ' fjernPaddingUnder' : '')}>
           {onske.favoritt &&
-            <StarIcon className={alleOnskerTatt(onske) ? "stjerne favorittTatt" : "stjerne favoritt"} />
+            <StarIcon className={alleOnskerTatt(onske) ? 'stjerne favorittTatt' : 'stjerne favoritt'} />
           }
           <ListItemText
             className={alleOnskerTatt(onske) ? 'onskeKjoptTekst ' : onske.antall && onske.antall > 1 ? 'fjernPaddingUnder' : ''}
@@ -169,7 +183,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
             <Tooltip title='Kjøpt'>
               <Checkbox checked={alleOnskerTatt(onske)}
                 disabled={alleOnskerTatt(onske) && !antallAlleredeKjoptAvMeg(onske)}
-                onChange={this.onMarkerOnskeSomKjopt(onske)} />
+                onChange={this.onMarkerOnskeSomKjopt(onske, listId)} />
             </Tooltip>
           </ListItemSecondaryAction>
         </ListItem>
@@ -281,7 +295,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   };
 
   render() {
-    const { valgtVenn, valgtVennsListe } = this.props;
+    const { valgtVenn, valgtVennsListe, valgtVennsEkstraLister, valgtVennsAlleEkstraListeOnsker, alleBrukere } = this.props;
     const harGenerelleMaal = valgtVenn.measurements && Object.values(valgtVenn.measurements).some(k => !!k);
     return (
       <div className="vennerliste-side">
@@ -292,15 +306,48 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
             <div className="minOnskeliste">
               <List dense={false}>
                 {valgtVennsListe.length > 0 && <Divider />}
-                {this.populerOnskeliste(valgtVennsListe)}
+                {this.populerOnskeliste(valgtVennsListe, null)}
               </List>
             </div>
           </div>
         </div>
+
+        {valgtVennsEkstraLister.map(liste => {
+          const onsker = valgtVennsAlleEkstraListeOnsker[liste.key] || [];
+          const otherUid = liste.sharedWithUid
+            ? (liste.ownerUid === valgtVenn.uid ? liste.sharedWithUid : liste.ownerUid)
+            : null;
+          const otherUser = otherUid ? alleBrukere.find(b => b.uid === otherUid) : null;
+
+          return (
+            <React.Fragment key={liste.key}>
+              <Divider style={{ marginTop: 24, borderStyle: 'dashed' }} />
+            <div className="vennerliste-side__liste">
+              <div className="vennerliste-side__liste-inner">
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <h2 style={{ margin: 0 }}>{liste.name}</h2>
+                  {otherUser && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Delt med {otherUser.navn}
+                    </Typography>
+                  )}
+                </div>
+                <div className="minOnskeliste">
+                  <List dense={false}>
+                    {onsker.length > 0 && <Divider />}
+                    {this.populerOnskeliste(onsker, liste.key)}
+                  </List>
+                </div>
+              </div>
+            </div>
+            </React.Fragment>
+          );
+        })}
+
         {harGenerelleMaal &&
           <div className="vennerliste-side__measurements-container">
             <div className="vennerliste-side__measurements">
-              <h4 style={{ textAlign: "center" }}>{`Generelle mål - ${valgtVenn.firstName}`}</h4>
+              <h4 style={{ textAlign: 'center' }}>{`Generelle mål - ${valgtVenn.firstName}`}</h4>
               {Object.keys(valgtVenn.measurements!).filter(key => !!valgtVenn.measurements![key]).map(key => {
                 return (
                   <p key={key}>
@@ -321,7 +368,10 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 const mapStateToProps = (state: RootState) => ({
   valgtVenn: state.vennersLister.valgtVenn,
   valgtVennsListe: state.vennersLister.valgtVennsListe || [],
-  mittNavn: state.innloggetBruker.navn
+  valgtVennsEkstraLister: state.vennersLister.valgtVennsEkstraLister,
+  valgtVennsAlleEkstraListeOnsker: state.vennersLister.valgtVennsAlleEkstraListeOnsker,
+  mittNavn: state.innloggetBruker.navn,
+  alleBrukere: state.config.brukere,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

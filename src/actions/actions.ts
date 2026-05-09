@@ -1,4 +1,4 @@
-import { Onske, Bruker, Viewer } from '../types';
+import { Onske, Bruker, Viewer, ExtraListMetadata } from '../types';
 
 // Min ønskeliste
 export const MOTTA_MIN_ONSKELISTE = 'MOTTA_MIN_ONSKELISTE';
@@ -131,6 +131,93 @@ export function settMineEkstraKjoep(ekstraKjoep: Record<string, Onske[]>) {
   };
 }
 
+export const OPPDATER_MINE_EKSTRA_LISTE_KJOEP = 'OPPDATER_MINE_EKSTRA_LISTE_KJOEP';
+export function oppdaterMineEkstraListeKjoep(ownerUid: string, listId: string, listName: string, onsker: Onske[], sharedWithUid?: string) {
+  return {
+    type: OPPDATER_MINE_EKSTRA_LISTE_KJOEP as typeof OPPDATER_MINE_EKSTRA_LISTE_KJOEP,
+    ownerUid,
+    listId,
+    listName,
+    sharedWithUid,
+    onsker,
+  };
+}
+
+
+export const SETT_OPPRETT_LISTE_DIALOG_OPEN = 'SETT_OPPRETT_LISTE_DIALOG_OPEN';
+export function settOpprettListeDialogOpen(open: boolean) {
+  return {
+    type: SETT_OPPRETT_LISTE_DIALOG_OPEN as typeof SETT_OPPRETT_LISTE_DIALOG_OPEN,
+    open,
+  };
+}
+
+// Extra lister
+export const OPPDATER_EKSTRA_LISTE_METADATA = 'OPPDATER_EKSTRA_LISTE_METADATA';
+export function oppdaterEkstraListeMetadata(liste: ExtraListMetadata) {
+  return {
+    type: OPPDATER_EKSTRA_LISTE_METADATA as typeof OPPDATER_EKSTRA_LISTE_METADATA,
+    liste,
+  };
+}
+
+export const MOTTA_MINE_EKSTRA_LISTER = 'MOTTA_MINE_EKSTRA_LISTER';
+export function mottaMineEkstraLister(lister: ExtraListMetadata[]) {
+  return {
+    type: MOTTA_MINE_EKSTRA_LISTER as typeof MOTTA_MINE_EKSTRA_LISTER,
+    lister,
+  };
+}
+
+export const SETT_AKTIV_LISTE_ID = 'SETT_AKTIV_LISTE_ID';
+export function settAktivListeId(listId: string | null) {
+  return {
+    type: SETT_AKTIV_LISTE_ID as typeof SETT_AKTIV_LISTE_ID,
+    listId,
+  };
+}
+
+export const MOTTA_EKSTRA_LISTE_ONSKER = 'MOTTA_EKSTRA_LISTE_ONSKER';
+export function mottaEkstraListeOnsker(listId: string, onsker: Onske[]) {
+  return {
+    type: MOTTA_EKSTRA_LISTE_ONSKER as typeof MOTTA_EKSTRA_LISTE_ONSKER,
+    listId,
+    onsker,
+  };
+}
+
+export const FJERN_EKSTRA_LISTE_ONSKER = 'FJERN_EKSTRA_LISTE_ONSKER';
+export function fjernEkstraListeOnsker(listId: string) {
+  return {
+    type: FJERN_EKSTRA_LISTE_ONSKER as typeof FJERN_EKSTRA_LISTE_ONSKER,
+    listId,
+  };
+}
+
+export const MOTTA_VALGT_VENNS_EKSTRA_LISTER = 'MOTTA_VALGT_VENNS_EKSTRA_LISTER';
+export function mottaValgtVennsEkstraLister(lister: ExtraListMetadata[]) {
+  return {
+    type: MOTTA_VALGT_VENNS_EKSTRA_LISTER as typeof MOTTA_VALGT_VENNS_EKSTRA_LISTER,
+    lister,
+  };
+}
+
+export const MOTTA_VALGT_VENNS_EKSTRA_LISTE_ONSKER = 'MOTTA_VALGT_VENNS_EKSTRA_LISTE_ONSKER';
+export function mottaValgtVennsEkstraListeOnsker(listId: string, onsker: Onske[]) {
+  return {
+    type: MOTTA_VALGT_VENNS_EKSTRA_LISTE_ONSKER as typeof MOTTA_VALGT_VENNS_EKSTRA_LISTE_ONSKER,
+    listId,
+    onsker,
+  };
+}
+
+export const SETT_VALGT_VENNS_LISTE_ID = 'SETT_VALGT_VENNS_LISTE_ID';
+export function settValgtVennsListeId(listId: string | null) {
+  return {
+    type: SETT_VALGT_VENNS_LISTE_ID as typeof SETT_VALGT_VENNS_LISTE_ID,
+    listId,
+  };
+}
 
 // Union type of all actions
 export type AppAction =
@@ -149,4 +236,14 @@ export type AppAction =
   | ReturnType<typeof lasterData>
   | ReturnType<typeof setSlettKjopteOnskerEnabled>
   | ReturnType<typeof oppdaterMineKjoep>
-  | ReturnType<typeof settMineEkstraKjoep>;
+  | ReturnType<typeof settMineEkstraKjoep>
+  | ReturnType<typeof oppdaterMineEkstraListeKjoep>
+  | ReturnType<typeof mottaMineEkstraLister>
+  | ReturnType<typeof settAktivListeId>
+  | ReturnType<typeof mottaEkstraListeOnsker>
+  | ReturnType<typeof fjernEkstraListeOnsker>
+  | ReturnType<typeof mottaValgtVennsEkstraLister>
+  | ReturnType<typeof mottaValgtVennsEkstraListeOnsker>
+  | ReturnType<typeof settValgtVennsListeId>
+  | ReturnType<typeof settOpprettListeDialogOpen>
+  | ReturnType<typeof oppdaterEkstraListeMetadata>;

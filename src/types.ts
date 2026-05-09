@@ -37,6 +37,13 @@ export interface Viewer {
   label: string;
 }
 
+export interface ExtraListMetadata {
+  key: string;
+  name: string;
+  ownerUid: string;
+  sharedWithUid?: string;
+}
+
 // Redux state types
 
 export interface InnloggetBrukerState {
@@ -52,7 +59,12 @@ export interface InnloggetBrukerState {
   measurements: Record<string, string>;
   mineKjoep: Record<string, Onske[]>;
   mineEkstraKjoep: Record<string, Onske[]>;
+  mineEkstraListeKjoep: Record<string, { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[] }[]>;
   erAdmin?: boolean;
+  mineEkstraLister: ExtraListMetadata[];
+  aktiveListeId: string | null;
+  alleEkstraListeOnsker: Record<string, Onske[]>;
+  opprettListeDialogOpen: boolean;
 }
 
 export interface ConfigState {
@@ -68,6 +80,9 @@ export interface VennersListerState {
   allowedListsForMe: string[];
   valgtVennsListe: Onske[];
   valgtVenn: Partial<Bruker>;
+  valgtVennsEkstraLister: ExtraListMetadata[];
+  valgtVennsAktivListeId: string | null;
+  valgtVennsAlleEkstraListeOnsker: Record<string, Onske[]>;
 }
 
 export interface RootState {

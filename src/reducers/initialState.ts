@@ -19,7 +19,12 @@ const initialState: InitialState = {
     userDbKey: '',
     measurements: {},
     mineKjoep: {},
-    mineEkstraKjoep: {}
+    mineEkstraKjoep: {},
+    mineEkstraListeKjoep: {},
+    mineEkstraLister: [],
+    aktiveListeId: null,
+    alleEkstraListeOnsker: {},
+    opprettListeDialogOpen: false,
   },
   brukere: {},
   config: {
@@ -34,6 +39,9 @@ const initialState: InitialState = {
     allowedListsForMe: [],
     valgtVennsListe: [],
     valgtVenn: {},
+    valgtVennsEkstraLister: [],
+    valgtVennsAktivListeId: null,
+    valgtVennsAlleEkstraListeOnsker: {},
   }
 };
 

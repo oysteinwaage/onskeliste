@@ -14,53 +14,88 @@ import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
+import SettingsIcon from '@mui/icons-material/Settings';
+import Typography from '@mui/material/Typography';
 
-import { removeWishFromMyList, updateFavorittOnMyWish, slettKjopteOnsker } from '../Api';
-import { toggleLenkeDialog, endreHeaderTekst } from '../actions/actions';
+import {
+  removeWishFromMyList,
+  removeWishFromExtraList,
+  updateFavorittOnMyWish,
+  updateWishFieldsOnExtraList,
+  slettKjopteOnsker,
+  slettKjopteOnskerPaaEkstraListe,
+} from '../Api';
+import { toggleLenkeDialog, endreHeaderTekst, settAktivListeId, settOpprettListeDialogOpen } from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
-import { RootState, Onske } from '../types';
+import OpprettListeDialog from './OpprettListeDialog';
+import { RootState, Onske, ExtraListMetadata, Bruker } from '../types';
 import { Dispatch } from 'redux';
 
-interface MinListeProps {
-  onToggleLenkeDialog: (index: Partial<Onske> | null) => void;
-  onEndreHeaderTekst: (nyTekst: string) => void;
-  innloggetBrukerNavn: string;
-  mineOnsker: Onske[];
-  slettKjopteOnskerEnabled: boolean;
+interface MinListeLocalState {
+  administrerListe: ExtraListMetadata | null;
 }
 
-class MinListe extends Component<MinListeProps> {
+interface MinListeProps {
+  onToggleLenkeDialog: (index: Partial<Onske> | undefined) => void;
+  onEndreHeaderTekst: (nyTekst: string) => void;
+  onSettAktivListeId: (listId: string | null) => void;
+  onLukkOpprettListeDialog: () => void;
+  innloggetBrukerNavn: string;
+  myUid: string;
+  mineOnsker: Onske[];
+  slettKjopteOnskerEnabled: boolean;
+  mineEkstraLister: ExtraListMetadata[];
+  alleEkstraListeOnsker: Record<string, Onske[]>;
+  opprettListeDialogOpen: boolean;
+  alleBrukere: Bruker[];
+}
+
+class MinListe extends Component<MinListeProps, MinListeLocalState> {
+  state: MinListeLocalState = { administrerListe: null };
+
   componentDidMount() {
-    const { onEndreHeaderTekst } = this.props;
-    onEndreHeaderTekst('Rediger ønskeliste');
+    this.props.onEndreHeaderTekst('Rediger ønskeliste');
   }
 
-  slettOnske(onske: Onske): void {
-    removeWishFromMyList(onske.key);
-  }
+  aapneDialog = (onske: Partial<Onske> | null, listId: string | null): void => {
+    const { onSettAktivListeId, onToggleLenkeDialog } = this.props;
+    onSettAktivListeId(listId);
+    onToggleLenkeDialog(onske || undefined);
+  };
 
-  settFavoritt(onske: Onske, erFavoritt: boolean): void {
-    updateFavorittOnMyWish(onske.key, erFavoritt);
-  }
+  slettOnske = (onske: Onske, listId: string | null): void => {
+    if (listId) {
+      removeWishFromExtraList(listId, onske.key);
+    } else {
+      removeWishFromMyList(onske.key);
+    }
+  };
+
+  settFavoritt = (onske: Onske, erFavoritt: boolean, listId: string | null): void => {
+    if (listId) {
+      updateWishFieldsOnExtraList(listId, onske.key, { favoritt: erFavoritt });
+    } else {
+      updateFavorittOnMyWish(onske.key, erFavoritt);
+    }
+  };
 
   lagAntallOgStrlKomponent = (onske: Onske): string => {
-    let res = (onske.antall && onske.antall > 1) ? `Antall: ${onske.antall}` : "";
+    let res = (onske.antall && onske.antall > 1) ? `Antall: ${onske.antall}` : '';
     if (onske.onskeSize) {
       res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
     }
     return res;
   };
 
-  populerMinListe() {
-    const { mineOnsker, onToggleLenkeDialog } = this.props;
-    mineOnsker.sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0));
-    return mineOnsker.map(onske =>
-      <div key={onske.onskeTekst + mineOnsker.indexOf(onske)}>
+  populerListe(onsker: Onske[], listId: string | null) {
+    const sorted = [...onsker].sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0));
+    return sorted.map((onske, idx) =>
+      <div key={onske.key || idx}>
         <ListItem
           className={onske.antall && onske.antall > 1 ? 'fjernPaddingUnder fjernPaddingVenstre' : 'fjernPaddingVenstre'}>
           {onske.favoritt ?
-            <StarIcon className="stjerne favoritt" onClick={() => this.settFavoritt(onske, false)} /> :
-            <StarBorderIcon className="stjerne" onClick={() => this.settFavoritt(onske, true)} />
+            <StarIcon className="stjerne favoritt" onClick={() => this.settFavoritt(onske, false, listId)} /> :
+            <StarBorderIcon className="stjerne" onClick={() => this.settFavoritt(onske, true, listId)} />
           }
           <ListItemText
             className='wishText'
@@ -83,12 +118,12 @@ class MinListe extends Component<MinListeProps> {
           />
           <ListItemSecondaryAction className='wishIconMenu'>
             <Tooltip title='Endre ønske'>
-              <IconButton aria-label="Edit" onClick={() => onToggleLenkeDialog(onske)}>
+              <IconButton aria-label="Edit" onClick={() => this.aapneDialog(onske, listId)}>
                 <EditIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title='Slett'>
-              <IconButton aria-label="Delete" onClick={() => this.slettOnske(onske)}>
+              <IconButton aria-label="Delete" onClick={() => this.slettOnske(onske, listId)}>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>
@@ -101,41 +136,113 @@ class MinListe extends Component<MinListeProps> {
           />
         }
         <Divider />
-      </div>,
+      </div>
     );
   }
 
   render() {
-    const { innloggetBrukerNavn, mineOnsker, onToggleLenkeDialog, slettKjopteOnskerEnabled } = this.props;
+    const {
+      innloggetBrukerNavn, myUid, mineOnsker, slettKjopteOnskerEnabled,
+      mineEkstraLister, alleEkstraListeOnsker,
+      opprettListeDialogOpen, onLukkOpprettListeDialog, alleBrukere,
+    } = this.props;
+    const { administrerListe } = this.state;
+
     return (
       <div className="minListe">
-        <p>
-          Velkommen {innloggetBrukerNavn}
-        </p>
-        <div className="addNewWish">
+        <p>Velkommen {innloggetBrukerNavn}</p>
+
+        {/* Hovedliste */}
+        <div className="addNewWish" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
           <Button className="addNewWishButton" variant="contained" color="inherit"
-            onClick={() => onToggleLenkeDialog(null)} startIcon={<PlaylistAddIcon />}>Legg til
-            ønske </Button>
+            onClick={() => this.aapneDialog(null, null)} startIcon={<PlaylistAddIcon />}>
+            Legg til ønske
+          </Button>
           {slettKjopteOnskerEnabled && (
-            <Button variant="outlined" color="error" style={{ marginLeft: 8 }}
-              onClick={() => slettKjopteOnsker(mineOnsker)}>
+            <Button variant="outlined" color="error" onClick={() => slettKjopteOnsker(mineOnsker)}>
               Slett kjøpte ønsker
             </Button>
           )}
         </div>
 
-        <div>
-          <Grid>
-            <h2>Min ønskeliste</h2>
-            <div className="minOnskeliste">
-              <List dense={false}>
-                {mineOnsker.length > 0 && <Divider />}
-                {this.populerMinListe()}
-              </List>
-              <OnskeDialog />
+        <Grid>
+          <h2>Min ønskeliste</h2>
+          <div className="minOnskeliste">
+            <List dense={false}>
+              {mineOnsker.length > 0 && <Divider />}
+              {this.populerListe(mineOnsker, null)}
+            </List>
+          </div>
+        </Grid>
+
+        {/* Ekstra lister */}
+        {mineEkstraLister.map(liste => {
+          const onsker = alleEkstraListeOnsker[liste.key] || [];
+          const otherUid = liste.sharedWithUid
+            ? (liste.ownerUid === myUid ? liste.sharedWithUid : liste.ownerUid)
+            : null;
+          const otherUser = otherUid ? alleBrukere.find(b => b.uid === otherUid) : null;
+
+          return (
+            <div key={liste.key}>
+              <Divider style={{ marginTop: 24, borderStyle: 'dashed' }} />
+              <Grid>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <h2 style={{ margin: 0 }}>{liste.name}</h2>
+                      {otherUser && (
+                        <Typography variant="caption" color="text.secondary">
+                          Delt liste med {otherUser.navn}
+                        </Typography>
+                      )}
+                    </div>
+                    <Tooltip title="Administrer liste">
+                      <IconButton size="small" onClick={() => this.setState({ administrerListe: liste })}>
+                        <SettingsIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', margin: '8px 0', justifyContent: 'center' }}>
+                    <Button variant="contained" color="inherit" size="small"
+                      onClick={() => this.aapneDialog(null, liste.key)} startIcon={<PlaylistAddIcon />}>
+                      Legg til ønske
+                    </Button>
+                    {slettKjopteOnskerEnabled && (
+                      <Button variant="outlined" color="error" size="small"
+                        onClick={() => slettKjopteOnskerPaaEkstraListe(liste.key, onsker)}>
+                        Slett kjøpte ønsker
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="minOnskeliste">
+                  <List dense={false}>
+                    {onsker.length > 0 && <Divider />}
+                    {this.populerListe(onsker, liste.key)}
+                  </List>
+                </div>
+              </Grid>
             </div>
-          </Grid>
-        </div>
+          );
+        })}
+
+        <OnskeDialog />
+
+        <OpprettListeDialog
+          open={opprettListeDialogOpen}
+          onClose={onLukkOpprettListeDialog}
+        />
+
+        {administrerListe && (
+          <OpprettListeDialog
+            open={true}
+            onClose={() => this.setState({ administrerListe: null })}
+            editListe={administrerListe}
+          />
+        )}
       </div>
     );
   }
@@ -143,13 +250,20 @@ class MinListe extends Component<MinListeProps> {
 
 const mapStateToProps = (state: RootState) => ({
   innloggetBrukerNavn: state.innloggetBruker.navn,
+  myUid: state.innloggetBruker.uid || '',
   mineOnsker: state.innloggetBruker.mineOnsker,
   slettKjopteOnskerEnabled: state.config.slettKjopteOnskerEnabled,
+  mineEkstraLister: state.innloggetBruker.mineEkstraLister,
+  alleEkstraListeOnsker: state.innloggetBruker.alleEkstraListeOnsker,
+  opprettListeDialogOpen: state.innloggetBruker.opprettListeDialogOpen,
+  alleBrukere: state.config.brukere,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  onToggleLenkeDialog: (index: Partial<Onske> | null) => dispatch(toggleLenkeDialog(index || undefined)),
+  onToggleLenkeDialog: (index: Partial<Onske> | undefined) => dispatch(toggleLenkeDialog(index)),
   onEndreHeaderTekst: (nyTekst: string) => dispatch(endreHeaderTekst(nyTekst)),
+  onSettAktivListeId: (listId: string | null) => dispatch(settAktivListeId(listId)),
+  onLukkOpprettListeDialog: () => dispatch(settOpprettListeDialogOpen(false)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MinListe);

@@ -17,7 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
-import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris } from '../Api';
+import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris, updateEkstraListeWishPris } from '../Api';
 import { finnNavnFraUid, antallAlleredeKjoptAvMeg, myWishlistId } from '../utils/util';
 import { RootState, Bruker, Onske } from '../types';
 import { Dispatch } from 'redux';
@@ -38,6 +38,7 @@ interface MineKjoepProps {
   onEndreHeaderTekst: (tekst: string) => void;
   mineKjoep: Record<string, Onske[]>;
   mineEkstraKjoep: Record<string, Onske[]>;
+  mineEkstraListeKjoep: Record<string, { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[] }[]>;
   alleBrukere: Bruker[];
   allowedListsForMe: string[];
 }
@@ -96,12 +97,14 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     this.setState(prev => ({ prisInput: { ...prev.prisInput, [editKey]: this.filtrerPris(value) } }));
   };
 
-  onPrisBlur = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean): void => {
+  onPrisBlur = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean, ekstraListeId?: string): void => {
     const editKey = `${brukerUid}_${kjoep.key}`;
     const value = this.state.prisInput[editKey];
     if (value === undefined) return;
     const pris = value.trim() === '' ? null : Number(value.replace(',', '.'));
-    if (erEkstraKjoep) {
+    if (ekstraListeId) {
+      updateEkstraListeWishPris(ekstraListeId, kjoep, pris);
+    } else if (erEkstraKjoep) {
       updateEkstraKjoepPris(brukerUid, kjoep.key, pris);
     } else {
       updateVanligKjoepPris(brukerUid, kjoep, pris);
@@ -123,18 +126,22 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     );
   };
 
-  renderPrisInput = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean): React.ReactNode => {
-    const currentPris = erEkstraKjoep
-      ? kjoep.pris
-      : (kjoep.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris;
-    const antall = erEkstraKjoep ? kjoep.antall : antallAlleredeKjoptAvMeg(kjoep);
+  renderPrisInput = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean, ekstraListeId?: string): React.ReactNode => {
+    const currentPris = ekstraListeId
+      ? (kjoep.kjoptAvListe || []).find((e: any) => e.kjoptAv === myWishlistId())?.pris
+      : erEkstraKjoep
+        ? kjoep.pris
+        : (kjoep.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris;
+    const antall = ekstraListeId
+      ? antallAlleredeKjoptAvMeg(kjoep)
+      : erEkstraKjoep ? kjoep.antall : antallAlleredeKjoptAvMeg(kjoep);
     return (
       <TextField
         size="small"
         label={antall && antall > 1 ? 'Totalpris' : 'Pris'}
         value={this.getPrisValue(brukerUid, kjoep.key, currentPris)}
         onChange={(e) => this.onPrisChange(brukerUid, kjoep.key, e.target.value)}
-        onBlur={() => this.onPrisBlur(brukerUid, kjoep, erEkstraKjoep)}
+        onBlur={() => this.onPrisBlur(brukerUid, kjoep, erEkstraKjoep, ekstraListeId)}
         inputProps={{ inputMode: 'numeric', style: { width: 60, padding: '4px 6px' } }}
         InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
         style={{ width: 90, flexShrink: 0, display: 'block' }}
@@ -202,14 +209,17 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
   };
 
   renderPersonGruppe = (brukerUid: string, bgColor: string): React.ReactNode => {
-    const { mineKjoep, mineEkstraKjoep, alleBrukere } = this.props;
+    const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere } = this.props;
     const kjoepListe = mineKjoep[brukerUid] || [];
     const ekstraListe = mineEkstraKjoep[brukerUid] || [];
-    const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0;
+    const ekstraListeLister = mineEkstraListeKjoep[brukerUid] || [];
+    const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0 || ekstraListeLister.some(l => l.onsker.length > 0);
 
     const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
     const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
-    const sum = kjoepSum + ekstraSum;
+    const ekstraListeSum = ekstraListeLister.reduce((acc, l) =>
+      acc + l.onsker.reduce((a, k) => a + ((k.kjoptAvListe || []).find((e: any) => e.kjoptAv === myWishlistId())?.pris || 0), 0), 0);
+    const sum = kjoepSum + ekstraSum + ekstraListeSum;
 
     return harNoe && (
       <div
@@ -270,10 +280,40 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                 <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
                   {this.renderPrisInput(brukerUid, kjoep, true)}
                 </div>
-                {ekstraListe.length > idx + 1 &&
+                {(ekstraListe.length > idx + 1 || ekstraListeLister.length > 0) &&
                   <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
               </div>
             ))}
+            {ekstraListeLister.map((listGruppe, lgIdx) => {
+              const deltMedBruker = listGruppe.sharedWithUid
+                ? alleBrukere.find(b => b.uid === listGruppe.sharedWithUid)
+                : null;
+              return (
+              <div key={listGruppe.listId}>
+                <Divider style={{ borderStyle: 'dashed', margin: '8px 0 6px' }} />
+                <div style={{ fontSize: '0.75rem', color: 'gray', padding: '2px 16px 4px', fontStyle: 'italic' }}>
+                  <span style={{ fontWeight: 'bold' }}>{listGruppe.listName}</span>
+                  {deltMedBruker && ` (delt med ${deltMedBruker.navn})`}
+                </div>
+                {listGruppe.onsker.map((kjoep, idx) => (
+                  <div key={kjoep.key}>
+                    <ListItem className="ProfilSide__mine-kjoep__liste-kjoep">
+                      <ListItemText
+                        className="wishText"
+                        primary={kjoep.onskeTekst}
+                        secondary={this.visLenkeOgAntall(kjoep)}
+                      />
+                    </ListItem>
+                    <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
+                      {this.renderPrisInput(brukerUid, kjoep, false, listGruppe.listId)}
+                    </div>
+                    {(listGruppe.onsker.length > idx + 1 || ekstraListeLister.length > lgIdx + 1) &&
+                      <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
+                  </div>
+                ))}
+              </div>
+            );
+            })}
           </div>
         </div>
       </div>
@@ -281,21 +321,29 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
   };
 
   render() {
-    const { mineKjoep, mineEkstraKjoep, alleBrukere, allowedListsForMe } = this.props;
+    const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere, allowedListsForMe } = this.props;
 
     const groupColors = ['#e8f4f8', '#f0f4e8', '#f8f0e8', '#f4e8f4', '#e8f4f0', '#f8f4e0'];
-    const allUids = Array.from(new Set([...Object.keys(mineKjoep), ...Object.keys(mineEkstraKjoep)]));
+    const allUids = Array.from(new Set([
+      ...Object.keys(mineKjoep),
+      ...Object.keys(mineEkstraKjoep),
+      ...Object.keys(mineEkstraListeKjoep),
+    ]));
     const harNoenKjoep = allUids.some(uid =>
       (mineKjoep[uid] && mineKjoep[uid].length > 0) ||
-      (mineEkstraKjoep[uid] && mineEkstraKjoep[uid].length > 0)
+      (mineEkstraKjoep[uid] && mineEkstraKjoep[uid].length > 0) ||
+      (mineEkstraListeKjoep[uid] && mineEkstraListeKjoep[uid].some(l => l.onsker.length > 0))
     );
 
     const totalSum = allUids.reduce((total, uid) => {
       const kjoepListe = mineKjoep[uid] || [];
       const ekstraListe = mineEkstraKjoep[uid] || [];
+      const ekstraListeLister = mineEkstraListeKjoep[uid] || [];
       const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
       const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
-      return total + kjoepSum + ekstraSum;
+      const ekstraListeSum = ekstraListeLister.reduce((acc, l) =>
+        acc + l.onsker.reduce((a, k) => a + ((k.kjoptAvListe || []).find((e: any) => e.kjoptAv === myWishlistId())?.pris || 0), 0), 0);
+      return total + kjoepSum + ekstraSum + ekstraListeSum;
     }, 0);
 
     return (
@@ -354,6 +402,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
 const mapStateToProps = (state: RootState) => ({
   mineKjoep: state.innloggetBruker.mineKjoep,
   mineEkstraKjoep: state.innloggetBruker.mineEkstraKjoep,
+  mineEkstraListeKjoep: state.innloggetBruker.mineEkstraListeKjoep,
   alleBrukere: state.config.brukere,
   allowedListsForMe: state.vennersLister.allowedListsForMe,
 });
