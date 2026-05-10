@@ -31,7 +31,6 @@ import {
     setSlettKjopteOnskerEnabled,
     mottaMineEkstraLister,
     oppdaterEkstraListeMetadata,
-    settAktivListeId,
     mottaEkstraListeOnsker,
     fjernEkstraListeOnsker,
     mottaValgtVennsEkstraLister,
