@@ -30,6 +30,7 @@ export interface Bruker {
   invisible?: boolean;
   erAdmin?: boolean;
   lastSeenVersion?: number;
+  mainListName?: string;
 }
 
 export interface Viewer {
@@ -50,6 +51,7 @@ export interface InnloggetBrukerState {
   email: string;
   navn: string;
   uid?: string;
+  mainListName?: string;
   mineOnsker: Onske[];
   openLenkeDialog: boolean;
   openLenkeDialogOnske: Partial<Onske>;

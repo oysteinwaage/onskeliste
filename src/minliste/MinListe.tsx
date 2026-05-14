@@ -48,6 +48,7 @@ interface MinListeProps {
   alleEkstraListeOnsker: Record<string, Onske[]>;
   opprettListeDialogOpen: boolean;
   alleBrukere: Bruker[];
+  mainListName?: string;
 }
 
 class MinListe extends Component<MinListeProps, MinListeLocalState> {
@@ -144,7 +145,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
     const {
       innloggetBrukerNavn, myUid, mineOnsker, slettKjopteOnskerEnabled,
       mineEkstraLister, alleEkstraListeOnsker,
-      opprettListeDialogOpen, onLukkOpprettListeDialog, alleBrukere,
+      opprettListeDialogOpen, onLukkOpprettListeDialog, alleBrukere, mainListName,
     } = this.props;
     const { administrerListe } = this.state;
 
@@ -166,7 +167,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
         </div>
 
         <Grid>
-          <h2>Min ønskeliste</h2>
+          <h2>{mainListName || 'Min ønskeliste'}</h2>
           <div className="minOnskeliste">
             <List dense={false}>
               {mineOnsker.length > 0 && <Divider />}
@@ -257,6 +258,7 @@ const mapStateToProps = (state: RootState) => ({
   alleEkstraListeOnsker: state.innloggetBruker.alleEkstraListeOnsker,
   opprettListeDialogOpen: state.innloggetBruker.opprettListeDialogOpen,
   alleBrukere: state.config.brukere,
+  mainListName: state.innloggetBruker.mainListName,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

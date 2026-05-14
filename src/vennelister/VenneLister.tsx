@@ -40,7 +40,8 @@ const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement<any, any> },
   ref: React.Ref<unknown>
 ) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  const { children, ...rest } = props;
+  return <Slide direction="up" ref={ref} {...rest}>{children}</Slide>;
 });
 
 interface VenneListerLocalState {
@@ -302,7 +303,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
         <ListeVelger />
         <div className="vennerliste-side__liste">
           <div className="vennerliste-side__liste-inner">
-            <h2>{valgtVenn && valgtVenn.navn && `Ønskelisten til ${valgtVenn.navn}`}</h2>
+            <h2>{valgtVenn && valgtVenn.navn && (valgtVenn.mainListName || `Ønskelisten til ${valgtVenn.navn}`)}</h2>
             <div className="minOnskeliste">
               <List dense={false}>
                 {valgtVennsListe.length > 0 && <Divider />}

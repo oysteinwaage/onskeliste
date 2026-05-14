@@ -37,6 +37,7 @@ import {
     mottaValgtVennsEkstraListeOnsker,
     settValgtVennsListeId,
     oppdaterMineEkstraListeKjoep,
+    settHovedListeNavn,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
 import { Onske, Viewer, ExtraListMetadata, Bruker } from './types';
@@ -265,6 +266,13 @@ export const updateLastSeenVersion = (newVersion: number, userDbKey: string) => 
         usersRef.child(userDbKey).update({ lastSeenVersion: newVersion });
     }
     dispatch(setLastSeenVersion(newVersion));
+};
+
+export const updateMainListName = (userDbKey: string, navn: string) => async (dispatch: Dispatch) => {
+    if (userDbKey) {
+        await usersRef.child(userDbKey).update({ mainListName: navn || null });
+    }
+    dispatch(settHovedListeNavn(navn));
 };
 
 export const updateMyMeasumentOnProfile = (userDbKey: string, newSize: string, sizeKey: string): void => {

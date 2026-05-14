@@ -85,6 +85,13 @@ const changes: ChangeEntry[] = [
     changes: [
       "Flere lister: Kan nå legge til flere ønskelister med angitt navn, disse kan også deles med andre brukere for å ha en delt ønskeliste",
     ]
+  },
+  {
+    version: 3.2,
+    releaseDate: "14.05.2025",
+    changes: [
+      "Kan nå også legge til eget navn på sin default ønskeliste om man vil, gjøres inne på Profil siden",
+    ]
   }
 ];
 

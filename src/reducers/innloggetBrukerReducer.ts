@@ -18,6 +18,7 @@ import {
     MOTTA_EKSTRA_LISTE_ONSKER,
     FJERN_EKSTRA_LISTE_ONSKER,
     SETT_OPPRETT_LISTE_DIALOG_OPEN,
+    SETT_HOVED_LISTE_NAVN,
 } from '../actions/actions';
 
 export default function innloggetBruker(
@@ -119,6 +120,11 @@ export default function innloggetBruker(
             return {
                 ...state,
                 opprettListeDialogOpen: action.open,
+            };
+        case SETT_HOVED_LISTE_NAVN:
+            return {
+                ...state,
+                mainListName: action.navn,
             };
         default:
             return state;

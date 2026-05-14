@@ -219,6 +219,14 @@ export function settValgtVennsListeId(listId: string | null) {
   };
 }
 
+export const SETT_HOVED_LISTE_NAVN = 'SETT_HOVED_LISTE_NAVN';
+export function settHovedListeNavn(navn: string) {
+  return {
+    type: SETT_HOVED_LISTE_NAVN as typeof SETT_HOVED_LISTE_NAVN,
+    navn,
+  };
+}
+
 // Union type of all actions
 export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
@@ -246,4 +254,5 @@ export type AppAction =
   | ReturnType<typeof mottaValgtVennsEkstraListeOnsker>
   | ReturnType<typeof settValgtVennsListeId>
   | ReturnType<typeof settOpprettListeDialogOpen>
-  | ReturnType<typeof oppdaterEkstraListeMetadata>;
+  | ReturnType<typeof oppdaterEkstraListeMetadata>
+  | ReturnType<typeof settHovedListeNavn>;

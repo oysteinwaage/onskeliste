@@ -7,7 +7,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { updateMyMeasumentOnProfile } from '../Api';
+import { updateMyMeasumentOnProfile, updateMainListName } from '../Api';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
 import { RootState } from '../types';
@@ -22,6 +22,7 @@ interface ProfilState {
   hansker: string | null;
   boksershorts: string | null;
   hatt: string | null;
+  mainListName: string | null;
   [key: string]: string | null;
 }
 
@@ -29,6 +30,8 @@ interface ProfilProps {
   myUserDbKey: string;
   onEndreHeaderTekst: () => void;
   measurements: Record<string, string>;
+  mainListName?: string;
+  onUpdateMainListName: (userDbKey: string, navn: string) => void;
 }
 
 class Profil extends Component<ProfilProps, ProfilState> {
@@ -43,6 +46,7 @@ class Profil extends Component<ProfilProps, ProfilState> {
       hansker: null,
       boksershorts: null,
       hatt: null,
+      mainListName: null,
     };
   }
 
@@ -57,10 +61,34 @@ class Profil extends Component<ProfilProps, ProfilState> {
   };
 
   render() {
-    const { measurements } = this.props;
+    const { measurements, mainListName, myUserDbKey, onUpdateMainListName } = this.props;
 
     return (
       <div className="ProfilSide">
+        <Accordion defaultExpanded>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <h3 style={{ margin: 0 }}>Min ønskeliste</h3>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormControl fullWidth>
+              <TextField
+                margin="dense"
+                id="mainListName"
+                label="Navn på ønskelisten din (valgfritt)"
+                placeholder="Min ønskeliste"
+                value={this.state.mainListName !== null ? this.state.mainListName : (mainListName || '')}
+                type="text"
+                onChange={(e) => this.setState({ mainListName: e.target.value })}
+                onBlur={(e) => {
+                  onUpdateMainListName(myUserDbKey, e.target.value.trim());
+                  this.setState({ mainListName: null });
+                }}
+                helperText="Vises istedenfor «Min ønskeliste» på din side og hos venner"
+              />
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
+
         <Accordion defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <h3 style={{ margin: 0 }}>Mine generelle mål</h3>
@@ -101,10 +129,12 @@ class Profil extends Component<ProfilProps, ProfilState> {
 const mapStateToProps = (state: RootState) => ({
   myUserDbKey: state.innloggetBruker.userDbKey,
   measurements: state.innloggetBruker.measurements,
+  mainListName: state.innloggetBruker.mainListName,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onEndreHeaderTekst: () => dispatch(endreHeaderTekst('Profil')),
+  onUpdateMainListName: (userDbKey: string, navn: string) => dispatch(updateMainListName(userDbKey, navn) as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Profil);
