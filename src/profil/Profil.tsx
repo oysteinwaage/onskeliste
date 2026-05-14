@@ -65,9 +65,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
 
     return (
       <div className="ProfilSide">
-        <Accordion defaultExpanded>
+        <Accordion style={{ width: '100%' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <h3 style={{ margin: 0 }}>Min ønskeliste</h3>
+            <h3 style={{ margin: 0 }}>Navn på hoved ønskeliste</h3>
           </AccordionSummary>
           <AccordionDetails>
             <FormControl fullWidth>
@@ -86,6 +86,15 @@ class Profil extends Component<ProfilProps, ProfilState> {
                 helperText="Vises istedenfor «Min ønskeliste» på din side og hos venner"
               />
             </FormControl>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <h3 style={{ margin: 0 }}>Hvem skal kunne se listen din?</h3>
+          </AccordionSummary>
+          <AccordionDetails>
+            <AddViewersToMyListComponent />
           </AccordionDetails>
         </Accordion>
 
@@ -110,15 +119,6 @@ class Profil extends Component<ProfilProps, ProfilState> {
                 />
               </FormControl>
             ))}
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <h3 style={{ margin: 0 }}>Hvem skal kunne se listen din?</h3>
-          </AccordionSummary>
-          <AccordionDetails>
-            <AddViewersToMyListComponent />
           </AccordionDetails>
         </Accordion>
       </div>
