@@ -87,7 +87,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   };
 
   kjoptAlleOnskerClassname = (onske: Onske): string =>
-    onske.antall === totalValgt(onske) ? inneholderInnloggetBrukersUid(onske.kjoptAvListe) ? 'onskeKjopt kjoptAvDeg' : 'onskeKjopt' : '';
+    alleOnskerTatt(onske) ? inneholderInnloggetBrukersUid(onske.kjoptAvListe) ? 'onskeKjopt kjoptAvDeg' : 'onskeKjopt' : '';
   onskeErFavoritt = (onske: Onske): string => onske.favoritt ? ' fjernPaddingVenstre' : '';
 
   onMarkerOnskeSomKjopt = (onske: Onske, listId: string | null) => (_event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -160,7 +160,12 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   };
 
   lagAntallOgStrlTekst = (onske: Onske): string => {
-    let res = (onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) ? `Antall tatt: ${totalValgt(onske)}/${onske.antall}` : '';
+    let res = '';
+    if (onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) {
+      const mittAntall = antallAlleredeKjoptAvMeg(onske);
+      res = `Antall tatt: ${totalValgt(onske)}/${onske.antall}`;
+      if (mittAntall > 0) res += ` · du har tatt ${mittAntall}`;
+    }
     if (onske.onskeSize) {
       res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
     }
@@ -200,10 +205,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   velgeAntallDialog = (): React.ReactNode => {
     const { dialogOpen, valgtOnske, antallValgt } = this.state;
     const alleredeValgtAvMeg = antallAlleredeKjoptAvMeg(valgtOnske);
-    let tilgjengeligeFortsatt = valgtOnske.antall || 0;
-
-    (valgtOnske.kjoptAvListe || []).forEach(kjopt => tilgjengeligeFortsatt = tilgjengeligeFortsatt - kjopt.antallKjopt);
-    const antallTilgjengeligeForMegTotalt = tilgjengeligeFortsatt + alleredeValgtAvMeg;
+    const tilgjengeligeFortsatt = Math.max(0, (valgtOnske.antall || 0) - totalValgt(valgtOnske as Onske) + alleredeValgtAvMeg);
 
     return (
       <Dialog
@@ -235,7 +237,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
             input={<Input />}
           >
             <MenuItem value={0}>{0}</MenuItem>
-            {[...Array(antallTilgjengeligeForMegTotalt).keys()].map(nr =>
+            {[...Array(tilgjengeligeFortsatt).keys()].map(nr =>
               <MenuItem key={nr + 1} value={nr + 1}>{nr + 1}</MenuItem>
             )}
           </Select>

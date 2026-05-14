@@ -18,8 +18,7 @@ export const inneholderInnloggetBrukersUid = (onskerKjopt: KjoptAv[] | undefined
   (onskerKjopt || []).find(kjop => kjop.kjoptAv === auth.currentUser!.uid);
 export const totalValgt = (onske: Onske): number =>
   kjoptListe(onske).reduce((total, kjopt) => total + kjopt.antallKjopt, 0);
-// TODO ja, det ble jo issue som forventet om noen skrur ned antall etter det allerede er kjøpt alt...
-export const alleOnskerTatt = (onske: Onske): boolean => totalValgt(onske) === onske.antall;
+export const alleOnskerTatt = (onske: Onske): boolean => totalValgt(onske) >= (onske.antall || 1);
 export const antallAlleredeKjoptAvMeg = (onske: Partial<Onske>): number =>
   (kjoptListe(onske as Onske).find(k => k.kjoptAv === myWishlistId()) || { antallKjopt: 0 }).antallKjopt || 0;
 
