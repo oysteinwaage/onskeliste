@@ -11,8 +11,6 @@ import { updateLastSeenVersion } from '../Api';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
 
-const currentVersion = 3.0;
-
 interface ChangeEntry {
   version: number;
   releaseDate: string;
@@ -94,6 +92,8 @@ const changes: ChangeEntry[] = [
     ]
   }
 ];
+
+const currentVersion = Math.max(...changes.map(c => c.version));
 
 interface ChangesSinceLastLoginProps {
   onUpdateLastSeenVersion: (currentVersion: number, dbKey: string) => void;
