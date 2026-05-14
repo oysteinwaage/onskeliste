@@ -185,13 +185,13 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
           const otherUser = otherUid ? alleBrukere.find(b => b.uid === otherUid) : null;
 
           return (
-            <div key={liste.key}>
-              <Divider style={{ marginTop: 24, borderStyle: 'dashed' }} />
+            <div key={liste.key} style={{ marginTop: 24 }}>
+
               <Grid>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <div style={{ textAlign: 'center' }}>
-                      <h2 style={{ margin: 0 }}>{liste.name}</h2>
+                      <h2 style={{ margin: 0, marginBottom: 8 }}>{liste.name}</h2>
                       {otherUser && (
                         <Typography variant="caption" color="text.secondary">
                           Delt liste med {otherUser.navn}

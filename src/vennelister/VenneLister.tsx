@@ -315,6 +315,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 
         {valgtVennsEkstraLister.map(liste => {
           const onsker = valgtVennsAlleEkstraListeOnsker[liste.key] || [];
+          if (onsker.length === 0) return null;
           const otherUid = liste.sharedWithUid
             ? (liste.ownerUid === valgtVenn.uid ? liste.sharedWithUid : liste.ownerUid)
             : null;
@@ -322,11 +323,10 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
 
           return (
             <React.Fragment key={liste.key}>
-              <Divider style={{ marginTop: 24, borderStyle: 'dashed' }} />
-            <div className="vennerliste-side__liste">
+            <div className="vennerliste-side__liste" style={{ marginTop: 24 }}>
               <div className="vennerliste-side__liste-inner">
                 <div style={{ textAlign: 'center', marginTop: 8 }}>
-                  <h2 style={{ margin: 0 }}>{liste.name}</h2>
+                  <h2 style={{ margin: 0, marginBottom: 8 }}>{liste.name}</h2>
                   {otherUser && (
                     <Typography variant="caption" color="text.secondary" display="block">
                       Delt med {otherUser.navn}
