@@ -103,7 +103,7 @@ const changes: ChangeEntry[] = [
     ]
   },
   {
-    version: 4.1,
+    version: 4.2,
     releaseDate: "15.05.2025",
     changes: [
       "Tilbakemelding: Det kan nå sendes inn endringsønsker, ønsker om ny funksjonalitet eller rapportere feil direkte i app'en. Se Tilbakemelding i sidemenyen 📬",
