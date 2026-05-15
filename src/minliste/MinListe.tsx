@@ -17,7 +17,7 @@ import { RootState, Onske, ExtraListMetadata, Bruker } from '../types';
 import { Dispatch } from 'redux';
 import { Button } from '../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
-import { nextSortOrder } from '../utils/sortUtils';
+import { nextSortOrder, firstSortOrder } from '../utils/sortUtils';
 
 interface MinListeLocalState {
   administrerListe: ExtraListMetadata | null;
@@ -64,7 +64,9 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
     const allOnsker = listId
       ? (this.props.alleEkstraListeOnsker[listId] || [])
       : this.props.mineOnsker;
-    const sortOrder = nextSortOrder(allOnsker, erFavoritt);
+    const sortOrder = erFavoritt
+      ? nextSortOrder(allOnsker, erFavoritt)
+      : firstSortOrder(allOnsker, erFavoritt);
     updateFavorittWithSortOrder(onske.key, erFavoritt, sortOrder, listId);
   };
 

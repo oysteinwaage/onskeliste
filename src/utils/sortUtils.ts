@@ -14,3 +14,10 @@ export const nextSortOrder = (onsker: Onske[], erFavoritt: boolean): number => {
   const maxOrder = Math.max(...sectionItems.map(o => o.sortOrder ?? -1));
   return maxOrder + 1;
 };
+
+export const firstSortOrder = (onsker: Onske[], erFavoritt: boolean): number => {
+  const sectionItems = onsker.filter(o => !!o.favoritt === erFavoritt);
+  if (sectionItems.length === 0) return 0;
+  const minOrder = Math.min(...sectionItems.map(o => o.sortOrder ?? Number.MAX_SAFE_INTEGER));
+  return minOrder - 1;
+};
