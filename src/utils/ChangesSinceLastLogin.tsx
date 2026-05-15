@@ -99,7 +99,7 @@ const changes: ChangeEntry[] = [
     version: 4.1,
     releaseDate: "15.05.2025",
     changes: [
-      "Manuell sortering: Man kan nå selv velge rekkefølgen på ønskene sine, drag-and-drop stil. Trykk og dra et ønske opp eller ned for å plassere det på riktig prioritering i din ønskeliste 😎",
+      "Manuell sortering: Man kan nå selv velge rekkefølgen på ønskene sine, drag-and-drop stil. Trykk og dra et ønske opp eller ned for å plassere det på riktig prioritering i din ønskeliste innenfor grupperingen sin (Stjernet eller ikke stjernet) 😎",
     ]
   }
 ];
