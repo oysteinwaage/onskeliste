@@ -171,6 +171,7 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
                       <div className="w-full">
                         <input
                           className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                          style={{ fontSize: 'max(16px, 1em)' }}
                           placeholder="Søk etter navn..."
                           value={soek}
                           onChange={e => this.setState({ soek: e.target.value, soekApen: true })}
