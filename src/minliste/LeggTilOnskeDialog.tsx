@@ -58,6 +58,9 @@ interface LeggTilOnskeDialogProps {
   openLenkeDialogOnske: Partial<Onske>;
   onToggleLenkeDialog: () => void;
   aktiveListeId: string | null;
+  mineEkstraLister: import('../types').ExtraListMetadata[];
+  myUid: string | undefined;
+  alleBrukere: import('../types').Bruker[];
 }
 
 class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState> {
@@ -200,7 +203,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
   };
 
   render() {
-    const { openLenkeDialog, openLenkeDialogOnske } = this.props;
+    const { openLenkeDialog, openLenkeDialogOnske, aktiveListeId, mineEkstraLister, myUid, alleBrukere } = this.props;
     const { text, size, antall, sokeResultater, lasterSok, sokeApen } = this.state;
     const defaultText = openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst;
     const defaultSize = openLenkeDialogOnske && openLenkeDialogOnske.onskeSize;
@@ -219,7 +222,23 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
       >
         <DialogContent fullScreen={isMobile} showClose={false} className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{erNyttOnske ? 'Legg til ønske' : 'Oppdater ønske'}</DialogTitle>
+            <DialogTitle>
+              {(() => {
+                if (!erNyttOnske) return 'Oppdater ønske';
+                if (!aktiveListeId) return 'Legg til ønske';
+                const aktivListe = mineEkstraLister.find(l => l.key === aktiveListeId);
+                const otherUid = aktivListe?.sharedWithUid
+                  ? (aktivListe.ownerUid === myUid ? aktivListe.sharedWithUid : aktivListe.ownerUid)
+                  : null;
+                const otherNavn = otherUid ? alleBrukere.find(b => b.uid === otherUid)?.navn : null;
+                return (
+                  <>
+                    {`Legg til ønske - ${aktivListe?.name ?? ''}`}
+                    {otherNavn && <span className="text-sm font-normal text-slate-400 ml-1">med {otherNavn}</span>}
+                  </>
+                );
+              })()}
+            </DialogTitle>
             <DialogDescription>
               {erNyttOnske
                 ? 'Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn jo bedre!'
@@ -370,6 +389,9 @@ const mapStateToProps = (state: RootState) => ({
   openLenkeDialog: state.innloggetBruker.openLenkeDialog,
   openLenkeDialogOnske: state.innloggetBruker.openLenkeDialogOnske,
   aktiveListeId: state.innloggetBruker.aktiveListeId,
+  mineEkstraLister: state.innloggetBruker.mineEkstraLister,
+  myUid: state.innloggetBruker.uid,
+  alleBrukere: state.config.brukere,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
