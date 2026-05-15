@@ -1,27 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
-import Checkbox from '@mui/material/Checkbox';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import InputLabel from '@mui/material/InputLabel';
-import Input from '@mui/material/Input';
-import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import TextField from '@mui/material/TextField';
-import Slide from '@mui/material/Slide';
-import StarIcon from '@mui/icons-material/Star';
-import { TransitionProps } from '@mui/material/transitions';
-
-import Typography from '@mui/material/Typography';
+import { Star } from 'lucide-react';
 
 import ListeVelger from './ListeVelger';
 import { endreHeaderTekst } from '../actions/actions';
@@ -35,14 +14,12 @@ import {
 } from '../utils/util';
 import { RootState, Onske, Bruker, KjoptAv, ExtraListMetadata } from '../types';
 import { Dispatch } from 'redux';
-
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children: React.ReactElement<any, any> },
-  ref: React.Ref<unknown>
-) {
-  const { children, ...rest } = props;
-  return <Slide direction="up" ref={ref} {...rest}>{children}</Slide>;
-});
+import { Separator } from '../components/ui/separator';
+import { Button } from '../components/ui/button';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody,
+} from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 interface VenneListerLocalState {
   dialogOpen: boolean;
@@ -54,7 +31,10 @@ interface VenneListerLocalState {
   prisPerStk: number | null;
 }
 
-const initLocalState: VenneListerLocalState = { dialogOpen: false, valgtOnske: {}, valgtListeId: null, antallValgt: 0, prisDialogOpen: false, prisInput: '', prisPerStk: null };
+const initLocalState: VenneListerLocalState = {
+  dialogOpen: false, valgtOnske: {}, valgtListeId: null,
+  antallValgt: 0, prisDialogOpen: false, prisInput: '', prisPerStk: null,
+};
 
 interface VenneListerProps {
   valgtVenn: Partial<Bruker>;
@@ -72,8 +52,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   resetLocalState = (): void => this.setState(initLocalState);
 
   componentDidMount() {
-    const { onEndreHeaderTekst } = this.props;
-    onEndreHeaderTekst('Venners lister');
+    this.props.onEndreHeaderTekst('Venners lister');
   }
 
   updateWishKjoep = (newValues: Partial<Onske>, wish: Onske): void => {
@@ -85,10 +64,6 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
       updateWishOnListWith(newValues, wish, valgtVenn.uid as string);
     }
   };
-
-  kjoptAlleOnskerClassname = (onske: Onske): string =>
-    alleOnskerTatt(onske) ? inneholderInnloggetBrukersUid(onske.kjoptAvListe) ? 'onskeKjopt kjoptAvDeg' : 'onskeKjopt' : '';
-  onskeErFavoritt = (onske: Onske): string => onske.favoritt ? ' fjernPaddingVenstre' : '';
 
   onMarkerOnskeSomKjopt = (onske: Onske, listId: string | null) => (_event: React.ChangeEvent<HTMLInputElement>): void => {
     if (onske.antall && onske.antall > 1) {
@@ -121,21 +96,30 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
     if (alleOnskerTatt(onske)) {
       const tattAvNavn = kjoptListe(onske).reduce((acc: string, bruker) => {
         const navn = erInnloggetBrukersUid(bruker.kjoptAv) ? 'deg' : bruker.kjoptAvNavn;
-        const antallTatt = bruker.antallKjopt > 1 ? '('.concat(String(bruker.antallKjopt), ')') : '';
-        acc = acc.concat(navn, antallTatt, ', ');
-        return acc;
+        const antallTatt = bruker.antallKjopt > 1 ? ` (${bruker.antallKjopt})` : '';
+        return acc.concat(navn, antallTatt, ', ');
       }, '').slice(0, -2);
-      return 'Tatt av ' + (onske.antall === 1 ? erInnloggetBrukersUid(onske.kjoptAvListe![0].kjoptAv) ? 'deg' : onske.kjoptAvListe![0].kjoptAvNavn : tattAvNavn);
+      return 'Tatt av ' + (onske.antall === 1
+        ? erInnloggetBrukersUid(onske.kjoptAvListe![0].kjoptAv) ? 'deg' : onske.kjoptAvListe![0].kjoptAvNavn
+        : tattAvNavn);
     }
     const allUrls = onske.urls || (onske.url ? [onske.url] : []);
     if (allUrls.length === 0) return null;
-    if (allUrls.length === 1) return <a href={allUrls[0]} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>;
+    if (allUrls.length === 1) return (
+      <a href={allUrls[0]} target="_blank" rel="noopener noreferrer"
+        className="text-primary-600 hover:text-primary-700 underline underline-offset-1 text-xs">
+        Her kan den kjøpes
+      </a>
+    );
     return (
-      <span>
+      <span className="text-xs text-primary-600">
         {allUrls.map((url, i) => (
           <React.Fragment key={i}>
-            <a href={url} target="_blank" rel="noopener noreferrer">Lenke {i + 1}</a>
-            {i < allUrls.length - 1 && ' · '}
+            <a href={url} target="_blank" rel="noopener noreferrer"
+              className="hover:text-primary-700 underline underline-offset-1">
+              Lenke {i + 1}
+            </a>
+            {i < allUrls.length - 1 && <span className="mx-1 text-slate-300">·</span>}
           </React.Fragment>
         ))}
       </span>
@@ -145,16 +129,13 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   onMarkerOnskerSomKjopt = (): void => {
     const { mittNavn } = this.props;
     const { antallValgt, valgtOnske, prisInput } = this.state;
-
     const newKjoptAvListe = [...((valgtOnske.kjoptAvListe || []).filter(vo => vo.kjoptAv !== myWishlistId()))];
-
     const parsedPris = prisInput.trim() ? Number(prisInput.replace(',', '.')) : undefined;
     if (antallValgt > 0) {
       const entry: KjoptAv = { kjoptAv: myWishlistId(), antallKjopt: antallValgt, kjoptAvNavn: mittNavn };
       if (parsedPris !== undefined && !isNaN(parsedPris)) entry.pris = parsedPris;
       newKjoptAvListe.push(entry);
     }
-
     this.updateWishKjoep({ kjoptAvListe: newKjoptAvListe }, valgtOnske as Onske);
     this.resetLocalState();
   };
@@ -167,40 +148,54 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
       if (mittAntall > 0) res += ` · du har tatt ${mittAntall}`;
     }
     if (onske.onskeSize) {
-      res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
+      res = res ? res.concat(` · Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
     }
     return res;
   };
 
   populerOnskeliste = (onskeliste: Onske[], listId: string | null = null): React.ReactNode =>
-    onskeliste.sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0)).map(onske =>
-      <div key={onske.onskeTekst + onskeliste.indexOf(onske)}>
-        <ListItem
-          className={this.kjoptAlleOnskerClassname(onske) + this.onskeErFavoritt(onske) + (!alleOnskerTatt(onske) && onske.antall && onske.antall > 1 ? ' fjernPaddingUnder' : '')}>
-          {onske.favoritt &&
-            <StarIcon className={alleOnskerTatt(onske) ? 'stjerne favorittTatt' : 'stjerne favoritt'} />
-          }
-          <ListItemText
-            className={alleOnskerTatt(onske) ? 'onskeKjoptTekst ' : onske.antall && onske.antall > 1 ? 'fjernPaddingUnder' : ''}
-            primary={onske.onskeTekst}
-            secondary={this.lenkeEllerKjoptAv(onske)}
-          />
-          <ListItemSecondaryAction>
-            <Tooltip title='Kjøpt'>
-              <Checkbox checked={alleOnskerTatt(onske)}
-                disabled={alleOnskerTatt(onske) && !antallAlleredeKjoptAvMeg(onske)}
-                onChange={this.onMarkerOnskeSomKjopt(onske, listId)} />
-            </Tooltip>
-          </ListItemSecondaryAction>
-        </ListItem>
-        {((onske.antall && onske.antall > 1 && !alleOnskerTatt(onske)) || onske.onskeSize) &&
-          <ListItemText
-            className={`${this.kjoptAlleOnskerClassname(onske)} ${onske.favoritt ? 'antallOnskerTatt erFavoritt' : 'antallOnskerTatt'}`}
-            secondary={this.lagAntallOgStrlTekst(onske)}
-          />}
-        <Divider />
-      </div>,
-    );
+    onskeliste.sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0)).map((onske, idx) => {
+      const erKjopt = alleOnskerTatt(onske);
+      const erKjoptAvMeg = erKjopt && !!inneholderInnloggetBrukersUid(onske.kjoptAvListe);
+      const metaTekst = this.lagAntallOgStrlTekst(onske);
+
+      return (
+        <div
+          key={onske.onskeTekst + idx}
+          className={erKjoptAvMeg ? 'bg-emerald-50' : erKjopt ? 'bg-rose-50' : ''}
+        >
+          <div className="flex items-start gap-2 py-3 px-3">
+            {onske.favoritt && (
+              <Star
+                className={`h-5 w-5 shrink-0 mt-0.5 ${erKjopt ? 'fill-amber-300 text-amber-300' : 'fill-amber-400 text-amber-400'}`}
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-medium break-words ${erKjopt ? 'italic text-slate-500' : 'text-slate-800'}`}>
+                {onske.onskeTekst}
+              </p>
+              <div className="mt-0.5">
+                {this.lenkeEllerKjoptAv(onske)}
+              </div>
+              {metaTekst && (
+                <p className="text-xs text-slate-400 mt-0.5">{metaTekst}</p>
+              )}
+            </div>
+
+            <div className="shrink-0 flex items-center h-6 mt-0.5">
+              <input
+                type="checkbox"
+                className="h-5 w-5 rounded border-2 border-slate-300 checked:bg-primary-600 checked:border-primary-600 cursor-pointer transition-colors accent-indigo-600"
+                checked={erKjopt}
+                disabled={erKjopt && !antallAlleredeKjoptAvMeg(onske)}
+                onChange={this.onMarkerOnskeSomKjopt(onske, listId)}
+              />
+            </div>
+          </div>
+          <Separator />
+        </div>
+      );
+    });
 
   velgeAntallDialog = (): React.ReactNode => {
     const { dialogOpen, valgtOnske, antallValgt } = this.state;
@@ -208,91 +203,112 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
     const tilgjengeligeFortsatt = Math.max(0, (valgtOnske.antall || 0) - totalValgt(valgtOnske as Onske) + alleredeValgtAvMeg);
 
     return (
-      <Dialog
-        className="plukkOnskerDialog"
-        open={dialogOpen}
-        onClose={this.resetLocalState}
-        TransitionComponent={Transition}
-      >
-        <DialogTitle>Det er fortsatt ledig {tilgjengeligeFortsatt} stk av <span
-          className="onskeTekstDialog">{valgtOnske.onskeTekst}</span>.
-          Hvor mange har du tenkt å kjøpe totalt?
-          {alleredeValgtAvMeg > 0 && <span
-            className="onskeTekstDialogLiten">(Inkludert de(n) {alleredeValgtAvMeg} du allerede har tatt)</span>}
-        </DialogTitle>
-        <DialogContent>
-          <InputLabel id="antall-dialog-select-label">Antall</InputLabel>
-          <Select
-            labelId="antall-dialog-select-label"
-            id="dialog-select"
-            value={antallValgt}
-            onChange={(e: SelectChangeEvent<number>) => {
-              const newAntall = e.target.value as number;
-              const { prisPerStk } = this.state;
-              const newPris = prisPerStk != null && newAntall > 0
-                ? String(Math.round(prisPerStk * newAntall))
-                : this.state.prisInput;
-              this.setState({ antallValgt: newAntall, prisInput: newPris });
-            }}
-            input={<Input />}
-          >
-            <MenuItem value={0}>{0}</MenuItem>
-            {[...Array(tilgjengeligeFortsatt).keys()].map(nr =>
-              <MenuItem key={nr + 1} value={nr + 1}>{nr + 1}</MenuItem>
-            )}
-          </Select>
-          <div style={{ marginTop: 16 }}>
-            <TextField
-              label={antallValgt > 1 ? 'Totalpris (valgfritt)' : 'Pris (valgfritt)'}
-              value={this.state.prisInput}
-              inputProps={{ inputMode: 'numeric' }}
-              InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9,.]/g, '');
-                const { antallValgt } = this.state;
-                const parsed = Number(val.replace(',', '.'));
-                const prisPerStk = val && !isNaN(parsed) && antallValgt > 0 ? parsed / antallValgt : null;
-                this.setState({ prisInput: val, prisPerStk });
-              }}
-              variant="standard"
-            />
-          </div>
+      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) this.resetLocalState(); }}>
+        <DialogContent showClose={false} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              Velg antall
+            </DialogTitle>
+            <p className="text-sm text-slate-500 mt-1">
+              Det er fortsatt ledig <strong>{tilgjengeligeFortsatt}</strong> stk av{' '}
+              <em className="font-semibold text-slate-700">{valgtOnske.onskeTekst}</em>.
+              Hvor mange har du tenkt å kjøpe totalt?
+              {alleredeValgtAvMeg > 0 && (
+                <span className="text-xs text-slate-400 block mt-1">
+                  (Inkludert de(n) {alleredeValgtAvMeg} du allerede har tatt)
+                </span>
+              )}
+            </p>
+          </DialogHeader>
+          <DialogBody className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-1">Antall</label>
+              <Select
+                value={String(antallValgt)}
+                onValueChange={(val) => {
+                  const newAntall = Number(val);
+                  const { prisPerStk } = this.state;
+                  const newPris = prisPerStk != null && newAntall > 0
+                    ? String(Math.round(prisPerStk * newAntall))
+                    : this.state.prisInput;
+                  this.setState({ antallValgt: newAntall, prisInput: newPris });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0</SelectItem>
+                  {[...Array(tilgjengeligeFortsatt).keys()].map(nr => (
+                    <SelectItem key={nr + 1} value={String(nr + 1)}>{nr + 1}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-1">
+                {antallValgt > 1 ? 'Totalpris' : 'Pris'}{' '}
+                <span className="text-slate-400 font-normal">(valgfritt)</span>
+              </label>
+              <div className="relative">
+                <input
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm pr-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                  inputMode="numeric"
+                  value={this.state.prisInput}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9,.]/g, '');
+                    const parsed = Number(val.replace(',', '.'));
+                    const prisPerStk = val && !isNaN(parsed) && antallValgt > 0 ? parsed / antallValgt : null;
+                    this.setState({ prisInput: val, prisPerStk });
+                  }}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kr</span>
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" onClick={this.resetLocalState}>Avbryt</Button>
+            <Button onClick={this.onMarkerOnskerSomKjopt}>Lagre</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={this.resetLocalState}>Avbryt</Button>
-          <Button onClick={this.onMarkerOnskerSomKjopt}>Lagre</Button>
-        </DialogActions>
       </Dialog>
     );
   };
 
   prisDialog = (): React.ReactNode => {
-    const { prisDialogOpen, valgtOnske, prisInput } = this.state;
+    const { prisDialogOpen, valgtOnske } = this.state;
     return (
-      <Dialog open={prisDialogOpen} onClose={this.resetLocalState} TransitionComponent={Transition}>
-        <DialogTitle>
-          Kjøpt: <span className="onskeTekstDialog">{valgtOnske.onskeTekst}</span>
-          <div style={{ fontSize: '0.75rem', fontStyle: 'italic', fontWeight: 'normal', marginTop: 4, color: 'gray' }}>
-            På den nye Mine Kjøp siden din kan du nå i tillegg til å se alle kjøpene dine også se hvor mye du har brukt pr person og totalt
-          </div>
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            label="Pris (valgfritt)"
-            value={prisInput}
-            inputProps={{ inputMode: 'numeric' }}
-            InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
-            onChange={(e) => this.setState({ prisInput: e.target.value.replace(/[^0-9,.]/g, '') })}
-            onKeyDown={(e) => { if (e.key === 'Enter') this.saveSingleKjoep(); }}
-            variant="standard"
-            fullWidth
-          />
+      <Dialog open={prisDialogOpen} onOpenChange={(o) => { if (!o) this.resetLocalState(); }}>
+        <DialogContent showClose={false} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              Kjøpt: <em className="not-italic font-bold text-primary-600">{valgtOnske.onskeTekst}</em>
+            </DialogTitle>
+            <p className="text-xs text-slate-400 italic mt-1">
+              På Mine Kjøp-siden kan du se alle kjøpene dine og oversikt over hva du har brukt
+            </p>
+          </DialogHeader>
+          <DialogBody>
+            <label className="text-sm font-medium text-slate-700 block mb-1">
+              Pris <span className="text-slate-400 font-normal">(valgfritt)</span>
+            </label>
+            <div className="relative">
+              <input
+                autoFocus
+                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm pr-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                inputMode="numeric"
+                value={this.state.prisInput}
+                onChange={(e) => this.setState({ prisInput: e.target.value.replace(/[^0-9,.]/g, '') })}
+                onKeyDown={(e) => { if (e.key === 'Enter') this.saveSingleKjoep(); }}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kr</span>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" onClick={this.resetLocalState}>Avbryt</Button>
+            <Button onClick={this.saveSingleKjoep}>Lagre</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={this.resetLocalState}>Avbryt</Button>
-          <Button onClick={this.saveSingleKjoep} variant="contained">Lagre</Button>
-        </DialogActions>
       </Dialog>
     );
   };
@@ -300,21 +316,28 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   render() {
     const { valgtVenn, valgtVennsListe, valgtVennsEkstraLister, valgtVennsAlleEkstraListeOnsker, alleBrukere } = this.props;
     const harGenerelleMaal = valgtVenn.measurements && Object.values(valgtVenn.measurements).some(k => !!k);
+
     return (
-      <div className="vennerliste-side">
+      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6">
         <ListeVelger />
-        <div className="vennerliste-side__liste">
-          <div className="vennerliste-side__liste-inner">
-            <h2>{valgtVenn && valgtVenn.navn && (valgtVenn.mainListName || `Ønskelisten til ${valgtVenn.navn}`)}</h2>
-            <div className="minOnskeliste">
-              <List dense={false}>
-                {valgtVennsListe.length > 0 && <Divider />}
-                {this.populerOnskeliste(valgtVennsListe, null)}
-              </List>
-            </div>
+
+        {/* Hovedliste */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+            <h2 className="text-base font-semibold text-slate-800">
+              {valgtVenn?.navn && (valgtVenn.mainListName || `Ønskelisten til ${valgtVenn.navn}`)}
+            </h2>
+          </div>
+          <div>
+            {valgtVennsListe.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-8">Velg en person for å se tilhørende ønskeliste(r)</p>
+            ) : (
+              this.populerOnskeliste(valgtVennsListe, null)
+            )}
           </div>
         </div>
 
+        {/* Ekstra lister */}
         {valgtVennsEkstraLister.map(liste => {
           const onsker = valgtVennsAlleEkstraListeOnsker[liste.key] || [];
           if (onsker.length === 0) return null;
@@ -324,43 +347,37 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
           const otherUser = otherUid ? alleBrukere.find(b => b.uid === otherUid) : null;
 
           return (
-            <React.Fragment key={liste.key}>
-            <div className="vennerliste-side__liste" style={{ marginTop: 24 }}>
-              <div className="vennerliste-side__liste-inner">
-                <div style={{ textAlign: 'center', marginTop: 8 }}>
-                  <h2 style={{ margin: 0, marginBottom: 8 }}>{liste.name}</h2>
-                  {otherUser && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Delt med {otherUser.navn}
-                    </Typography>
-                  )}
-                </div>
-                <div className="minOnskeliste">
-                  <List dense={false}>
-                    {onsker.length > 0 && <Divider />}
-                    {this.populerOnskeliste(onsker, liste.key)}
-                  </List>
-                </div>
+            <div key={liste.key} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                <h2 className="text-base font-semibold text-slate-800">{liste.name}</h2>
+                {otherUser && (
+                  <p className="text-xs text-slate-400 mt-0.5">Delt med {otherUser.navn}</p>
+                )}
               </div>
+              <div>{this.populerOnskeliste(onsker, liste.key)}</div>
             </div>
-            </React.Fragment>
           );
         })}
 
-        {harGenerelleMaal &&
-          <div className="vennerliste-side__measurements-container">
-            <div className="vennerliste-side__measurements">
-              <h4 style={{ textAlign: 'center' }}>{`Generelle mål - ${valgtVenn.firstName}`}</h4>
-              {Object.keys(valgtVenn.measurements!).filter(key => !!valgtVenn.measurements![key]).map(key => {
-                return (
-                  <p key={key}>
-                    <span className="vennerliste-side__measurements__label">{finnLabelForStrl(key)}</span>
-                    {`: ${valgtVenn.measurements![key]}`}
-                  </p>);
-              })}
+        {/* Generelle mål */}
+        {harGenerelleMaal && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-emerald-200">
+              <h3 className="text-sm font-semibold text-emerald-800">
+                Generelle mål – {valgtVenn.firstName}
+              </h3>
+            </div>
+            <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-1">
+              {Object.keys(valgtVenn.measurements!).filter(key => !!valgtVenn.measurements![key]).map(key => (
+                <p key={key} className="text-sm text-emerald-900">
+                  <span className="font-semibold">{finnLabelForStrl(key)}</span>
+                  {`: ${valgtVenn.measurements![key]}`}
+                </p>
+              ))}
             </div>
           </div>
-        }
+        )}
+
         {this.state.dialogOpen && this.velgeAntallDialog()}
         {this.state.prisDialogOpen && this.prisDialog()}
       </div>

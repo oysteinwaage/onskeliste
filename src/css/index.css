@@ -1,238 +1,82 @@
-.App {
-  text-align: center;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    @apply font-sans text-slate-900 bg-slate-50;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  #root,
+  .App {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 }
-.App .App-logo {
+
+@layer components {
+  .app-content {
+    @apply flex-1 bg-slate-50;
+  }
+
+  /* Wish item states */
+  .wish-item-bought {
+    @apply bg-rose-100;
+  }
+
+  .wish-item-bought-by-me {
+    @apply bg-emerald-100;
+  }
+
+  .wish-item-bought-text {
+    @apply italic text-slate-500;
+  }
+
+  /* Star/favorite */
+  .star-icon {
+    @apply cursor-pointer text-slate-300 hover:text-amber-400 transition-colors;
+  }
+
+  .star-icon-active {
+    @apply cursor-pointer text-amber-400;
+  }
+
+  .star-icon-bought {
+    @apply cursor-pointer text-amber-300;
+  }
+
+  /* Changes dialog */
+  .changes-header {
+    @apply font-bold text-primary-700;
+  }
+
+  .changes-text {
+    @apply ml-2;
+  }
+
+  .changes-text .header {
+    @apply italic font-medium;
+  }
+}
+
+/* App logo spin animation */
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.App-logo {
   animation: App-logo-spin infinite 20s linear;
   height: 80px;
-}
-.App .App-header {
-  background-color: #222;
-  height: 80px;
-  padding: 20px;
-  color: white;
-}
-.App .inputTextField {
-  margin: 5px 0 0 0;
-}
-@media only screen and (max-width: 400px) {
-  .App .inputTextField {
-    width: 70%;
-  }
-}
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.vennerliste-side__measurements-container {
-  display: flex;
-  justify-content: center;
-}
-.vennerliste-side__measurements {
-  text-align: left;
-  margin: 10px 10px;
-  border: 1px solid rgba(128, 128, 128, 0.5);
-  border-radius: 15px;
-  background-color: rgba(208, 249, 204, 0.47);
-  padding: 0 20px;
-  box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
-  max-width: 400px;
-}
-.vennerliste-side__measurements__label {
-  font-weight: 600;
-}
-.vennerliste-side__liste {
-  display: flex;
-  justify-content: center;
-}
-.vennerliste-side__liste-inner {
-  width: 100%;
-}
-@media (min-width: 600px) {
-  .vennerliste-side__liste-inner {
-    width: 50%;
-  }
-}
-.onskeKjopt {
-  background: #d3b6b3;
-}
-.onskeKjopt.kjoptAvDeg {
-  background: #add3a9;
-}
-.onskeKjopt .onskeKjoptTekst {
-  font-style: italic;
-}
-.onskeTekstDialog {
-  font-style: italic;
-  font-weight: bold;
-}
-.onskeTekstDialogLiten {
-  font-size: small;
-}
-.antallOnskerTatt {
-  display: flex;
-  align-self: flex-start;
-  padding: 0 0 10px 16px;
-  margin-top: 0!important;
-  margin-bottom: 0!important;
-}
-.antallOnskerTatt.erFavoritt {
-  padding: 0 0 10px 29px;
-}
-.fjernPaddingUnder {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-}
-.fjernPaddingVenstre {
-  padding-left: 0 !important;
-}
-.minListe {
-  margin: 0 10px;
-}
-.minListe .addNewWish {
-  display: flex;
-  justify-content: center;
-}
-.minListe .addNewWish .addNewWishButton {
-  align-self: center;
-  background-color: rgba(0, 190, 7, 0.54);
-}
-.minListe .minOnskeliste .wishText {
-  max-width: 80%;
-}
-@media only screen and (max-width: 400px) {
-  .minListe .minOnskeliste .wishText {
-    max-width: 60%;
-  }
-}
-.minListe .minOnskeliste .antallOnsker {
-  display: flex;
-  align-content: flex-start;
-  padding: 0 0 10px 16px;
-  font-size: 0.875rem;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-  font-weight: 400;
-  line-height: 1.43;
-  letter-spacing: 0.01071em;
-}
-.minListe .minOnskeliste .MuiDialog-paper {
-  margin: 32px 5px;
-}
-.minListe .antallOnskerTatt {
-  display: flex;
-  align-self: flex-start;
-  padding: 0 0 10px 29px;
-}
-.stjerne {
-  margin-right: 5px;
-  cursor: pointer;
-}
-.stjerne.favoritt {
-  color: #edc600;
-}
-.stjerne.favorittTatt {
-  color: gold;
-}
-.changesContent .changesHeader {
-  font-weight: bold;
-}
-.changesContent .changesText {
-  margin-left: 10px;
-}
-.changesContent .changesText .header {
-  font-style: italic;
-}
-.ProfilSide {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.ProfilSide__standard-profil-box {
-  margin: 10px 20px;
-  border: 1px solid rgba(128, 128, 128, 0.5);
-  border-radius: 15px;
-  padding: 0 15px 15px 15px;
-  box-shadow: 0 5px 5px 0 rgba(128, 128, 128, 0.5);
-  max-width: 1000px;
-}
-.ProfilSide__viewers-list {
-  background-color: rgba(121, 211, 249, 0.46);
-}
-.ProfilSide__egne-maal {
-  background-color: rgba(208, 249, 204, 0.47);
-}
-.ProfilSide__egne-maal__infotekst {
-  font-size: small;
-}
-.ProfilSide__mine-kjoep {
-  display: flex;
-  background-color: rgba(249, 162, 144, 0.47);
-  width: 100%;
-  text-align: left;
-  flex-wrap: wrap;
-}
-.ProfilSide__mine-kjoep__overskrift {
-  width: 100%;
-  text-align: center;
-}
-.ProfilSide__mine-kjoep__liste {
-  display: flex;
-  width: 100%;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.5);
-}
-.ProfilSide__mine-kjoep__onsker {
-  width: 100%;
-  border-left: 1px solid rgba(128, 128, 128, 0.5);
-}
-.ProfilSide__mine-kjoep__liste-eier {
-  margin-right: 15px;
-  align-self: center;
-  font-weight: 500;
-  width: 150px;
-}
-@media only screen and (max-width: 400px) {
-  .ProfilSide__mine-kjoep__liste-eier {
-    width: 40%;
-    margin-right: 10px;
-  }
-}
-.ProfilSide__mine-kjoep__ingen-kjoep {
-  width: 100%;
-  text-align: center;
-}
-body {
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-html,
-.App {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-.content {
-  background: #f4f4f4;
-  flex-grow: 2;
-}
-.glemt-passord-lenke {
-  text-decoration: underline;
-  cursor: pointer;
-  color: dodgerblue;
-}
-.backDrop {
-  z-index: 999999999999999!important;
-}
-.toppmeny-side-navn {
-  margin-left: -50px !important;
 }

@@ -1,84 +1,118 @@
-/* eslint-disable no-use-before-define */
-
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Checkbox from '@mui/material/Checkbox';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import Chip from '@mui/material/Chip';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { addViewersToMyList } from '../Api';
 import { myUid } from "../config/firebase";
 import { RootState, Bruker, Viewer } from '../types';
-
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+import { Badge } from '../components/ui/badge';
 
 interface AddViewersProps {
   alleBrukere: Bruker[];
   myAllowedViewers: Viewer[];
 }
 
-class AddViewersToMyListComponent extends Component<AddViewersProps> {
+interface AddViewersState {
+  soek: string;
+  soekApen: boolean;
+}
+
+class AddViewersToMyListComponent extends Component<AddViewersProps, AddViewersState> {
+  state: AddViewersState = { soek: '', soekApen: false };
+
   handleChange = (option: Viewer): void => {
     const { myAllowedViewers } = this.props;
-
     const skalFjernes = myAllowedViewers.find(v => v.value === option.value);
-
-    let newAllowedList: Viewer[] = [];
+    let newAllowedList: Viewer[];
     if (skalFjernes) {
       newAllowedList = myAllowedViewers.filter(v => v.value !== option.value);
     } else {
-      myAllowedViewers.push(option);
-      newAllowedList = myAllowedViewers;
+      newAllowedList = [...myAllowedViewers, option];
     }
-
     addViewersToMyList(newAllowedList);
   };
 
   render() {
     const { alleBrukere, myAllowedViewers } = this.props;
+    const { soek, soekApen } = this.state;
 
     const people: Viewer[] = alleBrukere
       .filter(user => user.uid !== myUid() && !user.invisible)
-      .map(b => ({
-        value: b.uid,
-        label: b.navn,
-      }));
+      .map(b => ({ value: b.uid, label: b.navn }));
+
+    const filtrert = soek.trim()
+      ? people.filter(p => p.label.toLowerCase().includes(soek.toLowerCase()))
+      : people;
 
     return (
-      <Autocomplete
-        multiple
-        id="myAllowedViewersAutocomplete"
-        options={people}
-        value={myAllowedViewers}
-        disableCloseOnSelect
-        getOptionLabel={(option) => option.label}
-        renderOption={(props, option) => (
-          <li {...props} style={{ width: '100%' }} onClick={() => this.handleChange(option)}>
-            <Checkbox
-              icon={icon}
-              checkedIcon={checkedIcon}
-              style={{ marginRight: 8 }}
-              checked={!!myAllowedViewers.find(v => v.value === option.value)}
-            />
-            {option.label}
-          </li>
+      <div className="w-full">
+        {/* Valgte brukere som chips */}
+        {myAllowedViewers.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {myAllowedViewers.map(viewer => (
+              <Badge
+                key={viewer.value}
+                variant="secondary"
+                onRemove={() => this.handleChange(viewer)}
+              >
+                {viewer.label}
+              </Badge>
+            ))}
+          </div>
         )}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip label={option.label} {...getTagProps({ index })} onDelete={() => this.handleChange(option)} />
-          ))
-        }
-        style={{ marginBottom: 15 }}
-        renderInput={(params) => (
-          <TextField {...params} variant="standard"
-            placeholder="Søk etter navn" />
+
+        {/* Søkefelt med portal-dropdown */}
+        <PopoverPrimitive.Root
+          open={soekApen && filtrert.length > 0}
+          onOpenChange={() => {}}
+        >
+          <PopoverPrimitive.Trigger asChild onClick={e => e.preventDefault()}>
+            <div className="w-full">
+              <input
+                className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                placeholder="Søk etter navn..."
+                value={soek}
+                onChange={e => this.setState({ soek: e.target.value, soekApen: true })}
+                onFocus={() => this.setState({ soekApen: true })}
+                onBlur={() => setTimeout(() => this.setState({ soekApen: false }), 150)}
+              />
+            </div>
+          </PopoverPrimitive.Trigger>
+          <PopoverPrimitive.Portal>
+            <PopoverPrimitive.Content
+              align="start"
+              sideOffset={4}
+              onOpenAutoFocus={e => e.preventDefault()}
+              onInteractOutside={() => this.setState({ soekApen: false })}
+              style={{ width: 'var(--radix-popover-trigger-width)', zIndex: 9999 }}
+              className="bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto"
+            >
+              <ul>
+                {filtrert.map(person => {
+                  const erValgt = !!myAllowedViewers.find(v => v.value === person.value);
+                  return (
+                    <li key={person.value}>
+                      <button
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-primary-50 transition-colors"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { this.handleChange(person); this.setState({ soek: '' }); }}
+                      >
+                        <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${erValgt ? 'bg-primary-600 border-primary-600 text-white' : 'border-slate-300'}`}>
+                          {erValgt && <span className="text-xs">✓</span>}
+                        </span>
+                        <span className={erValgt ? 'text-primary-700 font-medium' : 'text-slate-700'}>{person.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </PopoverPrimitive.Content>
+          </PopoverPrimitive.Portal>
+        </PopoverPrimitive.Root>
+
+        {myAllowedViewers.length === 0 && (
+          <p className="text-xs text-slate-400 mt-2">Ingen har tilgang til listen din ennå</p>
         )}
-        fullWidth={true}
-      />
+      </div>
     );
   }
 }

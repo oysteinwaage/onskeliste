@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import { fetdhOnskelisteForUid, fetchExtraListsForFriend } from '../Api';
 import { settValgtVennsListeId } from '../actions/actions';
@@ -27,19 +24,16 @@ class ListeVelger extends Component<ListeVelgerProps, ListeVelgerState> {
     this.state = { valgtVennUid: '' };
   }
 
-  handleChange = () => (event: SelectChangeEvent<string>): void => {
+  handleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
     const valgtBrukerUid = event.target.value;
     if (valgtBrukerUid !== '') {
-      this.setState({ valgtVennUid: event.target.value });
-      const venn = this.finnValgtVennObjekt(valgtBrukerUid)[0];
+      this.setState({ valgtVennUid: valgtBrukerUid });
+      const venn = this.props.allUsers.find(x => x.uid === valgtBrukerUid);
+      if (!venn) return;
       this.props.onResetVennsListeId();
       this.props.onHentValgtVennsListe(valgtBrukerUid, venn);
       this.props.onFetchExtraLists(valgtBrukerUid);
     }
-  };
-
-  finnValgtVennObjekt = (valgtUid: string): Bruker[] => {
-    return this.props.allUsers.filter(x => x.uid === valgtUid);
   };
 
   render() {
@@ -47,26 +41,25 @@ class ListeVelger extends Component<ListeVelgerProps, ListeVelgerState> {
     const venneliste = allUsers
       .filter(user => allowedListsForMe.includes(user.uid))
       .sort((a, b) => a.navn.localeCompare(b.navn));
+
     return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <FormControl sx={{ m: 1, minWidth: 120 }}>
-          <InputLabel htmlFor="navn-native-simple">Velg ønskeliste</InputLabel>
-          <Select
-            native
+      <div className="flex justify-center">
+        <div className="w-full max-w-xs">
+          <label className="text-sm font-medium text-slate-700 block mb-1.5 text-center">
+            Velg ønskeliste
+          </label>
+          <select
             value={this.state.valgtVennUid}
-            onChange={this.handleChange()}
-            label="Velg ønskeliste"
-            inputProps={{
-              name: 'navn',
-              id: 'navn-native-simple',
-            }}
+            onChange={this.handleChange}
+            className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 hover:border-slate-400 transition-colors cursor-pointer appearance-none text-center"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
           >
-            <option value="" />
-            {venneliste.map(venn => {
-              return (<option key={venn.uid} value={venn.uid}>{venn.navn}</option>);
-            })}
-          </Select>
-        </FormControl>
+            <option value="">— Velg person —</option>
+            {venneliste.map(venn => (
+              <option key={venn.uid} value={venn.uid}>{venn.navn}</option>
+            ))}
+          </select>
+        </div>
       </div>
     );
   }

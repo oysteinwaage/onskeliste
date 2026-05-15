@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
 import { endreHeaderTekst } from '../actions/actions';
 import { setSlettKjopteOnskerEnabledApi } from '../Api';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
+import { Switch } from '../components/ui/switch';
 
 interface AdminProps {
   onEndreHeaderTekst: () => void;
@@ -20,17 +19,16 @@ class Admin extends Component<AdminProps> {
   render() {
     const { slettKjopteOnskerEnabled } = this.props;
     return (
-      <div style={{ padding: 24 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={slettKjopteOnskerEnabled}
-              onChange={(e) => setSlettKjopteOnskerEnabledApi(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Skru på slett kjøpte ønsker knapp"
-        />
+      <div className="max-w-xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Innstillinger</h2>
+          <Switch
+            id="slettKjopteToggle"
+            checked={slettKjopteOnskerEnabled}
+            onChange={(e) => setSlettKjopteOnskerEnabledApi((e.target as HTMLInputElement).checked)}
+            label="Skru på «Slett kjøpte ønsker»-knapp"
+          />
+        </div>
       </div>
     );
   }

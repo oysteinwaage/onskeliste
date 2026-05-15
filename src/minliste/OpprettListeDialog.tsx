@@ -1,19 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import Typography from '@mui/material/Typography';
-
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { opprettEkstraListe, leggTilDelingspartner, fjernDelingspartner, slettEkstraListe, forlateEkstraListe } from '../Api';
 import { oppdaterEkstraListeMetadata } from '../actions/actions';
 import { RootState, Bruker, ExtraListMetadata } from '../types';
 import { myUid } from '../config/firebase';
 import { Dispatch } from 'redux';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody,
+} from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 
 interface OpprettListeDialogProps {
   open: boolean;
@@ -31,10 +28,12 @@ interface OpprettListeDialogState {
   navn: string;
   valgtDelingspartner: Bruker | null;
   bekreftSlett: boolean;
+  soek: string;
+  soekApen: boolean;
 }
 
 class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListeDialogState> {
-  state: OpprettListeDialogState = { navn: '', valgtDelingspartner: null, bekreftSlett: false };
+  state: OpprettListeDialogState = { navn: '', valgtDelingspartner: null, bekreftSlett: false, soek: '', soekApen: false };
 
   initFraProps() {
     const { editListe, alleBrukere } = this.props;
@@ -42,9 +41,9 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
       const partner = editListe.sharedWithUid
         ? alleBrukere.find(b => b.uid === editListe.sharedWithUid) || null
         : null;
-      this.setState({ navn: editListe.name, valgtDelingspartner: partner, bekreftSlett: false });
+      this.setState({ navn: editListe.name, valgtDelingspartner: partner, bekreftSlett: false, soek: partner?.navn || '', soekApen: false });
     } else {
-      this.setState({ navn: '', valgtDelingspartner: null, bekreftSlett: false });
+      this.setState({ navn: '', valgtDelingspartner: null, bekreftSlett: false, soek: '', soekApen: false });
     }
   }
 
@@ -103,84 +102,136 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
 
   render() {
     const { open, onClose, alleBrukere, myUid: myUidValue, editListe } = this.props;
-    const { navn, valgtDelingspartner, bekreftSlett } = this.state;
+    const { navn, valgtDelingspartner, bekreftSlett, soek, soekApen } = this.state;
     const erEier = !editListe || editListe.ownerUid === myUidValue;
     const erNy = !editListe;
 
     const valgbareBrukere = alleBrukere.filter(b => b.uid !== myUidValue && !b.invisible);
+    const filtrerteBrukere = soek.trim()
+      ? valgbareBrukere.filter(b => b.navn.toLowerCase().includes(soek.toLowerCase()))
+      : valgbareBrukere;
 
     return (
-      <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-        <DialogTitle>{erNy ? 'Opprett ny (delt) ønskeliste' : `Administrer: ${editListe?.name}`}</DialogTitle>
-        <DialogContent>
-          {erNy && (
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Navn på listen"
-              fullWidth
-              value={navn}
-              onChange={e => this.setState({ navn: e.target.value })}
-              onKeyDown={e => { if (e.key === 'Enter' && navn.trim()) this.handleLagre(); }}
-              variant="standard"
-            />
-          )}
+      <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+        <DialogContent showClose={false} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {erNy ? 'Opprett ny (delt) ønskeliste' : `Administrer: ${editListe?.name}`}
+            </DialogTitle>
+          </DialogHeader>
 
-          {erEier && (
-            <>
-              <Typography variant="body2" sx={{ mt: erNy ? 2 : 0, mb: 0.5, color: 'text.secondary' }}>
-                Del listen med en annen bruker (valgfritt)
-              </Typography>
-              <Autocomplete
-                options={valgbareBrukere}
-                getOptionLabel={b => b.navn}
-                value={valgtDelingspartner}
-                onChange={(_, val) => this.setState({ valgtDelingspartner: val })}
-                renderInput={params => (
-                  <TextField {...params} variant="standard" placeholder="Søk etter navn" />
-                )}
+          <DialogBody className="flex flex-col gap-4">
+            {erNy && (
+              <Input
+                autoFocus
+                label="Navn på listen"
+                placeholder="F.eks. Julekjøp"
+                value={navn}
+                onChange={e => this.setState({ navn: e.target.value })}
+                onKeyDown={e => { if (e.key === 'Enter' && navn.trim()) this.handleLagre(); }}
               />
-              {valgtDelingspartner && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  Begge vil se og kunne redigere listen på sin Min liste-side.
-                </Typography>
-              )}
-            </>
-          )}
+            )}
 
-          {!erEier && editListe && (
-            <Typography variant="body2" color="text.secondary">
-              Delt av: {alleBrukere.find(b => b.uid === editListe.ownerUid)?.navn || 'ukjent'}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: bekreftSlett ? 'space-between' : 'flex-end' }}>
-          {editListe && erEier && (
-            <Button
-              color="error"
-              onClick={this.handleSlett}
-            >
-              {bekreftSlett ? 'Bekreft sletting' : 'Slett liste'}
-            </Button>
-          )}
-          {editListe && !erEier && (
-            <Button color="error" onClick={this.handleSlett}>
-              {bekreftSlett ? 'Bekreft' : 'Forlat liste'}
-            </Button>
-          )}
-          <div>
-            <Button onClick={onClose}>Avbryt</Button>
-            {(erNy || erEier) && (
-              <Button
-                onClick={this.handleLagre}
-                disabled={erNy && !navn.trim()}
-                variant="contained"
-              >
-                {erNy ? 'Opprett' : 'Lagre'}
+            {erEier && (
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">
+                  Del med annen bruker <span className="text-slate-400 font-normal">(valgfritt)</span>
+                </label>
+
+                {/* Valgt bruker */}
+                {valgtDelingspartner && (
+                  <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
+                    <span className="flex-1">{valgtDelingspartner.navn}</span>
+                    <button
+                      onClick={() => this.setState({ valgtDelingspartner: null, soek: '' })}
+                      className="text-primary-400 hover:text-primary-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {/* Søk */}
+                {!valgtDelingspartner && (
+                  <PopoverPrimitive.Root
+                    open={soekApen && filtrerteBrukere.length > 0}
+                    onOpenChange={() => {}}
+                  >
+                    <PopoverPrimitive.Trigger asChild onClick={e => e.preventDefault()}>
+                      <div className="w-full">
+                        <input
+                          className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                          placeholder="Søk etter navn..."
+                          value={soek}
+                          onChange={e => this.setState({ soek: e.target.value, soekApen: true })}
+                          onFocus={() => this.setState({ soekApen: true })}
+                          onBlur={() => setTimeout(() => this.setState({ soekApen: false }), 150)}
+                        />
+                      </div>
+                    </PopoverPrimitive.Trigger>
+                    <PopoverPrimitive.Portal>
+                      <PopoverPrimitive.Content
+                        align="start"
+                        sideOffset={4}
+                        onOpenAutoFocus={e => e.preventDefault()}
+                        onInteractOutside={() => this.setState({ soekApen: false })}
+                        style={{ width: 'var(--radix-popover-trigger-width)', zIndex: 9999 }}
+                        className="bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto"
+                      >
+                        <ul>
+                          {filtrerteBrukere.map(b => (
+                            <li key={b.uid}>
+                              <button
+                                className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={() => this.setState({ valgtDelingspartner: b, soek: b.navn, soekApen: false })}
+                              >
+                                {b.navn}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </PopoverPrimitive.Content>
+                    </PopoverPrimitive.Portal>
+                  </PopoverPrimitive.Root>
+                )}
+
+                {valgtDelingspartner && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    Begge vil se og kunne redigere listen på sin Min liste-side.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!erEier && editListe && (
+              <p className="text-sm text-slate-500">
+                Delt av: {alleBrukere.find(b => b.uid === editListe.ownerUid)?.navn || 'ukjent'}
+              </p>
+            )}
+          </DialogBody>
+
+          <DialogFooter className={bekreftSlett ? 'justify-between' : 'justify-end'}>
+            {editListe && erEier && (
+              <Button variant="destructive" size="sm" onClick={this.handleSlett}>
+                {bekreftSlett ? 'Bekreft sletting' : 'Slett liste'}
               </Button>
             )}
-          </div>
-        </DialogActions>
+            {editListe && !erEier && (
+              <Button variant="destructive" size="sm" onClick={this.handleSlett}>
+                {bekreftSlett ? 'Bekreft' : 'Forlat liste'}
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={onClose}>Avbryt</Button>
+              {(erNy || erEier) && (
+                <Button onClick={this.handleLagre} disabled={erNy && !navn.trim()}>
+                  {erNy ? 'Opprett' : 'Lagre'}
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     );
   }

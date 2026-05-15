@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import { push } from 'connected-react-router';
 import { Route, Switch } from 'react-router';
 import firebase from "firebase/compat/app";
+import { Loader2 } from 'lucide-react';
 import Login from './login/Login';
 import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
@@ -10,14 +11,13 @@ import MineKjoep from './minekjoep/MineKjoep';
 import Profil from './profil/Profil';
 import Admin from './admin/Admin';
 import AppBar from './components/AppBarComponent';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
 import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste } from "./Api";
 import ChangesSinceLastLogin from "./utils/ChangesSinceLastLogin";
 import { RootState } from './types';
 import { Dispatch } from 'redux';
+import { TooltipProvider } from './components/ui/tooltip';
 
 interface AppProps {
   onSendTilLogin: () => void;
@@ -56,27 +56,33 @@ class App extends Component<AppProps> {
     });
   }
 
-
   render() {
     const { isLoading } = this.props;
     return (
-      <div className="App">
-        <Backdrop className="backDrop" open={isLoading}>
-          <CircularProgress color="secondary" />
-        </Backdrop>
-        {!isLoading && <ChangesSinceLastLogin />}
-        <AppBar />
-        <div className="content">
-          <Switch>
-            <Route exact path="/" component={Login} />
-            <Route path="/minliste" component={MinListe} />
-            <Route path="/vennelister" component={Vennelister} />
-            <Route path="/minekjoep" component={MineKjoep} />
-            <Route path="/profil" component={Profil} />
-            <Route path="/admin" component={Admin} />
-          </Switch>
+      <TooltipProvider>
+        <div className="App flex flex-col min-h-screen">
+          {isLoading && (
+            <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-3">
+                <Loader2 className="h-10 w-10 animate-spin text-primary-600" />
+                <p className="text-slate-600 text-sm font-medium">Laster...</p>
+              </div>
+            </div>
+          )}
+          {!isLoading && <ChangesSinceLastLogin />}
+          <AppBar />
+          <div className="flex-1 bg-slate-50">
+            <Switch>
+              <Route exact path="/" component={Login} />
+              <Route path="/minliste" component={MinListe} />
+              <Route path="/vennelister" component={Vennelister} />
+              <Route path="/minekjoep" component={MineKjoep} />
+              <Route path="/profil" component={Profil} />
+              <Route path="/admin" component={Admin} />
+            </Switch>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
     );
   }
 }

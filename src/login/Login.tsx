@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import { push } from "connected-react-router";
 import { connect } from 'react-redux';
 import firebase from "firebase/compat/app";
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import { loggInn, opprettNyBruker, resetPassord } from '../Api';
 import { endreHeaderTekst, lasterData, toggleVisOpprettBruker } from '../actions/actions';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 
 const logo = process.env.PUBLIC_URL + '/logo.svg';
 
@@ -102,83 +102,93 @@ class Login extends Component<LoginProps, LoginState> {
     const resettPassordVisning = this.state.resettPassordVisning;
     const innsendingKnappTekst = resettPassordVisning ? 'Resett passord' : visOpprettNyBruker ? 'Registrer bruker' : 'Logg inn';
     const endreVisningKnappTekst = resettPassordVisning || visOpprettNyBruker ? 'Tilbake til login' : 'Opprett ny bruker';
-    return (
-      <div className="login-page">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-        </header>
-        <div>
-          {visOpprettNyBruker && !resettPassordVisning &&
-            (<div>
-              <TextField
-                id="firstNameField"
-                className="inputTextField"
-                margin="normal"
-                label="Fyll inn fornavn"
-                required
-                error={this.state.firstNameMissing}
-                onChange={(event) => this.setState({
-                  firstName: event.target.value,
-                  firstNameMissing: false
-                })}
-              />
-              <br />
-              <TextField
-                id="lastNameField"
-                className="inputTextField"
-                margin="normal"
-                label="Fyll inn etternavn"
-                required
-                error={this.state.lastNameMissing}
-                onChange={(event) => this.setState({ lastName: event.target.value, lastNameMissing: false })}
-              />
-            </div>)
-          }
 
-          <TextField
-            id="emailFelt"
-            className="inputTextField"
-            margin="normal"
-            label="Fyll inn email-adresse"
-            onChange={(event) => this.setState({ username: event.target.value })}
-          />
-          <br />
-          {resettPassordVisning && infoResettMailSendt &&
-            <p>{infoResettMailSendt}</p>
-          }
-          {!resettPassordVisning &&
-            <TextField
-              id="passordFelt"
-              className="inputTextField"
-              type="password"
-              label="Fyll inn passord"
-              onChange={(event) => this.setState({ password: event.target.value })}
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center py-12 px-4">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <div className="bg-slate-900 rounded-2xl py-6 flex justify-center mb-8 shadow-lg">
+            <img src={logo} className="App-logo h-16" alt="logo" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
+            {visOpprettNyBruker && !resettPassordVisning && (
+              <>
+                <Input
+                  id="firstNameField"
+                  label="Fornavn *"
+                  placeholder="Ola"
+                  error={this.state.firstNameMissing}
+                  helperText={this.state.firstNameMissing ? 'Fornavn er påkrevd' : undefined}
+                  onChange={(event) => this.setState({ firstName: event.target.value, firstNameMissing: false })}
+                />
+                <Input
+                  id="lastNameField"
+                  label="Etternavn *"
+                  placeholder="Nordmann"
+                  error={this.state.lastNameMissing}
+                  helperText={this.state.lastNameMissing ? 'Etternavn er påkrevd' : undefined}
+                  onChange={(event) => this.setState({ lastName: event.target.value, lastNameMissing: false })}
+                />
+              </>
+            )}
+
+            <Input
+              id="emailFelt"
+              type="email"
+              label="E-postadresse"
+              placeholder="navn@eksempel.no"
+              onChange={(event) => this.setState({ username: event.target.value })}
             />
-          }
-          <br />
-          <Button variant="contained" color="primary" onClick={() => this.innsendigKnappTrykket()}
-            style={style}>
-            {innsendingKnappTekst}
-          </Button>
+
+            {resettPassordVisning && infoResettMailSendt && (
+              <p className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                {infoResettMailSendt}
+              </p>
+            )}
+
+            {!resettPassordVisning && (
+              <Input
+                id="passordFelt"
+                type="password"
+                label="Passord"
+                placeholder="••••••••"
+                onChange={(event) => this.setState({ password: event.target.value })}
+                onKeyDown={(e) => { if (e.key === 'Enter') this.innsendigKnappTrykket(); }}
+              />
+            )}
+
+            <Button
+              className="w-full mt-2"
+              onClick={() => this.innsendigKnappTrykket()}
+            >
+              {innsendingKnappTekst}
+            </Button>
+          </div>
+
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <Button
+              variant="ghost"
+              className="text-slate-600"
+              onClick={() => this.endreVisningTrykket()}
+            >
+              {endreVisningKnappTekst}
+            </Button>
+
+            {!resettPassordVisning && !visOpprettNyBruker && (
+              <button
+                className="text-sm text-primary-600 hover:text-primary-700 underline underline-offset-2 transition-colors"
+                onClick={() => this.glemtPassorTrykket()}
+              >
+                Glemt passord?
+              </button>
+            )}
+          </div>
         </div>
-        <Button variant="outlined" onClick={() => this.endreVisningTrykket()}>
-          {endreVisningKnappTekst}
-        </Button>
-        <br />
-        <br />
-        {!resettPassordVisning && !visOpprettNyBruker &&
-          <button className="glemt-passord-lenke" onClick={() => this.glemtPassorTrykket()}>
-            Glemt passord?
-          </button>
-        }
       </div>
     );
   }
 }
-
-const style = {
-  margin: 15,
-};
 
 const mapStateToProps = (state: RootState) => ({
   visOpprettNyBruker: state.config.visOpprettNyBruker,

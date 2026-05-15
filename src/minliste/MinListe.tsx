@@ -1,21 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import ListItemText from '@mui/material/ListItemText';
-import IconButton from '@mui/material/IconButton';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import Grid from '@mui/material/Grid';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Typography from '@mui/material/Typography';
+import { Plus, Trash2, Edit2, Star, Settings } from 'lucide-react';
 
 import {
   removeWishFromMyList,
@@ -30,6 +15,9 @@ import OnskeDialog from './LeggTilOnskeDialog';
 import OpprettListeDialog from './OpprettListeDialog';
 import { RootState, Onske, ExtraListMetadata, Bruker } from '../types';
 import { Dispatch } from 'redux';
+import { Button } from '../components/ui/button';
+import { Separator } from '../components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
 
 interface MinListeLocalState {
   administrerListe: ExtraListMetadata | null;
@@ -80,65 +68,89 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
     }
   };
 
-  lagAntallOgStrlKomponent = (onske: Onske): string => {
+  lagAntallOgStrlTekst = (onske: Onske): string => {
     let res = (onske.antall && onske.antall > 1) ? `Antall: ${onske.antall}` : '';
     if (onske.onskeSize) {
-      res = res ? res.concat(` - Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
+      res = res ? res.concat(` · Strl: ${onske.onskeSize}`) : `Strl: ${onske.onskeSize}`;
     }
     return res;
   };
 
   populerListe(onsker: Onske[], listId: string | null) {
     const sorted = [...onsker].sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0));
-    return sorted.map((onske, idx) =>
-      <div key={onske.key || idx}>
-        <ListItem
-          className={onske.antall && onske.antall > 1 ? 'fjernPaddingUnder fjernPaddingVenstre' : 'fjernPaddingVenstre'}>
-          {onske.favoritt ?
-            <StarIcon className="stjerne favoritt" onClick={() => this.settFavoritt(onske, false, listId)} /> :
-            <StarBorderIcon className="stjerne" onClick={() => this.settFavoritt(onske, true, listId)} />
-          }
-          <ListItemText
-            className='wishText'
-            primary={onske.onskeTekst}
-            secondary={(() => {
-              const allUrls = onske.urls || (onske.url ? [onske.url] : []);
-              if (allUrls.length === 0) return null;
-              if (allUrls.length === 1) return <a href={allUrls[0]} target="_blank" rel="noopener noreferrer">Her kan den kjøpes</a>;
-              return (
-                <span>
+    return sorted.map((onske, idx) => {
+      const allUrls = onske.urls || (onske.url ? [onske.url] : []);
+      const metaTekst = this.lagAntallOgStrlTekst(onske);
+      return (
+        <div key={onske.key || idx}>
+          <div className="flex items-start gap-2 py-3 px-2">
+            <button
+              onClick={() => this.settFavoritt(onske, !onske.favoritt, listId)}
+              className="mt-0.5 shrink-0 transition-colors"
+              aria-label={onske.favoritt ? 'Fjern favoritt' : 'Merk som favoritt'}
+            >
+              <Star
+                className={`h-5 w-5 ${onske.favoritt ? 'fill-amber-400 text-amber-400' : 'text-slate-300 hover:text-amber-300'} transition-colors`}
+              />
+            </button>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-800 break-words">{onske.onskeTekst}</p>
+              {allUrls.length === 1 && (
+                <a href={allUrls[0]} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-primary-600 hover:text-primary-700 underline underline-offset-1">
+                  Her kan den kjøpes
+                </a>
+              )}
+              {allUrls.length > 1 && (
+                <span className="text-xs text-primary-600">
                   {allUrls.map((url, i) => (
                     <React.Fragment key={i}>
-                      <a href={url} target="_blank" rel="noopener noreferrer">Lenke {i + 1}</a>
-                      {i < allUrls.length - 1 && ' · '}
+                      <a href={url} target="_blank" rel="noopener noreferrer"
+                        className="hover:text-primary-700 underline underline-offset-1">
+                        Lenke {i + 1}
+                      </a>
+                      {i < allUrls.length - 1 && <span className="mx-1 text-slate-300">·</span>}
                     </React.Fragment>
                   ))}
                 </span>
-              );
-            })()}
-          />
-          <ListItemSecondaryAction className='wishIconMenu'>
-            <Tooltip title='Endre ønske'>
-              <IconButton aria-label="Edit" onClick={() => this.aapneDialog(onske, listId)}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title='Slett'>
-              <IconButton aria-label="Delete" onClick={() => this.slettOnske(onske, listId)}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </ListItemSecondaryAction>
-        </ListItem>
-        {((onske.antall && onske.antall > 1) || onske.onskeSize) &&
-          <ListItemText
-            className='antallOnskerTatt'
-            secondary={this.lagAntallOgStrlKomponent(onske)}
-          />
-        }
-        <Divider />
-      </div>
-    );
+              )}
+              {metaTekst && (
+                <p className="text-xs text-slate-400 mt-0.5">{metaTekst}</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => this.aapneDialog(onske, listId)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                    aria-label="Endre ønske"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Endre ønske</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => this.slettOnske(onske, listId)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    aria-label="Slett"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Slett ønske</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+          <Separator />
+        </div>
+      );
+    });
   }
 
   render() {
@@ -150,31 +162,35 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
     const { administrerListe } = this.state;
 
     return (
-      <div className="minListe">
-        <p>Velkommen {innloggetBrukerNavn}</p>
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <p className="text-center text-slate-500 text-sm mb-4">Velkommen, {innloggetBrukerNavn}</p>
 
-        {/* Hovedliste */}
-        <div className="addNewWish" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          <Button className="addNewWishButton" variant="contained" color="inherit"
-            onClick={() => this.aapneDialog(null, null)} startIcon={<PlaylistAddIcon />}>
+        {/* Legg til ønske / slett-knapper */}
+        <div className="flex flex-wrap gap-2 justify-center mb-6">
+          <Button onClick={() => this.aapneDialog(null, null)} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
             Legg til ønske
           </Button>
           {slettKjopteOnskerEnabled && (
-            <Button variant="outlined" color="error" onClick={() => slettKjopteOnsker(mineOnsker)}>
+            <Button variant="outline-destructive" size="sm" onClick={() => slettKjopteOnsker(mineOnsker)}>
               Slett kjøpte ønsker
             </Button>
           )}
         </div>
 
-        <Grid>
-          <h2>{mainListName || 'Min ønskeliste'}</h2>
-          <div className="minOnskeliste">
-            <List dense={false}>
-              {mineOnsker.length > 0 && <Divider />}
-              {this.populerListe(mineOnsker, null)}
-            </List>
+        {/* Hovedliste */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+            <h2 className="text-base font-semibold text-slate-800">{mainListName || 'Min ønskeliste'}</h2>
           </div>
-        </Grid>
+          <div>
+            {mineOnsker.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-8">Ingen ønsker lagt til ennå</p>
+            ) : (
+              this.populerListe(mineOnsker, null)
+            )}
+          </div>
+        </div>
 
         {/* Ekstra lister */}
         {mineEkstraLister.map(liste => {
@@ -185,47 +201,49 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
           const otherUser = otherUid ? alleBrukere.find(b => b.uid === otherUid) : null;
 
           return (
-            <div key={liste.key} style={{ marginTop: 24 }}>
-
-              <Grid>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <h2 style={{ margin: 0, marginBottom: 8 }}>{liste.name}</h2>
-                      {otherUser && (
-                        <Typography variant="caption" color="text.secondary">
-                          Delt liste med {otherUser.navn}
-                        </Typography>
-                      )}
-                    </div>
-                    <Tooltip title="Administrer liste">
-                      <IconButton size="small" onClick={() => this.setState({ administrerListe: liste })}>
-                        <SettingsIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', margin: '8px 0', justifyContent: 'center' }}>
-                    <Button variant="contained" color="inherit" size="small"
-                      onClick={() => this.aapneDialog(null, liste.key)} startIcon={<PlaylistAddIcon />}>
-                      Legg til ønske
-                    </Button>
-                    {slettKjopteOnskerEnabled && (
-                      <Button variant="outlined" color="error" size="small"
-                        onClick={() => slettKjopteOnskerPaaEkstraListe(liste.key, onsker)}>
-                        Slett kjøpte ønsker
-                      </Button>
+            <div key={liste.key} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-800">{liste.name}</h2>
+                    {otherUser && (
+                      <p className="text-xs text-slate-400 mt-0.5">Delt liste med {otherUser.navn}</p>
                     )}
                   </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => this.setState({ administrerListe: liste })}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Administrer liste</TooltipContent>
+                  </Tooltip>
                 </div>
+              </div>
 
-                <div className="minOnskeliste">
-                  <List dense={false}>
-                    {onsker.length > 0 && <Divider />}
-                    {this.populerListe(onsker, liste.key)}
-                  </List>
-                </div>
-              </Grid>
+              <div className="px-4 py-2 flex flex-wrap gap-2 justify-center">
+                <Button size="sm" onClick={() => this.aapneDialog(null, liste.key)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Legg til ønske
+                </Button>
+                {slettKjopteOnskerEnabled && (
+                  <Button variant="outline-destructive" size="sm"
+                    onClick={() => slettKjopteOnskerPaaEkstraListe(liste.key, onsker)}>
+                    Slett kjøpte ønsker
+                  </Button>
+                )}
+              </div>
+
+              <div>
+                {onsker.length === 0 ? (
+                  <p className="text-center text-slate-400 text-sm py-6">Ingen ønsker lagt til ennå</p>
+                ) : (
+                  this.populerListe(onsker, liste.key)
+                )}
+              </div>
             </div>
           );
         })}

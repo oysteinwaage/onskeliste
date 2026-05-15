@@ -1,22 +1,5 @@
 import React, { Component } from 'react';
-import Autocomplete from '@mui/material/Autocomplete';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Loader2, Plus, X } from 'lucide-react';
 
 import {
   addWishToMyList,
@@ -33,6 +16,12 @@ import { opprettUrlAv } from "../utils/util";
 import { RootState, Onske } from '../types';
 import { Dispatch } from 'redux';
 import { sokPrisjakt, PrisjaktProdukt } from '../services/PrisjaktService';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogBody,
+} from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 interface DialogState {
   urls: string[] | null;
@@ -156,6 +145,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
       urlsChanged: true,
       sokeResultater: [],
       lasterSok: false,
+      sokeApen: false,
     });
   };
 
@@ -209,12 +199,8 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
     this.resettState();
   };
 
-  endreAntall = (nyttValg: SelectChangeEvent<number | string>): void => {
-    this.setState({ antall: nyttValg.target.value, antallChanged: true });
-  };
-
   render() {
-    const { openLenkeDialog, onToggleLenkeDialog, openLenkeDialogOnske } = this.props;
+    const { openLenkeDialog, openLenkeDialogOnske } = this.props;
     const { text, size, antall, sokeResultater, lasterSok, sokeApen } = this.state;
     const defaultText = openLenkeDialogOnske && openLenkeDialogOnske.onskeTekst;
     const defaultSize = openLenkeDialogOnske && openLenkeDialogOnske.onskeSize;
@@ -222,181 +208,160 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
     const erNyttOnske = !(openLenkeDialogOnske && openLenkeDialogOnske.key);
     const effectiveUrls = this.getEffectiveUrls();
     const textVerdi = text !== null ? text : (defaultText || '');
+    const antallVerdi = antall || defaultAntall;
 
     const isMobile = window.matchMedia('(max-width: 599px)').matches;
+
     return (
-      <div>
-        <Dialog
-          open={openLenkeDialog}
-          fullScreen={isMobile}
-          onClose={(event, reason) => {
-            if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
-              onToggleLenkeDialog();
-            }
-          }}
-          aria-labelledby="form-dialog-title"
-        >
-          <DialogTitle id="form-dialog-title">
-            {erNyttOnske ? "Legg til ønske" : "Oppdater ønske"}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {erNyttOnske ? "Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn jo bedre!"
-                : "Du kan legge til og fjerne lenker ved å bruke knappene under."
-              }
-            </DialogContentText>
+      <Dialog
+        open={openLenkeDialog}
+        onOpenChange={(open) => { if (!open) this.cancel(); }}
+      >
+        <DialogContent fullScreen={isMobile} showClose={false} className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{erNyttOnske ? 'Legg til ønske' : 'Oppdater ønske'}</DialogTitle>
+            <DialogDescription>
+              {erNyttOnske
+                ? 'Ønsketekst er eneste obligatoriske felt, men jo mer informasjon du legger inn jo bedre!'
+                : 'Du kan legge til og fjerne lenker ved å bruke knappene under.'}
+            </DialogDescription>
+          </DialogHeader>
 
-            <Autocomplete
-              freeSolo
-              open={sokeApen}
-              onClose={() => this.setState({ sokeApen: false })}
-              options={sokeResultater}
-              getOptionLabel={(option) =>
-                typeof option === 'string' ? option : option.navn
-              }
-              filterOptions={(x) => x}
-              loading={lasterSok}
-              inputValue={textVerdi}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'clear') {
-                  this.setState({ text: '', textChanged: true, urls: [], urlsChanged: true, sokeResultater: [] });
-                } else if (reason === 'input') {
-                  this.handleTextEndring(value);
-                }
-              }}
-              onChange={(_, value) => {
-                if (value && typeof value !== 'string') {
-                  this.velgProdukt(value);
-                }
-              }}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 0.25 }}>
-                    <img
-                      src={option.bildeUrl}
-                      alt=""
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0 }}
-                    />
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                      <Typography variant="body2">{option.navn}</Typography>
-                      {option.pris != null && (
-                        <Typography variant="caption" color="text.secondary">
-                          Fra kr {option.pris.toLocaleString('nb-NO')},-
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </li>
-              )}
-              PaperComponent={(props) => (
-                <Paper {...props}>
-                  {sokeResultater.length > 0 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1, pb: 0.5, borderBottom: 1, borderColor: 'divider' }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Forslag fra prisjakt.no
-                      </Typography>
-                      <Button
-                        size="small"
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => this.setState({ sokeResultater: [], sokeApen: false })}
-                        sx={{ fontSize: '0.7rem', py: 0, minWidth: 0 }}
-                      >
-                        Ikke bruk prisjakt
-                      </Button>
-                    </Box>
-                  )}
-                  {props.children}
-                </Paper>
-              )}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
+          <DialogBody className="flex flex-col gap-4">
+            {/* Tekst-søk med Prisjakt-autofullføring */}
+            <div className="relative">
+              <div className="relative">
+                <input
                   autoFocus
-                  margin="dense"
-                  label="Hva ønsker du deg"
-                  fullWidth
-                  onKeyDown={this.onKeyPressed}
-                  helperText={sokeResultater.length > 0 ? 'Forslag fra prisjakt.no' : undefined}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {lasterSok ? <CircularProgress color="inherit" size={18} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 8 }}>
-              <FormControl style={{ minWidth: 80 }}>
-                <InputLabel id="antall-onsker-label">Antall</InputLabel>
-                <Select
-                  labelId="antall-onsker-label"
-                  id="antall-onsker"
-                  value={antall || defaultAntall}
-                  onChange={this.endreAntall}
-                  label="Antall"
-                >
-                  {antallOnskerValg.map(antall => <MenuItem key={antall} value={antall}>{antall}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl style={{ width: 100 }}>
-                <TextField
-                  id="size"
-                  label='Størrelse'
-                  value={size !== null ? size : defaultSize}
-                  type="text"
-                  onChange={(e) => {
-                    this.setState({ size: e.target.value, sizeChanged: true });
-                  }}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 hover:border-slate-400 transition-colors pr-8"
+                  placeholder="Hva ønsker du deg?"
+                  value={textVerdi}
+                  onChange={(e) => this.handleTextEndring(e.target.value)}
                   onKeyDown={this.onKeyPressed}
                 />
-              </FormControl>
-            </div>
+                {lasterSok && (
+                  <Loader2 className="absolute right-2.5 top-2.5 h-5 w-5 animate-spin text-slate-400" />
+                )}
+              </div>
 
-            <div style={{ marginTop: 12 }}>
-              {effectiveUrls.map((url, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <TextField
-                    margin="dense"
-                    label={effectiveUrls.length > 1 ? `Lenke ${index + 1}` : "Lenke - http://www.eksempel.com"}
-                    type="url"
-                    value={url}
-                    fullWidth
-                    onChange={(e) => this.updateUrl(index, e.target.value)}
-                    onKeyDown={this.onKeyPressed}
-                  />
-                  <IconButton size="small" onClick={() => this.removeUrl(index)} aria-label="Fjern lenke">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+              {/* Prisjakt søkeresultater */}
+              {sokeApen && sokeResultater.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
+                    <span className="text-xs text-slate-500">Forslag fra prisjakt.no</span>
+                    <button
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => this.setState({ sokeResultater: [], sokeApen: false })}
+                    >
+                      Lukk
+                    </button>
+                  </div>
+                  <ul className="max-h-60 overflow-y-auto py-1">
+                    {sokeResultater.map(produkt => (
+                      <li key={produkt.id}>
+                        <button
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-primary-50 transition-colors"
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => this.velgProdukt(produkt)}
+                        >
+                          <img
+                            src={produkt.bildeUrl}
+                            alt=""
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            className="w-10 h-10 object-contain flex-shrink-0 rounded"
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm text-slate-800 truncate">{produkt.navn}</span>
+                            {produkt.pris != null && (
+                              <span className="text-xs text-slate-500">
+                                Fra kr {produkt.pris.toLocaleString('nb-NO')},-
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
-              <Button
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={this.addUrl}
-                style={{ marginTop: 4 }}
-              >
-                Legg til lenke
-              </Button>
+              )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-              <Button onClick={() => this.cancel()} color="primary">
-                Avbryt
-              </Button>
-              <Button disabled={(!text && !openLenkeDialogOnske.onskeTekst) || text === ""}
-                onClick={() => this.saveChanges()} color="primary">
-                Lagre
-              </Button>
+            {/* Antall og størrelse */}
+            <div className="flex items-end gap-3">
+              <div className="w-24">
+                <label className="text-sm font-medium text-slate-700 block mb-1">Antall</label>
+                <Select
+                  value={String(antallVerdi)}
+                  onValueChange={(val) => this.setState({ antall: Number(val), antallChanged: true })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {antallOnskerValg.map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-28">
+                <Input
+                  id="size"
+                  label="Størrelse"
+                  value={size !== null ? size : (defaultSize || '')}
+                  placeholder="M, 42, ..."
+                  onChange={(e) => this.setState({ size: e.target.value, sizeChanged: true })}
+                  onKeyDown={this.onKeyPressed}
+                />
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+
+            {/* Lenker */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">Lenker</label>
+              <div className="flex flex-col gap-2">
+                {effectiveUrls.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      className="flex-1 h-9 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                      type="url"
+                      placeholder={effectiveUrls.length > 1 ? `Lenke ${index + 1}` : 'http://www.eksempel.com'}
+                      value={url}
+                      onChange={(e) => this.updateUrl(index, e.target.value)}
+                      onKeyDown={this.onKeyPressed}
+                    />
+                    <button
+                      onClick={() => this.removeUrl(index)}
+                      className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                      aria-label="Fjern lenke"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={this.addUrl}
+                  className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium mt-1 self-start"
+                >
+                  <Plus className="h-4 w-4" />
+                  Legg til lenke
+                </button>
+              </div>
+            </div>
+          </DialogBody>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => this.cancel()}>Avbryt</Button>
+            <Button
+              disabled={(!text && !openLenkeDialogOnske.onskeTekst) || text === ''}
+              onClick={() => this.saveChanges()}
+            >
+              Lagre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 }

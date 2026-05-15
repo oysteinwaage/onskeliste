@@ -1,17 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { endreHeaderTekst } from '../actions/actions';
-import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { updateMyMeasumentOnProfile, updateMainListName } from '../Api';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
+import { Input } from '../components/ui/input';
 
 interface ProfilState {
   sko: string | null;
@@ -38,15 +34,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
   constructor(props: ProfilProps) {
     super(props);
     this.state = {
-      sko: null,
-      bukse: null,
-      genser_tskjorte: null,
-      skjorte: null,
-      bh: null,
-      hansker: null,
-      boksershorts: null,
-      hatt: null,
-      mainListName: null,
+      sko: null, bukse: null, genser_tskjorte: null,
+      skjorte: null, bh: null, hansker: null,
+      boksershorts: null, hatt: null, mainListName: null,
     };
   }
 
@@ -64,62 +54,65 @@ class Profil extends Component<ProfilProps, ProfilState> {
     const { measurements, mainListName, myUserDbKey, onUpdateMainListName } = this.props;
 
     return (
-      <div className="ProfilSide">
-        <Accordion style={{ width: '100%' }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <h3 style={{ margin: 0 }}>Navn på hoved ønskeliste</h3>
-          </AccordionSummary>
-          <AccordionDetails>
-            <FormControl fullWidth>
-              <TextField
-                margin="dense"
+      <div className="max-w-xl mx-auto px-4 py-6">
+        <Accordion type="multiple" defaultValue={['maal']} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden divide-y divide-slate-100">
+          {/* Navn på ønskeliste */}
+          <AccordionItem value="listenavn" className="border-none px-4">
+            <AccordionTrigger className="text-sm font-semibold text-slate-800">
+              Navn på hoved ønskeliste
+            </AccordionTrigger>
+            <AccordionContent>
+              <Input
                 id="mainListName"
                 label="Navn på ønskelisten din (valgfritt)"
                 placeholder="Min ønskeliste"
                 value={this.state.mainListName !== null ? this.state.mainListName : (mainListName || '')}
                 type="text"
+                helperText="Vises istedenfor «Min ønskeliste» på din side og hos venner"
                 onChange={(e) => this.setState({ mainListName: e.target.value })}
                 onBlur={(e) => {
                   onUpdateMainListName(myUserDbKey, e.target.value.trim());
                   this.setState({ mainListName: null });
                 }}
-                helperText="Vises istedenfor «Min ønskeliste» på din side og hos venner"
               />
-            </FormControl>
-          </AccordionDetails>
-        </Accordion>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <h3 style={{ margin: 0 }}>Hvem skal kunne se listen din?</h3>
-          </AccordionSummary>
-          <AccordionDetails>
-            <AddViewersToMyListComponent />
-          </AccordionDetails>
-        </Accordion>
+          {/* Hvem kan se listen */}
+          <AccordionItem value="tilgang" className="border-none px-4">
+            <AccordionTrigger className="text-sm font-semibold text-slate-800">
+              Hvem skal kunne se listen din?
+            </AccordionTrigger>
+            <AccordionContent>
+              <AddViewersToMyListComponent />
+            </AccordionContent>
+          </AccordionItem>
 
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <h3 style={{ margin: 0 }}>Mine generelle mål</h3>
-          </AccordionSummary>
-          <AccordionDetails>
-            <p className="ProfilSide__egne-maal__infotekst">Fyll inn de mål som passer for deg, de du lar stå tomme vil ikke bli vist for andre</p>
-            {Object.values(measurementKeys).map(sizeKey => (
-              <FormControl style={{ marginRight: 15 }} key={sizeKey}>
-                <TextField
-                  margin="dense"
-                  id={sizeKey}
-                  label={finnLabelForStrl(sizeKey)}
-                  value={this.state[sizeKey] !== null ? this.state[sizeKey] : (measurements && measurements[sizeKey]) || ''}
-                  type="text"
-                  onChange={(e) => {
-                    this.setState({ [sizeKey]: e.target.value });
-                  }}
-                  onBlur={(e) => this.lagreNyttMaal(sizeKey, e.target.value)}
-                />
-              </FormControl>
-            ))}
-          </AccordionDetails>
+          {/* Mål */}
+          <AccordionItem value="maal" className="border-none px-4">
+            <AccordionTrigger className="text-sm font-semibold text-slate-800">
+              Mine generelle mål
+            </AccordionTrigger>
+            <AccordionContent>
+              <p className="text-xs text-slate-400 mb-3">
+                Fyll inn de mål som passer for deg, de du lar stå tomme vil ikke bli vist for andre
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {Object.values(measurementKeys).map(sizeKey => (
+                  <Input
+                    key={sizeKey}
+                    id={sizeKey}
+                    label={finnLabelForStrl(sizeKey)}
+                    value={this.state[sizeKey] !== null ? (this.state[sizeKey] as string) : ((measurements && measurements[sizeKey]) || '')}
+                    type="text"
+                    placeholder="—"
+                    onChange={(e) => this.setState({ [sizeKey]: e.target.value })}
+                    onBlur={(e) => this.lagreNyttMaal(sizeKey, e.target.value)}
+                  />
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </div>
     );

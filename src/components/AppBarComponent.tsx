@@ -1,26 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import GiftIcon from '@mui/icons-material/CardGiftcard';
-import ProfileIcon from '@mui/icons-material/AccountCircleOutlined';
-import Exit from '@mui/icons-material/ExitToApp';
-import ListeIcon from '@mui/icons-material/FormatListBulleted';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import AdminIcon from '@mui/icons-material/AdminPanelSettings';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-
+import {
+  List, Gift, ShoppingCart, User, LogOut,
+  Menu, X, PlusSquare, Shield,
+} from 'lucide-react';
 import { logOut } from '../Api';
 import { settOpprettListeDialogOpen } from '../actions/actions';
 import { RootState } from '../types';
@@ -37,6 +21,13 @@ interface AppBarComponentProps {
   onLogOut: () => void;
   onOpprettNyListe: () => void;
 }
+
+const navItems = [
+  { key: 'minliste', label: 'Min ønskeliste', icon: List },
+  { key: 'vennelister', label: 'Venners lister', icon: Gift },
+  { key: 'minekjoep', label: 'Mine kjøp', icon: ShoppingCart },
+  { key: 'profil', label: 'Profil', icon: User },
+];
 
 class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   constructor(props: AppBarComponentProps) {
@@ -57,88 +48,103 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
         this.props.onLogOut();
         break;
       default:
-        console.log('ERROR_NO_MATCH');
-        //doNothing
+        break;
     }
     this.setState({ drawerOpen: false });
   }
 
   render() {
     const { headerTekst, erAdmin, onOpprettNyListe } = this.props;
+    const { drawerOpen } = this.state;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
     const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
+
     return (
-      <AppBar position="static">
-        <Toolbar>
-          {visHamburgerMeny &&
-            <IconButton sx={{ ml: '-12px', mr: '20px' }} onClick={() => this.setState({ drawerOpen: true })} color="inherit" aria-label="Menu">
-              <MenuIcon />
-            </IconButton>
-          }
-          <Typography variant="h6" color="inherit" sx={{ flexGrow: 1 }} className="toppmeny-side-navn">
-            {this.props.headerTekst}
-          </Typography>
-          {erPaaMinListe && (
-            <IconButton color="inherit" onClick={onOpprettNyListe} aria-label="Ny liste">
-              <PlaylistAddIcon />
-            </IconButton>
-          )}
-        </Toolbar>
-        <Drawer open={this.state.drawerOpen} onClose={() => this.setState({ drawerOpen: false })}>
-          <div style={{ width: 250, display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <List>
-              <ListItem key='minliste' disablePadding>
-                <ListItemButton onClick={() => this.menyValgTrykket('minliste')}>
-                  <ListItemIcon><ListeIcon /></ListItemIcon>
-                  <ListItemText primary='Min ønskeliste' />
-                </ListItemButton>
-              </ListItem>
-              <Divider />
-              <ListItem key='vennelister' disablePadding>
-                <ListItemButton onClick={() => this.menyValgTrykket('vennelister')}>
-                  <ListItemIcon><GiftIcon /></ListItemIcon>
-                  <ListItemText primary='Venners lister' />
-                </ListItemButton>
-              </ListItem>
-              <Divider />
-              <ListItem key='minekjoep' disablePadding>
-                <ListItemButton onClick={() => this.menyValgTrykket('minekjoep')}>
-                  <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
-                  <ListItemText primary='Mine kjøp' />
-                </ListItemButton>
-              </ListItem>
-              <Divider />
-              <ListItem key='profil' disablePadding>
-                <ListItemButton onClick={() => this.menyValgTrykket('profil')}>
-                  <ListItemIcon><ProfileIcon /></ListItemIcon>
-                  <ListItemText primary='Profil' />
-                </ListItemButton>
-              </ListItem>
-              <Divider />
-            </List>
-            <List style={{ marginTop: 'auto' }}>
-              <Divider />
-              {erAdmin && (
-                <>
-                  <ListItem key='admin' disablePadding>
-                    <ListItemButton onClick={() => this.menyValgTrykket('admin')}>
-                      <ListItemIcon><AdminIcon /></ListItemIcon>
-                      <ListItemText primary='Admin' />
-                    </ListItemButton>
-                  </ListItem>
-                  <Divider />
-                </>
-              )}
-              <ListItem key='loggUt' disablePadding>
-                <ListItemButton onClick={() => this.menyValgTrykket('loggUt')}>
-                  <ListItemIcon><Exit /></ListItemIcon>
-                  <ListItemText primary='Logg ut' />
-                </ListItemButton>
-              </ListItem>
-            </List>
+      <>
+        <header className="bg-primary-900 text-white shadow-md z-40 relative">
+          <div className="flex items-center h-14 px-4 gap-3">
+            {visHamburgerMeny && (
+              <button
+                onClick={() => this.setState({ drawerOpen: true })}
+                className="p-2 rounded-lg hover:bg-primary-800 transition-colors -ml-1"
+                aria-label="Åpne meny"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
+            <h1 className="text-base font-semibold flex-1 text-center">
+              {headerTekst}
+            </h1>
+            {erPaaMinListe && (
+              <button
+                onClick={onOpprettNyListe}
+                className="p-2 rounded-lg hover:bg-primary-800 transition-colors -mr-1"
+                aria-label="Ny liste"
+              >
+                <PlusSquare className="h-5 w-5" />
+              </button>
+            )}
+            {!erPaaMinListe && <div className="w-9" />}
           </div>
-        </Drawer>
-      </AppBar>
+        </header>
+
+        {/* Drawer overlay */}
+        {drawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            onClick={() => this.setState({ drawerOpen: false })}
+          />
+        )}
+
+        {/* Drawer */}
+        <aside
+          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ${
+            drawerOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-center justify-between px-4 py-4 bg-primary-900 text-white">
+            <span className="font-bold text-lg">Ønskeliste</span>
+            <button
+              onClick={() => this.setState({ drawerOpen: false })}
+              className="p-1.5 rounded-lg hover:bg-primary-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <nav className="flex-1 py-2 overflow-y-auto">
+            {navItems.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => this.menyValgTrykket(key)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="py-2 border-t border-slate-100">
+            {erAdmin && (
+              <button
+                onClick={() => this.menyValgTrykket('admin')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
+              >
+                <Shield className="h-5 w-5 shrink-0" />
+                Admin
+              </button>
+            )}
+            <button
+              onClick={() => this.menyValgTrykket('loggUt')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-rose-600 hover:bg-rose-50 transition-colors text-sm font-medium"
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              Logg ut
+            </button>
+          </div>
+        </aside>
+      </>
     );
   }
 }

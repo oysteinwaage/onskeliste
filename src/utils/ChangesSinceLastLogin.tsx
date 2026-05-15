@@ -1,15 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-
 import { updateLastSeenVersion } from '../Api';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody,
+} from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 interface ChangeEntry {
   version: number;
@@ -51,14 +48,14 @@ const changes: ChangeEntry[] = [
     version: 2.4,
     releaseDate: "19.11.2021",
     changes: [
-      "Kan nå legge inn størrelse (på klær, sko osv) i eget felt på hvert enkelt ønske, så vises det på samme måte som 'Antall' i ønskelisten din. Kan også oppdatere eksisterende ønsker med størrelse ved å trykke på blyanten på ønsket du vil endre på",
+      "Kan nå legge inn størrelse (på klær, sko osv) i eget felt på hvert enkelt ønske",
     ]
   },
   {
     version: 2.5,
     releaseDate: "19.11.2021",
     changes: [
-      "Kan nå legge inn dine generelle størrelser (på klær, sko osv) inne på din egen Profil-side (Hamburgermeny -> Profil -> Mine generelle mål). Disse generelle målene vil bli vist samtidig som folk ser på din ønskeliste, og vil gjøre det enklere for alle å kjøpe riktige størrelser på både konkrete ønsker du har i listen din, men også om noen vil gå off-list og prøve seg på egen hånd :)",
+      "Kan nå legge inn dine generelle størrelser (på klær, sko osv) inne på din egen Profil-side",
       "Har flyttet listen hvor man legger til de som kan se på ønskelisten din inn til Profil-siden"
     ]
   },
@@ -66,22 +63,22 @@ const changes: ChangeEntry[] = [
     version: 2.6,
     releaseDate: "27.11.2021",
     changes: [
-      "Mine kjøp: Her blir det listet opp alle ønsker du har krysset ut fra noen andres ønskelister. Denne oversikten finner du inne på din Profil side. Dette er en første versjon og vil utvides etterhvert med flere funksjoner."
+      "Mine kjøp: Her blir det listet opp alle ønsker du har krysset ut fra noen andres ønskelister"
     ]
   },
   {
     version: 3.0,
     releaseDate: "02.05.2025",
     changes: [
-      "Mine kjøp: Har fått eget menyvalg og egen side. I tillegg kan du nå registrere egne kjøp til folk som ikke er på deres ønskeliste, og registrere pris på dine kjøp for god oversikt over dine utgifter både pr person og totalt 💰",
-      "Prisjakt-søk: Når du legger til et nytt ønske kan du nå søke direkte etter produkter fra prisjakt.no i beskrivelses-feltet. Forslag vises med bilde og pris, og lenke til prisjakt legges automatisk til når du velger et produkt",
+      "Mine kjøp: Har fått eget menyvalg og egen side. Kan nå registrere egne kjøp og se oversikt over utgifter",
+      "Prisjakt-søk: Når du legger til et nytt ønske kan du nå søke direkte etter produkter fra prisjakt.no",
     ]
   },
   {
     version: 3.1,
     releaseDate: "09.05.2025",
     changes: [
-      "Flere lister: Kan nå legge til flere ønskelister med angitt navn, disse kan også deles med andre brukere for å ha en delt ønskeliste",
+      "Flere lister: Kan nå legge til flere ønskelister med angitt navn, disse kan også deles med andre brukere",
     ]
   },
   {
@@ -89,6 +86,13 @@ const changes: ChangeEntry[] = [
     releaseDate: "14.05.2025",
     changes: [
       "Kan nå også legge til eget navn på sin default ønskeliste om man vil, gjøres inne på Profil siden",
+    ]
+  },
+  {
+    version: 3.3,
+    releaseDate: "15.05.2025",
+    changes: [
+      "Nytt design: Appen har fått et friskt, moderne utseende! Alt fungerer som før, det bare ser bedre ut ✨🙌🏼",
     ]
   }
 ];
@@ -107,40 +111,42 @@ class ChangesSinceLastLogin extends Component<ChangesSinceLastLoginProps> {
 
   render() {
     const { lastSeenVersion } = this.props;
+    const nyeEndringer = changes.filter(c => c.version > lastSeenVersion);
+    const erApen = nyeEndringer.length > 0 && window.location.pathname !== '/';
+
     return (
-      <Dialog
-        open={currentVersion > lastSeenVersion && window.location.pathname !== '/'}
-        scroll='paper'
-        aria-labelledby="scroll-dialog-title"
-        aria-describedby="scroll-dialog-description"
-      >
-        <DialogTitle id="scroll-dialog-title">Endringer siden sist du logget inn!</DialogTitle>
-        <DialogContent dividers={true}>
-          {changes.map(change => change.version > lastSeenVersion &&
-            <DialogContentText
-              id="scroll-dialog-description"
-              tabIndex={-1}
-              className="changesContent"
-              key={change.version}
-            >
-              <span className="changesHeader">
-                {"v.".concat(String(change.version), " - ", change.releaseDate)}
-              </span>
-              {change.changes.map(text =>
-                <li className="changesText" key={text.split(':')[0]}>
-                  <span className="header">{text.split(':')[0].concat(":")}</span>
-                  <span className="text">{text.split(':')[1]}</span>
-                </li>
-              )}
-            </DialogContentText>
-          )
-          }
+      <Dialog open={erApen} onOpenChange={(o) => { if (!o) this.handleClose(); }}>
+        <DialogContent showClose={false} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary-700">🎉 Endringer siden sist du logget inn!</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="flex flex-col gap-4">
+            {nyeEndringer.map(change => (
+              <div key={change.version}>
+                <p className="text-xs font-bold text-primary-600 mb-1.5">
+                  v.{change.version} – {change.releaseDate}
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {change.changes.map(text => {
+                    const [tittel, ...rest] = text.split(':');
+                    return (
+                      <li key={tittel} className="text-sm text-slate-700 flex gap-1.5">
+                        <span className="text-primary-400 shrink-0">•</span>
+                        <span>
+                          <span className="font-semibold italic text-slate-800">{tittel}:</span>
+                          {rest.length > 0 && <span className="text-slate-600">{rest.join(':')}</span>}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </DialogBody>
+          <DialogFooter>
+            <Button onClick={this.handleClose}>Lukk</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => this.handleClose()} color="primary">
-            Lukk
-          </Button>
-        </DialogActions>
       </Dialog>
     );
   }

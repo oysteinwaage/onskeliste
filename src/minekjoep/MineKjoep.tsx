@@ -1,28 +1,28 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { endreHeaderTekst } from '../actions/actions';
-import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import IconButton from '@mui/material/IconButton';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
 import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris, updateEkstraListeWishPris } from '../Api';
 import { finnNavnFraUid, antallAlleredeKjoptAvMeg, myWishlistId } from '../utils/util';
 import { RootState, Bruker, Onske } from '../types';
 import { Dispatch } from 'redux';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody,
+} from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 const antallValg = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const groupColors = [
+  'bg-sky-50 border-sky-200',
+  'bg-lime-50 border-lime-200',
+  'bg-orange-50 border-orange-200',
+  'bg-violet-50 border-violet-200',
+  'bg-teal-50 border-teal-200',
+  'bg-amber-50 border-amber-200',
+];
 
 interface MineKjoepState {
   addKjoepDialogOpen: boolean;
@@ -62,9 +62,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     this.setState({ addKjoepDialogOpen: true, addKjoepForUid: uid, addKjoepTekst: '', addKjoepAntall: 1, addKjoepUrl: '', addKjoepPris: '' });
   };
 
-  closeAddKjoepDialog = (): void => {
-    this.setState({ addKjoepDialogOpen: false });
-  };
+  closeAddKjoepDialog = (): void => this.setState({ addKjoepDialogOpen: false });
 
   saveEkstraKjoep = (): void => {
     const { addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris } = this.state;
@@ -115,17 +113,6 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     });
   };
 
-  visLenkeOgAntall = (kjoep: Onske): React.ReactNode => {
-    const antallKjopt = antallAlleredeKjoptAvMeg(kjoep) || kjoep.antall || 1;
-    return (
-      <>
-        <span>Antall: {antallKjopt}</span>
-        {kjoep.url && ' - '}
-        {kjoep.url && <a href={kjoep.url} target="_blank" rel="noopener noreferrer">Lenke</a>}
-      </>
-    );
-  };
-
   renderPrisInput = (brukerUid: string, kjoep: Onske, erEkstraKjoep: boolean, ekstraListeId?: string): React.ReactNode => {
     const currentPris = ekstraListeId
       ? (kjoep.kjoptAvListe || []).find((e: any) => e.kjoptAv === myWishlistId())?.pris
@@ -136,84 +123,27 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
       ? antallAlleredeKjoptAvMeg(kjoep)
       : erEkstraKjoep ? kjoep.antall : antallAlleredeKjoptAvMeg(kjoep);
     return (
-      <TextField
-        size="small"
-        label={antall && antall > 1 ? 'Totalpris' : 'Pris'}
-        value={this.getPrisValue(brukerUid, kjoep.key, currentPris)}
-        onChange={(e) => this.onPrisChange(brukerUid, kjoep.key, e.target.value)}
-        onBlur={() => this.onPrisBlur(brukerUid, kjoep, erEkstraKjoep, ekstraListeId)}
-        inputProps={{ inputMode: 'numeric', style: { width: 60, padding: '4px 6px' } }}
-        InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
-        style={{ width: 90, flexShrink: 0, display: 'block' }}
-        variant="standard"
-      />
+      <div className="relative w-24 shrink-0">
+        <input
+          className="h-7 w-full rounded border border-slate-200 bg-white px-2 text-xs pr-7 focus:outline-none focus:ring-1 focus:ring-primary-400 hover:border-slate-300 transition-colors"
+          inputMode="numeric"
+          placeholder={antall && antall > 1 ? 'Totalpris' : 'Pris'}
+          value={this.getPrisValue(brukerUid, kjoep.key, currentPris)}
+          onChange={(e) => this.onPrisChange(brukerUid, kjoep.key, e.target.value)}
+          onBlur={() => this.onPrisBlur(brukerUid, kjoep, erEkstraKjoep, ekstraListeId)}
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">kr</span>
+      </div>
     );
   };
 
-  renderAddKjoepDialog = (): React.ReactNode => {
-    const { alleBrukere } = this.props;
-    const { addKjoepDialogOpen, addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris } = this.state;
-    const personNavn = finnNavnFraUid(addKjoepForUid, alleBrukere);
-    const kanLagre = !!addKjoepTekst.trim();
-
-    return (
-      <Dialog open={addKjoepDialogOpen} onClose={this.closeAddKjoepDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Legg til kjøp for {personNavn}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Hva kjøpte du?"
-            value={addKjoepTekst}
-            type="text"
-            fullWidth
-            onChange={(e) => this.setState({ addKjoepTekst: e.target.value })}
-            onKeyDown={(e) => { if (e.key === 'Enter' && kanLagre) this.saveEkstraKjoep(); }}
-          />
-          <FormControl margin="dense" style={{ minWidth: 80 }}>
-            <InputLabel id="antall-label">Antall</InputLabel>
-            <Select
-              labelId="antall-label"
-              value={addKjoepAntall}
-              label="Antall"
-              onChange={(e: SelectChangeEvent<number>) => this.setState({ addKjoepAntall: e.target.value as number })}
-            >
-              {antallValg.map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="Lenke (valgfritt)"
-            value={addKjoepUrl}
-            type="url"
-            fullWidth
-            onChange={(e) => this.setState({ addKjoepUrl: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label={addKjoepAntall > 1 ? 'Totalpris (valgfritt)' : 'Pris (valgfritt)'}
-            value={addKjoepPris}
-            inputProps={{ inputMode: 'numeric' }}
-            InputProps={{ endAdornment: <span style={{ fontSize: '0.75rem', color: 'gray' }}>kr</span> }}
-            onChange={(e) => this.setState({ addKjoepPris: this.filtrerPris(e.target.value) })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={this.closeAddKjoepDialog}>Avbryt</Button>
-          <Button onClick={this.saveEkstraKjoep} disabled={!kanLagre} variant="contained">
-            Lagre
-          </Button>
-        </DialogActions>
-      </Dialog>
-    );
-  };
-
-  renderPersonGruppe = (brukerUid: string, bgColor: string): React.ReactNode => {
+  renderPersonGruppe = (brukerUid: string, colorClass: string): React.ReactNode => {
     const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere } = this.props;
     const kjoepListe = mineKjoep[brukerUid] || [];
     const ekstraListe = mineEkstraKjoep[brukerUid] || [];
     const ekstraListeLister = mineEkstraListeKjoep[brukerUid] || [];
     const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0 || ekstraListeLister.some(l => l.onsker.length > 0);
+    if (!harNoe) return null;
 
     const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
     const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
@@ -221,98 +151,84 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
       acc + l.onsker.reduce((a, k) => a + ((k.kjoptAvListe || []).find((e: any) => e.kjoptAv === myWishlistId())?.pris || 0), 0), 0);
     const sum = kjoepSum + ekstraSum + ekstraListeSum;
 
-    return harNoe && (
-      <div
-        key={brukerUid}
-        className="ProfilSide__mine-kjoep__liste"
-        style={{ backgroundColor: bgColor, borderRadius: 8, marginBottom: 8, padding: '8px 12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 3 }}>
-            <div className="ProfilSide__mine-kjoep__liste-eier" style={{ textAlign: 'center', wordBreak: 'break-word', whiteSpace: 'normal', fontSize: '1rem' }}>
+    return (
+      <div key={brukerUid} className={`border rounded-2xl overflow-hidden ${colorClass}`}>
+        <div className="flex items-stretch">
+          {/* Venstre kolonne - navn + total */}
+          <div className="w-28 shrink-0 flex flex-col items-center justify-center p-3 border-r border-current border-opacity-20 gap-1.5">
+            <span className="text-sm font-semibold text-slate-700 text-center break-words leading-tight">
               {finnNavnFraUid(brukerUid, alleBrukere)}
-            </div>
+            </span>
             {sum > 0 && (
-              <div style={{ fontSize: '0.8rem', color: 'gray', marginTop: 4 }}>{sum} kr</div>
+              <span className="text-xs text-slate-500">{sum} kr</span>
             )}
-            <IconButton
+            <button
               onClick={() => this.openAddKjoepDialog(brukerUid)}
-              aria-label={`Legg til kjøp for ${finnNavnFraUid(brukerUid, alleBrukere)}`}
-              style={{ marginTop: 4, border: '1px solid rgba(0,0,0,0.23)', borderRadius: '50%', padding: 6 }}
+              className="mt-1 p-1.5 rounded-full border border-slate-300 text-slate-500 hover:text-primary-600 hover:border-primary-400 hover:bg-white/60 transition-colors"
+              aria-label="Legg til kjøp"
             >
-              <AddIcon />
-            </IconButton>
+              <Plus className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div style={{ flex: 7, minWidth: 0 }} className="ProfilSide__mine-kjoep__onsker">
+
+          {/* Høyre kolonne - kjøpsliste */}
+          <div className="flex-1 min-w-0 divide-y divide-slate-100/60">
             {kjoepListe.map((kjoep, idx) => (
-              <div key={kjoep.onskeTekst + idx}>
-                <ListItem className="ProfilSide__mine-kjoep__liste-kjoep">
-                  <ListItemText
-                    className="wishText"
-                    primary={kjoep.onskeTekst}
-                    secondary={this.visLenkeOgAntall(kjoep)}
-                  />
-                </ListItem>
-                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
-                  {this.renderPrisInput(brukerUid, kjoep, false)}
+              <div key={kjoep.onskeTekst + idx} className="flex items-center gap-2 px-3 py-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-800 font-medium truncate">{kjoep.onskeTekst}</p>
+                  <p className="text-xs text-slate-400">
+                    Antall: {antallAlleredeKjoptAvMeg(kjoep) || kjoep.antall || 1}
+                    {kjoep.url && <> · <a href={kjoep.url} target="_blank" rel="noopener noreferrer" className="text-primary-500 underline">Lenke</a></>}
+                  </p>
                 </div>
-                {(kjoepListe.length > idx + 1 || ekstraListe.length > 0) &&
-                  <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
+                {this.renderPrisInput(brukerUid, kjoep, false)}
               </div>
             ))}
-            {ekstraListe.map((kjoep, idx) => (
-              <div key={kjoep.key}>
-                <ListItem className="ProfilSide__mine-kjoep__liste-kjoep">
-                  <ListItemText
-                    className="wishText"
-                    primary={kjoep.onskeTekst}
-                    secondary={this.visLenkeOgAntall(kjoep)}
-                  />
-                  <IconButton
-                    size="small"
-                    edge="end"
-                    aria-label="Slett kjøp"
-                    onClick={() => removeEkstraKjoepForBruker(brukerUid, kjoep.key)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </ListItem>
-                <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
-                  {this.renderPrisInput(brukerUid, kjoep, true)}
+            {ekstraListe.map((kjoep) => (
+              <div key={kjoep.key} className="flex items-center gap-2 px-3 py-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-800 font-medium truncate">{kjoep.onskeTekst}</p>
+                  <p className="text-xs text-slate-400">
+                    Antall: {kjoep.antall || 1}
+                    {kjoep.url && <> · <a href={kjoep.url} target="_blank" rel="noopener noreferrer" className="text-primary-500 underline">Lenke</a></>}
+                  </p>
                 </div>
-                {(ekstraListe.length > idx + 1 || ekstraListeLister.length > 0) &&
-                  <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
+                {this.renderPrisInput(brukerUid, kjoep, true)}
+                <button
+                  onClick={() => removeEkstraKjoepForBruker(brukerUid, kjoep.key)}
+                  className="p-1 rounded text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
+                  aria-label="Slett kjøp"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
-            {ekstraListeLister.map((listGruppe, lgIdx) => {
+            {ekstraListeLister.map((listGruppe, _lgIdx) => {
               const deltMedBruker = listGruppe.sharedWithUid
                 ? alleBrukere.find(b => b.uid === listGruppe.sharedWithUid)
                 : null;
               return (
-              <div key={listGruppe.listId}>
-                <Divider style={{ borderStyle: 'dashed', margin: '8px 0 6px' }} />
-                <div style={{ fontSize: '0.75rem', color: 'gray', padding: '2px 16px 4px', fontStyle: 'italic' }}>
-                  <span style={{ fontWeight: 'bold' }}>{listGruppe.listName}</span>
-                  {deltMedBruker && ` (delt med ${deltMedBruker.navn})`}
-                </div>
-                {listGruppe.onsker.map((kjoep, idx) => (
-                  <div key={kjoep.key}>
-                    <ListItem className="ProfilSide__mine-kjoep__liste-kjoep">
-                      <ListItemText
-                        className="wishText"
-                        primary={kjoep.onskeTekst}
-                        secondary={this.visLenkeOgAntall(kjoep)}
-                      />
-                    </ListItem>
-                    <div style={{ paddingLeft: 16, paddingBottom: 4, marginTop: -12 }}>
+                <div key={listGruppe.listId}>
+                  <div className="px-3 py-1.5 bg-slate-50/60 border-t border-slate-100/60">
+                    <p className="text-xs text-slate-500 font-semibold">
+                      {listGruppe.listName}
+                      {deltMedBruker && <span className="font-normal"> (delt med {deltMedBruker.navn})</span>}
+                    </p>
+                  </div>
+                  {listGruppe.onsker.map((kjoep) => (
+                    <div key={kjoep.key} className="flex items-center gap-2 px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800 font-medium truncate">{kjoep.onskeTekst}</p>
+                        <p className="text-xs text-slate-400">
+                          Antall: {antallAlleredeKjoptAvMeg(kjoep) || kjoep.antall || 1}
+                        </p>
+                      </div>
                       {this.renderPrisInput(brukerUid, kjoep, false, listGruppe.listId)}
                     </div>
-                    {(listGruppe.onsker.length > idx + 1 || ekstraListeLister.length > lgIdx + 1) &&
-                      <Divider className="ProfilSide__mine-kjoep__liste-divider" />}
-                  </div>
-                ))}
-              </div>
-            );
+                  ))}
+                </div>
+              );
             })}
           </div>
         </div>
@@ -322,8 +238,8 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
 
   render() {
     const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere, allowedListsForMe } = this.props;
+    const { addKjoepDialogOpen, addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris } = this.state;
 
-    const groupColors = ['#e8f4f8', '#f0f4e8', '#f8f0e8', '#f4e8f4', '#e8f4f0', '#f8f4e0'];
     const allUids = Array.from(new Set([
       ...Object.keys(mineKjoep),
       ...Object.keys(mineEkstraKjoep),
@@ -346,54 +262,110 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
       return total + kjoepSum + ekstraSum + ekstraListeSum;
     }, 0);
 
+    const personNavn = finnNavnFraUid(addKjoepForUid, alleBrukere);
+
     return (
-      <div className="ProfilSide" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '0.9rem', color: 'gray', fontStyle: 'italic', marginBottom: 12 }}>
-          Her har du oversikt over alle ønsker du har tatt fra venners lister, du kan også legge til ting du har kjøpt/skaffet utenfor ønskelisten til folk og i tillegg få oversikt over hvor mye du har brukt pr person og totalt
-        </div>
+      <div className="max-w-xl mx-auto px-4 py-6 flex flex-col gap-4">
+        <p className="text-sm text-slate-400 italic text-center">
+          Her har du oversikt over alle ønsker du har tatt fra venners lister. Du kan også legge til kjøp gjort utenfor ønskelisten.
+        </p>
+
         {totalSum > 0 && (
-          <hr style={{ width: '100%', border: 'none', borderTop: '1px solid rgba(0,0,0,0.12)', margin: '0 0 12px 0' }} />
-        )}
-        {totalSum > 0 && (
-          <div style={{ textAlign: 'center', fontWeight: 500, marginBottom: 12 }}>
-            Totalsum: {totalSum} kr
+          <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-2 text-center">
+            <p className="text-sm font-semibold text-primary-800">Totalsum: {totalSum} kr</p>
           </div>
         )}
-        {totalSum > 0 && (
-          <hr style={{ width: '100%', border: 'none', borderTop: '1px solid rgba(0,0,0,0.12)', margin: '0 0 12px 0' }} />
-        )}
+
         {allowedListsForMe.length > 0 && (
-          <FormControl size="small" style={{ marginBottom: 12, minWidth: 220, alignSelf: 'center' }}>
-            <Select
-              displayEmpty
-              value=""
-              onChange={(e: SelectChangeEvent) => {
-                if (e.target.value) this.openAddKjoepDialog(e.target.value);
-              }}
-              renderValue={() => (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AddIcon fontSize="small" />
-                  Legg til kjøp for...
-                </span>
-              )}
-            >
-              {[...allowedListsForMe]
-                .sort((a, b) => (finnNavnFraUid(a, alleBrukere) || a).localeCompare(finnNavnFraUid(b, alleBrukere) || b))
-                .map(uid => (
-                  <MenuItem key={uid} value={uid}>
-                    {finnNavnFraUid(uid, alleBrukere) || uid}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
+          <div className="flex justify-center">
+            <div className="relative">
+              <select
+                value=""
+                onChange={(e) => { if (e.target.value) this.openAddKjoepDialog(e.target.value); }}
+                className="h-9 rounded-xl border border-slate-300 bg-white pl-8 pr-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:border-slate-400 transition-colors appearance-none cursor-pointer"
+              >
+                <option value="">Legg til kjøp for...</option>
+                {[...allowedListsForMe]
+                  .sort((a, b) => (finnNavnFraUid(a, alleBrukere) || a).localeCompare(finnNavnFraUid(b, alleBrukere) || b))
+                  .map(uid => (
+                    <option key={uid} value={uid}>{finnNavnFraUid(uid, alleBrukere) || uid}</option>
+                  ))}
+              </select>
+              <Plus className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
+            </div>
+          </div>
         )}
-        {allUids.map((brukerUid, colorIndex) =>
-          this.renderPersonGruppe(brukerUid, groupColors[colorIndex % groupColors.length])
-        )}
+
+        <div className="flex flex-col gap-3">
+          {allUids.map((brukerUid, colorIndex) =>
+            this.renderPersonGruppe(brukerUid, groupColors[colorIndex % groupColors.length])
+          )}
+        </div>
+
         {!harNoenKjoep && (
-          <span className="ProfilSide__mine-kjoep__ingen-kjoep">Du har ikke tatt noen ønsker enda</span>
+          <p className="text-center text-slate-400 text-sm py-8">Du har ikke tatt noen ønsker enda</p>
         )}
-        {this.renderAddKjoepDialog()}
+
+        {/* Dialog: Legg til kjøp */}
+        <Dialog open={addKjoepDialogOpen} onOpenChange={(o) => { if (!o) this.closeAddKjoepDialog(); }}>
+          <DialogContent showClose={false} className="max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Legg til kjøp for {personNavn}</DialogTitle>
+            </DialogHeader>
+            <DialogBody className="flex flex-col gap-3">
+              <Input
+                autoFocus
+                label="Hva kjøpte du?"
+                value={addKjoepTekst}
+                type="text"
+                onChange={(e) => this.setState({ addKjoepTekst: e.target.value })}
+                onKeyDown={(e) => { if (e.key === 'Enter' && addKjoepTekst.trim()) this.saveEkstraKjoep(); }}
+              />
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Antall</label>
+                <Select
+                  value={String(addKjoepAntall)}
+                  onValueChange={(val) => this.setState({ addKjoepAntall: Number(val) })}
+                >
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {antallValg.map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                label="Lenke (valgfritt)"
+                value={addKjoepUrl}
+                type="url"
+                placeholder="https://..."
+                onChange={(e) => this.setState({ addKjoepUrl: e.target.value })}
+              />
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">
+                  {addKjoepAntall > 1 ? 'Totalpris' : 'Pris'}{' '}
+                  <span className="text-slate-400 font-normal">(valgfritt)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm pr-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                    inputMode="numeric"
+                    value={addKjoepPris}
+                    onChange={(e) => this.setState({ addKjoepPris: this.filtrerPris(e.target.value) })}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kr</span>
+                </div>
+              </div>
+            </DialogBody>
+            <DialogFooter>
+              <Button variant="ghost" onClick={this.closeAddKjoepDialog}>Avbryt</Button>
+              <Button onClick={this.saveEkstraKjoep} disabled={!addKjoepTekst.trim()}>
+                Lagre
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
