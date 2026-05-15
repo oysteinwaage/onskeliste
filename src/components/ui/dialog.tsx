@@ -39,7 +39,7 @@ const DialogContent = React.forwardRef<
       className={cn(
         'fixed z-50 bg-white shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
         fullScreen
-          ? 'inset-0 w-full h-full rounded-none flex flex-col'
+          ? 'inset-0 w-full min-h-full rounded-none overflow-y-auto'
           : 'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-md rounded-xl max-h-[90vh] flex flex-col',
         className,
       )}
