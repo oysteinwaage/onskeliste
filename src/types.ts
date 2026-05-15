@@ -46,6 +46,15 @@ export interface ExtraListMetadata {
   sharedWithUid?: string;
 }
 
+export interface Feedback {
+  key: string;
+  tekst: string;
+  timestamp: number;
+  brukerUid: string;
+  brukerNavn: string;
+  lest: boolean;
+}
+
 // Redux state types
 
 export interface InnloggetBrukerState {
@@ -68,6 +77,8 @@ export interface InnloggetBrukerState {
   aktiveListeId: string | null;
   alleEkstraListeOnsker: Record<string, Onske[]>;
   opprettListeDialogOpen: boolean;
+  alleFeedback: Feedback[];
+  ulesteFeedback: number;
 }
 
 export interface ConfigState {
@@ -77,6 +88,7 @@ export interface ConfigState {
   infoResettMailSendt: string;
   isLoading: boolean;
   slettKjopteOnskerEnabled: boolean;
+  tilbakemeldingEnabled: boolean;
 }
 
 export interface VennersListerState {

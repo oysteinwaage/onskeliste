@@ -25,6 +25,8 @@ const initialState: InitialState = {
     aktiveListeId: null,
     alleEkstraListeOnsker: {},
     opprettListeDialogOpen: false,
+    alleFeedback: [],
+    ulesteFeedback: 0,
   },
   brukere: {},
   config: {
@@ -34,6 +36,7 @@ const initialState: InitialState = {
     infoResettMailSendt: '',
     isLoading: false,
     slettKjopteOnskerEnabled: false,
+    tilbakemeldingEnabled: false,
   },
   vennersLister: {
     allowedListsForMe: [],

@@ -35,6 +35,9 @@ export const myUserExtraListsRef = () => userExtraListsRef(myUid() as string);
 // Admin config
 export const adminConfigRef = db.ref('config');
 
+// Feedback
+export const feedbackRef = db.ref('feedback');
+
 // Authentication/signed in user
 export const auth = firebase.auth();
 export const myUid = (): string | null => firebase.auth().currentUser ? firebase.auth().currentUser!.uid : null;

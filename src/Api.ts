@@ -7,6 +7,7 @@ import {
     ekstraKjoepRef,
     extraListRef,
     extraListWishesRef,
+    feedbackRef,
     myAllowedViewersRef,
     myEkstraKjoepRef,
     myUid,
@@ -29,6 +30,7 @@ import {
     oppdaterMineKjoep,
     settMineEkstraKjoep,
     setSlettKjopteOnskerEnabled,
+    setTilbakemeldingEnabled,
     mottaMineEkstraLister,
     oppdaterEkstraListeMetadata,
     mottaEkstraListeOnsker,
@@ -38,9 +40,11 @@ import {
     settValgtVennsListeId,
     oppdaterMineEkstraListeKjoep,
     settHovedListeNavn,
+    mottaFeedback,
+    settUlesteFeedback,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
-import { Onske, Viewer, ExtraListMetadata, Bruker } from './types';
+import { Onske, Viewer, ExtraListMetadata, Bruker, Feedback } from './types';
 import { Dispatch } from 'redux';
 
 const mapTolist = (res: firebase.default.database.DataSnapshot): any[] =>
@@ -283,7 +287,13 @@ export const resetPassord = (mail: string) => async (dispatch: Dispatch) => {
 
 export const fetchUsers = () => async (dispatch: Dispatch) => {
     usersRef.once('value', snapshot => {
-        dispatch(mottaBrukere(mapTolist(snapshot).sort((a, b) => a.navn.localeCompare(b.navn))));
+        const brukere: Bruker[] = mapTolist(snapshot).sort((a: Bruker, b: Bruker) => a.navn.localeCompare(b.navn));
+        dispatch(mottaBrukere(brukere));
+        const uid = myUid();
+        const meg = brukere.find((b: Bruker) => b.uid === uid);
+        if (meg?.erAdmin) {
+            dispatch(subscribeTilFeedback() as any);
+        }
     });
 };
 
@@ -323,11 +333,17 @@ export const fetchAdminConfig = () => async (dispatch: Dispatch) => {
     adminConfigRef.on('value', snapshot => {
         const config = snapshot.val() || {};
         dispatch(setSlettKjopteOnskerEnabled(!!config.slettKjopteOnskerEnabled));
+        dispatch(setTilbakemeldingEnabled(!!config.tilbakemeldingEnabled));
     });
 };
 
 export const setSlettKjopteOnskerEnabledApi = (enabled: boolean): void => {
     adminConfigRef.update({ slettKjopteOnskerEnabled: enabled });
+};
+
+export const setTilbakemeldingEnabledApi = (enabled: boolean) => (dispatch: Dispatch) => {
+    adminConfigRef.update({ tilbakemeldingEnabled: enabled });
+    dispatch(setTilbakemeldingEnabled(enabled));
 };
 
 export const slettKjopteOnsker = (mineOnsker: Onske[]): void => {
@@ -574,4 +590,51 @@ export const opprettNyBruker = (brukernavn: string, passord: string, firstName: 
         .catch(function (error: any) {
             alert(error);
         });
+};
+
+// Feedback
+export const sendFeedback = async (tekst: string, brukerUid: string, brukerNavn: string): Promise<void> => {
+    await feedbackRef.push({
+        tekst,
+        timestamp: Date.now(),
+        brukerUid,
+        brukerNavn,
+        lest: false,
+    });
+};
+
+export const subscribeTilFeedback = () => (dispatch: Dispatch) => {
+    feedbackRef.on('value', (snap: any) => {
+        const data = snap.val();
+        if (!data) {
+            dispatch(mottaFeedback([]));
+            dispatch(settUlesteFeedback(0));
+            return;
+        }
+        const feedback: Feedback[] = Object.entries(data).map(([key, val]: [string, any]) => ({
+            key,
+            ...val,
+        }));
+        dispatch(mottaFeedback(feedback));
+        dispatch(settUlesteFeedback(feedback.filter(f => !f.lest).length));
+    });
+};
+
+export const slettFeedback = async (feedbackKey: string): Promise<void> => {
+    await feedbackRef.child(feedbackKey).remove();
+};
+
+export const markerAlleFeedbackSomLest = async (): Promise<void> => {
+    const snap = await feedbackRef.once('value');
+    const data = snap.val();
+    if (!data) return;
+    const updates: Record<string, boolean> = {};
+    Object.keys(data).forEach(key => {
+        if (!data[key].lest) {
+            updates[`${key}/lest`] = true;
+        }
+    });
+    if (Object.keys(updates).length > 0) {
+        await feedbackRef.update(updates);
+    }
 };

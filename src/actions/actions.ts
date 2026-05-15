@@ -1,4 +1,4 @@
-import { Onske, Bruker, Viewer, ExtraListMetadata } from '../types';
+import { Onske, Bruker, Viewer, ExtraListMetadata, Feedback } from '../types';
 
 // Min ønskeliste
 export const MOTTA_MIN_ONSKELISTE = 'MOTTA_MIN_ONSKELISTE';
@@ -111,6 +111,11 @@ export function lasterData(isLoading: boolean) {
 export const SET_SLETT_KJOPTE_ONSKER_ENABLED = 'SET_SLETT_KJOPTE_ONSKER_ENABLED';
 export function setSlettKjopteOnskerEnabled(enabled: boolean) {
   return { type: SET_SLETT_KJOPTE_ONSKER_ENABLED as typeof SET_SLETT_KJOPTE_ONSKER_ENABLED, enabled };
+}
+
+export const SET_TILBAKEMELDING_ENABLED = 'SET_TILBAKEMELDING_ENABLED';
+export function setTilbakemeldingEnabled(enabled: boolean) {
+  return { type: SET_TILBAKEMELDING_ENABLED as typeof SET_TILBAKEMELDING_ENABLED, enabled };
 }
 
 //Profil
@@ -227,6 +232,23 @@ export function settHovedListeNavn(navn: string) {
   };
 }
 
+// Feedback
+export const MOTTA_FEEDBACK = 'MOTTA_FEEDBACK';
+export function mottaFeedback(feedback: Feedback[]) {
+  return {
+    type: MOTTA_FEEDBACK as typeof MOTTA_FEEDBACK,
+    feedback,
+  };
+}
+
+export const SETT_ULESTE_FEEDBACK = 'SETT_ULESTE_FEEDBACK';
+export function settUlesteFeedback(antall: number) {
+  return {
+    type: SETT_ULESTE_FEEDBACK as typeof SETT_ULESTE_FEEDBACK,
+    antall,
+  };
+}
+
 // Union type of all actions
 export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
@@ -255,4 +277,7 @@ export type AppAction =
   | ReturnType<typeof settValgtVennsListeId>
   | ReturnType<typeof settOpprettListeDialogOpen>
   | ReturnType<typeof oppdaterEkstraListeMetadata>
-  | ReturnType<typeof settHovedListeNavn>;
+  | ReturnType<typeof settHovedListeNavn>
+  | ReturnType<typeof mottaFeedback>
+  | ReturnType<typeof settUlesteFeedback>
+  | ReturnType<typeof setTilbakemeldingEnabled>;

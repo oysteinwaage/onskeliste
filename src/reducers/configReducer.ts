@@ -9,7 +9,8 @@ import {
     RESETT_PASSORD_MAIL_SENDT,
     SETT_IS_LOADING,
     MOTTA_MIN_ONSKELISTE,
-    SET_SLETT_KJOPTE_ONSKER_ENABLED
+    SET_SLETT_KJOPTE_ONSKER_ENABLED,
+    SET_TILBAKEMELDING_ENABLED
 } from '../actions/actions';
 
 export default function config(
@@ -50,6 +51,11 @@ export default function config(
             return {
                 ...state,
                 slettKjopteOnskerEnabled: action.enabled,
+            };
+        case SET_TILBAKEMELDING_ENABLED:
+            return {
+                ...state,
+                tilbakemeldingEnabled: action.enabled,
             };
         default:
             return state;

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
 import {
   List, Gift, ShoppingCart, User, LogOut,
-  Menu, X, PlusSquare, Shield,
+  Menu, X, PlusSquare, Shield, MessageSquare,
 } from 'lucide-react';
 import { logOut } from '../Api';
 import { settOpprettListeDialogOpen } from '../actions/actions';
@@ -18,6 +18,8 @@ interface AppBarComponentProps {
   headerTekst: string;
   erAdmin: boolean;
   innloggetBrukerNavn: string;
+  ulesteFeedback: number;
+  tilbakemeldingEnabled: boolean;
   onAapneNySide: (id: string) => void;
   onLogOut: () => void;
   onOpprettNyListe: () => void;
@@ -43,6 +45,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
       case 'profil':
       case 'minekjoep':
       case 'admin':
+      case 'tilbakemelding':
         this.props.onAapneNySide(valg);
         break;
       case 'loggUt':
@@ -55,7 +58,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   }
 
   render() {
-    const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe } = this.props;
+    const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled } = this.props;
     const { drawerOpen } = this.state;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
     const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
@@ -67,10 +70,15 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
             {visHamburgerMeny && (
               <button
                 onClick={() => this.setState({ drawerOpen: true })}
-                className="p-2 rounded-lg hover:bg-primary-800 transition-colors -ml-1"
+                className="relative p-2 rounded-lg hover:bg-primary-800 transition-colors -ml-1"
                 aria-label="Åpne meny"
               >
                 <Menu className="h-5 w-5" />
+                {erAdmin && ulesteFeedback > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
+                    {ulesteFeedback}
+                  </span>
+                )}
               </button>
             )}
             <div className="flex-1 text-center">
@@ -127,6 +135,20 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                 {label}
               </button>
             ))}
+            {(erAdmin || tilbakemeldingEnabled) && (
+              <button
+                onClick={() => this.menyValgTrykket('tilbakemelding')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
+              >
+                <MessageSquare className="h-5 w-5 shrink-0" />
+                Tilbakemelding
+                {erAdmin && ulesteFeedback > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                    {ulesteFeedback}
+                  </span>
+                )}
+              </button>
+            )}
           </nav>
 
           <div className="py-2 border-t border-slate-100">
@@ -157,6 +179,8 @@ const mapStateToProps = (state: RootState) => ({
   headerTekst: state.config.headerTekst,
   erAdmin: state.innloggetBruker.erAdmin || false,
   innloggetBrukerNavn: state.innloggetBruker.navn,
+  ulesteFeedback: state.innloggetBruker.ulesteFeedback,
+  tilbakemeldingEnabled: state.config.tilbakemeldingEnabled,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

@@ -10,6 +10,7 @@ import Vennelister from './vennelister/VenneLister';
 import MineKjoep from './minekjoep/MineKjoep';
 import Profil from './profil/Profil';
 import Admin from './admin/Admin';
+import Tilbakemelding from './tilbakemelding/Tilbakemelding';
 import AppBar from './components/AppBarComponent';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
@@ -38,10 +39,10 @@ class App extends Component<AppProps> {
     const { onSendTilLogin, onBrukerLoggetInn, onAbonnerPaaMinOnskeliste, onSubscribeToMyAllowedViewers,
       onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig, onFetchMineEkstraLister } = this.props;
     onSettLasterData(true);
-    onFetchAdminConfig();
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
         onBrukerLoggetInn(user);
+        onFetchAdminConfig();
         onFetchAllUsers();
         onAbonnerPaaMinOnskeliste();
         onSubscribeToMyAllowedViewers();
@@ -79,6 +80,7 @@ class App extends Component<AppProps> {
               <Route path="/minekjoep" component={MineKjoep} />
               <Route path="/profil" component={Profil} />
               <Route path="/admin" component={Admin} />
+              <Route path="/tilbakemelding" component={Tilbakemelding} />
             </Switch>
           </div>
         </div>

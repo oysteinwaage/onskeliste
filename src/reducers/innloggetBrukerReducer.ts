@@ -19,6 +19,8 @@ import {
     FJERN_EKSTRA_LISTE_ONSKER,
     SETT_OPPRETT_LISTE_DIALOG_OPEN,
     SETT_HOVED_LISTE_NAVN,
+    MOTTA_FEEDBACK,
+    SETT_ULESTE_FEEDBACK,
 } from '../actions/actions';
 
 export default function innloggetBruker(
@@ -125,6 +127,16 @@ export default function innloggetBruker(
             return {
                 ...state,
                 mainListName: action.navn,
+            };
+        case MOTTA_FEEDBACK:
+            return {
+                ...state,
+                alleFeedback: action.feedback,
+            };
+        case SETT_ULESTE_FEEDBACK:
+            return {
+                ...state,
+                ulesteFeedback: action.antall,
             };
         default:
             return state;
