@@ -233,7 +233,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
               <div className="relative">
                 <input
                   autoFocus
-                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 hover:border-slate-400 transition-colors pr-8"
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 hover:border-slate-400 transition-colors pr-8"
                   placeholder="Hva ønsker du deg?"
                   value={textVerdi}
                   onChange={(e) => this.handleTextEndring(e.target.value)}
@@ -324,7 +324,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
                 {effectiveUrls.map((url, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <input
-                      className="flex-1 h-9 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
+                      className="flex-1 h-9 rounded-md border border-slate-300 bg-white px-3 py-1.5 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
                       type="url"
                       placeholder={effectiveUrls.length > 1 ? `Lenke ${index + 1}` : 'http://www.eksempel.com'}
                       value={url}

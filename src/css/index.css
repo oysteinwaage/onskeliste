@@ -7,11 +7,6 @@
     box-sizing: border-box;
   }
 
-  /* Prevent iOS Safari from zooming on input focus (triggered when font-size < 16px) */
-  input, textarea, select {
-    font-size: max(16px, 1em);
-  }
-
   body {
     min-height: 100vh;
     margin: 0;
@@ -73,6 +68,12 @@
   .changes-text .header {
     @apply italic font-medium;
   }
+}
+
+/* Prevent iOS Safari from zooming on input focus (triggered when font-size < 16px).
+   Must be outside @layer so it wins over Tailwind utility classes like text-sm. */
+input, textarea, select {
+  font-size: max(16px, 1em);
 }
 
 /* App logo spin animation */
