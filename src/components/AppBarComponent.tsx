@@ -17,6 +17,7 @@ interface AppBarState {
 interface AppBarComponentProps {
   headerTekst: string;
   erAdmin: boolean;
+  innloggetBrukerNavn: string;
   onAapneNySide: (id: string) => void;
   onLogOut: () => void;
   onOpprettNyListe: () => void;
@@ -54,7 +55,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   }
 
   render() {
-    const { headerTekst, erAdmin, onOpprettNyListe } = this.props;
+    const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe } = this.props;
     const { drawerOpen } = this.state;
     const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
     const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
@@ -72,9 +73,12 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                 <Menu className="h-5 w-5" />
               </button>
             )}
-            <h1 className="text-base font-semibold flex-1 text-center">
-              {headerTekst}
-            </h1>
+            <div className="flex-1 text-center">
+              <h1 className="text-base font-semibold leading-tight">{headerTekst}</h1>
+              {erPaaMinListe && innloggetBrukerNavn && (
+                <p className="text-xs text-primary-200 leading-tight">{innloggetBrukerNavn}</p>
+              )}
+            </div>
             {erPaaMinListe && (
               <button
                 onClick={onOpprettNyListe}
@@ -152,6 +156,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
 const mapStateToProps = (state: RootState) => ({
   headerTekst: state.config.headerTekst,
   erAdmin: state.innloggetBruker.erAdmin || false,
+  innloggetBrukerNavn: state.innloggetBruker.navn,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

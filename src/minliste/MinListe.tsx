@@ -5,8 +5,6 @@ import { Plus, Settings } from 'lucide-react';
 import {
   removeWishFromMyList,
   removeWishFromExtraList,
-  slettKjopteOnsker,
-  slettKjopteOnskerPaaEkstraListe,
   updateFavorittWithSortOrder,
 } from '../Api';
 import { toggleLenkeDialog, endreHeaderTekst, settAktivListeId, settOpprettListeDialogOpen } from '../actions/actions';
@@ -31,7 +29,6 @@ interface MinListeProps {
   innloggetBrukerNavn: string;
   myUid: string;
   mineOnsker: Onske[];
-  slettKjopteOnskerEnabled: boolean;
   mineEkstraLister: ExtraListMetadata[];
   alleEkstraListeOnsker: Record<string, Onske[]>;
   opprettListeDialogOpen: boolean;
@@ -93,7 +90,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
 
   render() {
     const {
-      innloggetBrukerNavn, myUid, mineOnsker, slettKjopteOnskerEnabled,
+      myUid, mineOnsker,
       mineEkstraLister, alleEkstraListeOnsker,
       opprettListeDialogOpen, onLukkOpprettListeDialog, alleBrukere, mainListName,
     } = this.props;
@@ -101,25 +98,16 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
 
     return (
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <p className="text-center text-slate-500 text-sm mb-4">Velkommen, {innloggetBrukerNavn}</p>
-
-        {/* Legg til ønske / slett-knapper */}
-        <div className="flex flex-wrap gap-2 justify-center mb-6">
-          <Button onClick={() => this.aapneDialog(null, null)} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Legg til ønske
-          </Button>
-          {slettKjopteOnskerEnabled && (
-            <Button variant="outline-destructive" size="sm" onClick={() => slettKjopteOnsker(mineOnsker)}>
-              Slett kjøpte ønsker
-            </Button>
-          )}
-        </div>
-
         {/* Hovedliste */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
-            <h2 className="text-base font-semibold text-slate-800">{mainListName || 'Min ønskeliste'}</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-800">{mainListName || 'Min ønskeliste'}</h2>
+              <Button size="sm" onClick={() => this.aapneDialog(null, null)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Ønske
+              </Button>
+            </div>
           </div>
           <div>
             {mineOnsker.length === 0 ? (
@@ -148,31 +136,24 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
                       <p className="text-xs text-slate-400 mt-0.5">Delt liste med {otherUser.navn}</p>
                     )}
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => this.setState({ administrerListe: liste })}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Administrer liste</TooltipContent>
-                  </Tooltip>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={() => this.aapneDialog(null, liste.key)} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Ønske
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => this.setState({ administrerListe: liste })}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Administrer liste</TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
-              </div>
-
-              <div className="px-4 py-2 flex flex-wrap gap-2 justify-center">
-                <Button size="sm" onClick={() => this.aapneDialog(null, liste.key)} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Legg til ønske
-                </Button>
-                {slettKjopteOnskerEnabled && (
-                  <Button variant="outline-destructive" size="sm"
-                    onClick={() => slettKjopteOnskerPaaEkstraListe(liste.key, onsker)}>
-                    Slett kjøpte ønsker
-                  </Button>
-                )}
               </div>
 
               <div>
@@ -209,7 +190,6 @@ const mapStateToProps = (state: RootState) => ({
   innloggetBrukerNavn: state.innloggetBruker.navn,
   myUid: state.innloggetBruker.uid || '',
   mineOnsker: state.innloggetBruker.mineOnsker,
-  slettKjopteOnskerEnabled: state.config.slettKjopteOnskerEnabled,
   mineEkstraLister: state.innloggetBruker.mineEkstraLister,
   alleEkstraListeOnsker: state.innloggetBruker.alleEkstraListeOnsker,
   opprettListeDialogOpen: state.innloggetBruker.opprettListeDialogOpen,
