@@ -135,6 +135,9 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                 {label}
               </button>
             ))}
+          </nav>
+
+          <div className="py-2 border-t border-slate-100">
             {(erAdmin || tilbakemeldingEnabled) && (
               <button
                 onClick={() => this.menyValgTrykket('tilbakemelding')}
@@ -149,9 +152,6 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                 )}
               </button>
             )}
-          </nav>
-
-          <div className="py-2 border-t border-slate-100">
             {erAdmin && (
               <button
                 onClick={() => this.menyValgTrykket('admin')}
