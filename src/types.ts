@@ -17,6 +17,7 @@ export interface Onske {
   favoritt?: boolean;
   kjoptAvListe?: KjoptAv[];
   pris?: number;
+  sortOrder?: number;
 }
 
 export interface Bruker {

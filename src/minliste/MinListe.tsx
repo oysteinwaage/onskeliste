@@ -1,23 +1,23 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Plus, Trash2, Edit2, Star, Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 
 import {
   removeWishFromMyList,
   removeWishFromExtraList,
-  updateFavorittOnMyWish,
-  updateWishFieldsOnExtraList,
   slettKjopteOnsker,
   slettKjopteOnskerPaaEkstraListe,
+  updateFavorittWithSortOrder,
 } from '../Api';
 import { toggleLenkeDialog, endreHeaderTekst, settAktivListeId, settOpprettListeDialogOpen } from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
 import OpprettListeDialog from './OpprettListeDialog';
+import { SortableOnskeliste } from './SortableOnskeliste';
 import { RootState, Onske, ExtraListMetadata, Bruker } from '../types';
 import { Dispatch } from 'redux';
 import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
+import { nextSortOrder } from '../utils/sortUtils';
 
 interface MinListeLocalState {
   administrerListe: ExtraListMetadata | null;
@@ -61,11 +61,11 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
   };
 
   settFavoritt = (onske: Onske, erFavoritt: boolean, listId: string | null): void => {
-    if (listId) {
-      updateWishFieldsOnExtraList(listId, onske.key, { favoritt: erFavoritt });
-    } else {
-      updateFavorittOnMyWish(onske.key, erFavoritt);
-    }
+    const allOnsker = listId
+      ? (this.props.alleEkstraListeOnsker[listId] || [])
+      : this.props.mineOnsker;
+    const sortOrder = nextSortOrder(allOnsker, erFavoritt);
+    updateFavorittWithSortOrder(onske.key, erFavoritt, sortOrder, listId);
   };
 
   lagAntallOgStrlTekst = (onske: Onske): string => {
@@ -76,81 +76,17 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
     return res;
   };
 
-  populerListe(onsker: Onske[], listId: string | null) {
-    const sorted = [...onsker].sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0));
-    return sorted.map((onske, idx) => {
-      const allUrls = onske.urls || (onske.url ? [onske.url] : []);
-      const metaTekst = this.lagAntallOgStrlTekst(onske);
-      return (
-        <div key={onske.key || idx}>
-          <div className="flex items-start gap-2 py-3 px-2">
-            <button
-              onClick={() => this.settFavoritt(onske, !onske.favoritt, listId)}
-              className="mt-0.5 shrink-0 transition-colors"
-              aria-label={onske.favoritt ? 'Fjern favoritt' : 'Merk som favoritt'}
-            >
-              <Star
-                className={`h-5 w-5 ${onske.favoritt ? 'fill-amber-400 text-amber-400' : 'text-slate-300 hover:text-amber-300'} transition-colors`}
-              />
-            </button>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-800 break-words">{onske.onskeTekst}</p>
-              {allUrls.length === 1 && (
-                <a href={allUrls[0]} target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-primary-600 hover:text-primary-700 underline underline-offset-1">
-                  Her kan den kjøpes
-                </a>
-              )}
-              {allUrls.length > 1 && (
-                <span className="text-xs text-primary-600">
-                  {allUrls.map((url, i) => (
-                    <React.Fragment key={i}>
-                      <a href={url} target="_blank" rel="noopener noreferrer"
-                        className="hover:text-primary-700 underline underline-offset-1">
-                        Lenke {i + 1}
-                      </a>
-                      {i < allUrls.length - 1 && <span className="mx-1 text-slate-300">·</span>}
-                    </React.Fragment>
-                  ))}
-                </span>
-              )}
-              {metaTekst && (
-                <p className="text-xs text-slate-400 mt-0.5">{metaTekst}</p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => this.aapneDialog(onske, listId)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-                    aria-label="Endre ønske"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Endre ønske</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => this.slettOnske(onske, listId)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    aria-label="Slett"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Slett ønske</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-          <Separator />
-        </div>
-      );
-    });
+  renderOnskeliste(onsker: Onske[], listId: string | null) {
+    return (
+      <SortableOnskeliste
+        onsker={onsker}
+        listId={listId}
+        onSettFavoritt={(onske, erFavoritt) => this.settFavoritt(onske, erFavoritt, listId)}
+        onSlett={(onske) => this.slettOnske(onske, listId)}
+        onEdit={(onske) => this.aapneDialog(onske, listId)}
+        lagAntallOgStrlTekst={this.lagAntallOgStrlTekst}
+      />
+    );
   }
 
   render() {
@@ -187,7 +123,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
             {mineOnsker.length === 0 ? (
               <p className="text-center text-slate-400 text-sm py-8">Ingen ønsker lagt til ennå</p>
             ) : (
-              this.populerListe(mineOnsker, null)
+              this.renderOnskeliste(mineOnsker, null)
             )}
           </div>
         </div>
@@ -241,7 +177,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
                 {onsker.length === 0 ? (
                   <p className="text-center text-slate-400 text-sm py-6">Ingen ønsker lagt til ennå</p>
                 ) : (
-                  this.populerListe(onsker, liste.key)
+                  this.renderOnskeliste(onsker, liste.key)
                 )}
               </div>
             </div>

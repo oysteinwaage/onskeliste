@@ -15,6 +15,7 @@ import {
 import { RootState, Onske, Bruker, KjoptAv, ExtraListMetadata } from '../types';
 import { Dispatch } from 'redux';
 import { Separator } from '../components/ui/separator';
+import { sortWishes } from '../utils/sortUtils';
 import { Button } from '../components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody,
@@ -154,7 +155,7 @@ class VenneLister extends Component<VenneListerProps, VenneListerLocalState> {
   };
 
   populerOnskeliste = (onskeliste: Onske[], listId: string | null = null): React.ReactNode =>
-    onskeliste.sort((a, b) => (!a.favoritt ? 1 : 0) - (!b.favoritt ? 1 : 0)).map((onske, idx) => {
+    sortWishes(onskeliste).map((onske, idx) => {
       const erKjopt = alleOnskerTatt(onske);
       const erKjoptAvMeg = erKjopt && !!inneholderInnloggetBrukersUid(onske.kjoptAvListe);
       const metaTekst = this.lagAntallOgStrlTekst(onske);

@@ -96,6 +96,32 @@ export const updateFavorittOnMyWish = (wishId: string, erFavoritt: boolean): voi
     wishRef.update({ favoritt: erFavoritt });
 };
 
+export const updateFavorittWithSortOrder = (
+    wishId: string,
+    erFavoritt: boolean,
+    sortOrder: number,
+    listId: string | null
+): void => {
+    if (listId) {
+        extraListWishesRef(listId).child(wishId).update({ favoritt: erFavoritt, sortOrder });
+    } else {
+        myWishlistRef().child(wishId).update({ favoritt: erFavoritt, sortOrder });
+    }
+};
+
+export const updateSortOrderBatch = (
+    wishes: Array<{ key: string; sortOrder: number }>,
+    listId: string | null
+): void => {
+    wishes.forEach(({ key, sortOrder }) => {
+        if (listId) {
+            extraListWishesRef(listId).child(key).update({ sortOrder });
+        } else {
+            myWishlistRef().child(key).update({ sortOrder });
+        }
+    });
+};
+
 export const updateWishOnListWith = (newValues: Partial<Onske>, wish: Onske, listId: string): void => {
     const wishKey = wish.key;
     const wishWithoutKey = { ...wish };
