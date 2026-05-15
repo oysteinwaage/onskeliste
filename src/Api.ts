@@ -463,6 +463,10 @@ export const fjernDelingspartner = async (listId: string, shareWithUid: string):
     await userExtraListsRef(shareWithUid).child(listId).remove();
 };
 
+export const oppdaterEkstraListeNavn = async (listId: string, name: string): Promise<void> => {
+    await extraListRef(listId).update({ name });
+};
+
 export const addWishToExtraList = (listId: string, newWish: Omit<Onske, 'key'>): void => {
     extraListWishesRef(listId).push().set(newWish);
 };

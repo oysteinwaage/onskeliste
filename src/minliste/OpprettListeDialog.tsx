@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { opprettEkstraListe, leggTilDelingspartner, fjernDelingspartner, slettEkstraListe, forlateEkstraListe } from '../Api';
+import { opprettEkstraListe, leggTilDelingspartner, fjernDelingspartner, slettEkstraListe, forlateEkstraListe, oppdaterEkstraListeNavn } from '../Api';
 import { oppdaterEkstraListeMetadata } from '../actions/actions';
 import { RootState, Bruker, ExtraListMetadata } from '../types';
 import { myUid } from '../config/firebase';
@@ -64,14 +64,24 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
     if (editListe) {
       const gammelPartnerUid = editListe.sharedWithUid;
       const nyPartnerUid = valgtDelingspartner?.uid;
+      const nyttNavn = navn.trim();
 
-      if (gammelPartnerUid !== nyPartnerUid) {
+      const navnEndret = nyttNavn && nyttNavn !== editListe.name;
+      const partnerEndret = gammelPartnerUid !== nyPartnerUid;
+
+      if (navnEndret) {
+        await oppdaterEkstraListeNavn(editListe.key, nyttNavn);
+      }
+
+      if (partnerEndret) {
         if (gammelPartnerUid) await fjernDelingspartner(editListe.key, gammelPartnerUid);
         if (nyPartnerUid) await leggTilDelingspartner(editListe.key, nyPartnerUid);
+      }
 
+      if (navnEndret || partnerEndret) {
         const oppdatert: ExtraListMetadata = {
           key: editListe.key,
-          name: editListe.name,
+          name: navnEndret ? nyttNavn : editListe.name,
           ownerUid: editListe.ownerUid,
           ...(nyPartnerUid ? { sharedWithUid: nyPartnerUid } : {}),
         };
@@ -121,9 +131,9 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
           </DialogHeader>
 
           <DialogBody className="flex flex-col gap-4">
-            {erNy && (
+            {(erNy || erEier) && (
               <Input
-                autoFocus
+                autoFocus={erNy}
                 label="Navn på listen"
                 placeholder="F.eks. Julekjøp"
                 value={navn}
@@ -225,7 +235,7 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
             <div className="flex gap-2">
               <Button variant="ghost" onClick={onClose}>Avbryt</Button>
               {(erNy || erEier) && (
-                <Button onClick={this.handleLagre} disabled={erNy && !navn.trim()}>
+                <Button onClick={this.handleLagre} disabled={!navn.trim()}>
                   {erNy ? 'Opprett' : 'Lagre'}
                 </Button>
               )}
