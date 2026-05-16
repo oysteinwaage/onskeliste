@@ -111,7 +111,7 @@ const changes: ChangeEntry[] = [
   }
 ];
 
-const currentVersion = Math.max(...changes.map(c => c.version));
+export const currentVersion = Math.max(...changes.map(c => c.version));
 
 interface ChangesSinceLastLoginProps {
   onUpdateLastSeenVersion: (currentVersion: number, dbKey: string) => void;

@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import confetti from 'canvas-confetti';
-import { updateMyMeasumentOnProfile, setOnboardingCompleted } from '../Api';
+import { setOnboardingCompleted } from '../Api';
+import { currentVersion } from '../utils/ChangesSinceLastLogin';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
 import { Input } from '../components/ui/input';
@@ -11,24 +12,16 @@ import { Dispatch } from 'redux';
 import { Gift, Users, Target, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
 interface OnboardingProps {
-  myUserDbKey: string;
   measurements: Record<string, string>;
-  onComplete: () => void;
+  onComplete: (measurements: Record<string, string>, lastSeenVersion: number) => void;
 }
 
 const STEPS = 3;
 
-function Onboarding({ myUserDbKey, measurements, onComplete }: OnboardingProps) {
+function Onboarding({ measurements, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(1);
   const [localMeasurements, setLocalMeasurements] = useState<Record<string, string>>({});
   const [completing, setCompleting] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const handleMeasurementBlur = (sizeKey: string, value: string) => {
-    if (myUserDbKey) {
-      updateMyMeasumentOnProfile(myUserDbKey, value, sizeKey);
-    }
-  };
 
   const getMeasurementValue = (sizeKey: string): string => {
     if (localMeasurements[sizeKey] !== undefined) return localMeasurements[sizeKey];
@@ -50,7 +43,7 @@ function Onboarding({ myUserDbKey, measurements, onComplete }: OnboardingProps) 
     setCompleting(true);
     fireConfetti();
     setTimeout(() => {
-      onComplete();
+      onComplete(localMeasurements, currentVersion);
     }, 1800);
   };
 
@@ -116,7 +109,6 @@ function Onboarding({ myUserDbKey, measurements, onComplete }: OnboardingProps) 
                     type="text"
                     placeholder="—"
                     onChange={(e) => setLocalMeasurements(prev => ({ ...prev, [sizeKey]: e.target.value }))}
-                    onBlur={(e) => handleMeasurementBlur(sizeKey, e.target.value)}
                   />
                 ))}
               </div>
@@ -190,7 +182,6 @@ function Onboarding({ myUserDbKey, measurements, onComplete }: OnboardingProps) 
               </Button>
             ) : (
               <Button
-                ref={buttonRef}
                 onClick={handleComplete}
                 disabled={completing}
                 className="gap-2 bg-primary-600 hover:bg-primary-700 px-5"
@@ -208,12 +199,11 @@ function Onboarding({ myUserDbKey, measurements, onComplete }: OnboardingProps) 
 }
 
 const mapStateToProps = (state: RootState) => ({
-  myUserDbKey: state.innloggetBruker.userDbKey,
   measurements: state.innloggetBruker.measurements,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  onComplete: () => dispatch(setOnboardingCompleted() as any),
+  onComplete: (measurements: Record<string, string>, lastSeenVersion: number) => dispatch(setOnboardingCompleted(measurements, lastSeenVersion) as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Onboarding);

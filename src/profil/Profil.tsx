@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { endreHeaderTekst } from '../actions/actions';
-import { updateMyMeasumentOnProfile, updateMainListName } from '../Api';
+import { updateMyMeasumentOnProfile, updateMainListName, deleteMyAccount } from '../Api';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Trash2 } from 'lucide-react';
 
 interface ProfilState {
   sko: string | null;
@@ -19,7 +22,9 @@ interface ProfilState {
   boksershorts: string | null;
   hatt: string | null;
   mainListName: string | null;
-  [key: string]: string | null;
+  slettDialogApen: boolean;
+  sletter: boolean;
+  [key: string]: string | null | boolean;
 }
 
 interface ProfilProps {
@@ -28,6 +33,7 @@ interface ProfilProps {
   measurements: Record<string, string>;
   mainListName?: string;
   onUpdateMainListName: (userDbKey: string, navn: string) => void;
+  onSlettBruker: (userDbKey: string) => void;
 }
 
 class Profil extends Component<ProfilProps, ProfilState> {
@@ -37,6 +43,7 @@ class Profil extends Component<ProfilProps, ProfilState> {
       sko: null, bukse: null, genser_tskjorte: null,
       skjorte: null, bh: null, hansker: null,
       boksershorts: null, hatt: null, mainListName: null,
+      slettDialogApen: false, sletter: false,
     };
   }
 
@@ -50,8 +57,15 @@ class Profil extends Component<ProfilProps, ProfilState> {
     updateMyMeasumentOnProfile(myUserDbKey, newSize, sizeKey);
   };
 
+  handleSlettBruker = (): void => {
+    const { myUserDbKey, onSlettBruker } = this.props;
+    this.setState({ sletter: true });
+    onSlettBruker(myUserDbKey);
+  };
+
   render() {
     const { measurements, mainListName, myUserDbKey, onUpdateMainListName } = this.props;
+    const { slettDialogApen, sletter } = this.state;
 
     return (
       <div className="max-w-xl mx-auto px-4 py-6">
@@ -114,6 +128,43 @@ class Profil extends Component<ProfilProps, ProfilState> {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        <div className="mt-8 pt-6 border-t border-slate-200">
+          <button
+            className="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 transition-colors"
+            onClick={() => this.setState({ slettDialogApen: true })}
+          >
+            <Trash2 className="w-4 h-4" />
+            Slett brukeren min
+          </button>
+        </div>
+
+        <Dialog open={slettDialogApen} onOpenChange={open => this.setState({ slettDialogApen: open })}>
+          <DialogContent showClose={false}>
+            <DialogHeader>
+              <DialogTitle>Slett konto</DialogTitle>
+              <DialogDescription>
+                Dette vil permanent slette kontoen din, ønskelisten og alle tilknyttede data. Handlingen kan ikke angres.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => this.setState({ slettDialogApen: false })}
+                disabled={sletter}
+              >
+                Avbryt
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={this.handleSlettBruker}
+                disabled={sletter}
+              >
+                {sletter ? 'Sletter...' : 'Ja, slett kontoen'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -128,6 +179,7 @@ const mapStateToProps = (state: RootState) => ({
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onEndreHeaderTekst: () => dispatch(endreHeaderTekst('Profil')),
   onUpdateMainListName: (userDbKey: string, navn: string) => dispatch(updateMainListName(userDbKey, navn) as any),
+  onSlettBruker: (userDbKey: string) => dispatch(deleteMyAccount(userDbKey) as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Profil);

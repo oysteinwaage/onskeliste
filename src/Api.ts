@@ -567,6 +567,40 @@ export const slettKjopteOnskerPaaEkstraListe = (listId: string, onsker: Onske[])
     });
 };
 
+export const deleteMyAccount = (userDbKey: string) => async (dispatch: Dispatch) => {
+    const uid = myUid();
+    if (!uid) return;
+
+    // Delete extra lists owned by this user
+    const extraListsSnap = await userExtraListsRef(uid).once('value');
+    const extraListVal = extraListsSnap.val();
+    if (extraListVal) {
+        await Promise.all(Object.keys(extraListVal).map(listId => extraListRef(listId).remove()));
+    }
+
+    // Delete all user data nodes
+    await Promise.all([
+        userExtraListsRef(uid).remove(),
+        myWishlistRef().remove(),
+        myAllowedViewersRef().remove(),
+        userDbKey ? usersRef.child(userDbKey).remove() : Promise.resolve(),
+    ]);
+
+    // Delete Firebase Auth account (requires recent login)
+    try {
+        await auth.currentUser!.delete();
+    } catch (error: any) {
+        if (error.code === 'auth/requires-recent-login') {
+            alert('Av sikkerhetsgrunner må du logge ut og inn igjen før du kan slette kontoen din.');
+            return;
+        }
+        throw error;
+    }
+
+    dispatch(push('/'));
+    dispatch(resetAllData());
+};
+
 export const logOut = () => async (dispatch: Dispatch) => {
     auth.signOut().then(function () {
         dispatch(push('/'));
@@ -592,13 +626,17 @@ export const opprettNyBruker = (brukernavn: string, passord: string, firstName: 
         });
 };
 
-export const setOnboardingCompleted = () => async (dispatch: Dispatch) => {
+export const setOnboardingCompleted = (measurements: Record<string, string>, lastSeenVersion: number) => async (dispatch: Dispatch) => {
     const uid = myUid();
     const snapshot = await usersRef.orderByChild('uid').equalTo(uid).once('value');
     const val = snapshot.val();
     if (val) {
         const key = Object.keys(val)[0];
-        await usersRef.child(key).update({ onboardingCompleted: true });
+        const updates: Record<string, any> = { onboardingCompleted: true, lastSeenVersion };
+        Object.entries(measurements).forEach(([sizeKey, value]) => {
+            if (value.trim()) updates[`measurements/${sizeKey}`] = value;
+        });
+        await usersRef.child(key).update(updates);
     }
     dispatch(push('/minliste'));
 };
