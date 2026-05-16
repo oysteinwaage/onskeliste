@@ -73,7 +73,7 @@ class App extends Component<AppProps> {
           )}
           {!isLoading && <ChangesSinceLastLogin />}
           <AppBar />
-          <div className="flex-1 bg-slate-50">
+          <div className="flex-1 bg-slate-50 pb-16">
             <Switch>
               <Route exact path="/" component={Login} />
               <Route path="/minliste" component={MinListe} />

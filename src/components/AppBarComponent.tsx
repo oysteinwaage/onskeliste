@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
 import {
   List, Gift, ShoppingCart, User, LogOut,
-  Menu, X, PlusSquare, Shield, MessageSquare,
+  X, PlusSquare, Shield, MessageSquare, Settings,
 } from 'lucide-react';
 import { logOut } from '../Api';
 import { settOpprettListeDialogOpen } from '../actions/actions';
@@ -25,12 +25,14 @@ interface AppBarComponentProps {
   onOpprettNyListe: () => void;
 }
 
-const navItems = [
-  { key: 'minliste', label: 'Min ønskeliste', icon: List },
-  { key: 'vennelister', label: 'Venners lister', icon: Gift },
+const bottomNavItems = [
+  { key: 'minliste', label: 'Min liste', icon: List },
+  { key: 'vennelister', label: 'Vennelister', icon: Gift },
   { key: 'minekjoep', label: 'Mine kjøp', icon: ShoppingCart },
   { key: 'profil', label: 'Profil', icon: User },
 ];
+
+const LOGIN_HEADERS = ['Innlogging', 'Opprett ny bruker', 'Resett passord'];
 
 class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   constructor(props: AppBarComponentProps) {
@@ -38,7 +40,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
     this.state = { drawerOpen: false };
   }
 
-  menyValgTrykket(valg: string): void {
+  navigate(valg: string): void {
     switch (valg) {
       case 'vennelister':
       case 'minliste':
@@ -60,90 +62,132 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   render() {
     const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled } = this.props;
     const { drawerOpen } = this.state;
-    const visHamburgerMeny = headerTekst !== 'Innlogging' && headerTekst !== 'Opprett ny bruker' && headerTekst !== 'Resett passord';
+
+    const erPaaLoginSide = LOGIN_HEADERS.includes(headerTekst);
+    const erPaaOnboarding = window.location.pathname === '/onboarding';
+    const visNav = !erPaaLoginSide && !erPaaOnboarding;
     const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
+    const visSettings = visNav && (erAdmin || tilbakemeldingEnabled);
+
+    const pathname = window.location.pathname;
+    const activeTab = pathname === '/minliste' ? 'minliste'
+      : pathname === '/vennelister' ? 'vennelister'
+      : pathname === '/minekjoep' ? 'minekjoep'
+      : pathname === '/profil' ? 'profil'
+      : '';
 
     return (
       <>
-        <header className="bg-primary-900 text-white shadow-md z-40 relative">
-          <div className="flex items-center h-14 px-4 gap-3">
-            {visHamburgerMeny && (
-              <button
-                onClick={() => this.setState({ drawerOpen: true })}
-                className="relative p-2 rounded-lg hover:bg-primary-800 transition-colors -ml-1"
-                aria-label="Åpne meny"
-              >
-                <Menu className="h-5 w-5" />
-                {erAdmin && ulesteFeedback > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
-                    {ulesteFeedback}
-                  </span>
-                )}
-              </button>
-            )}
-            <div className="flex-1 text-center">
-              <h1 className="text-base font-semibold leading-tight">{headerTekst}</h1>
-              {erPaaMinListe && innloggetBrukerNavn && (
-                <p className="text-xs text-primary-200 leading-tight">{innloggetBrukerNavn}</p>
+        {/* Top header */}
+        <header className="bg-white border-b border-slate-100 z-40 relative">
+          <div className="flex items-center h-14 px-3">
+            {/* Left slot */}
+            <div className="w-10 flex items-center justify-start">
+              {visSettings && (
+                <button
+                  onClick={() => this.setState({ drawerOpen: true })}
+                  className="relative p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  aria-label="Innstillinger og mer"
+                >
+                  <Settings className="h-5 w-5" />
+                  {erAdmin && ulesteFeedback > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
+                      {ulesteFeedback}
+                    </span>
+                  )}
+                </button>
               )}
             </div>
-            {erPaaMinListe && (
-              <button
-                onClick={onOpprettNyListe}
-                className="p-2 rounded-lg hover:bg-primary-800 transition-colors -mr-1"
-                aria-label="Ny liste"
-              >
-                <PlusSquare className="h-5 w-5" />
-              </button>
-            )}
-            {!erPaaMinListe && <div className="w-9" />}
+
+            {/* Center: title */}
+            <div className="flex-1 text-center">
+              <h1 className="text-[15px] font-semibold text-slate-800 leading-tight">{headerTekst}</h1>
+              {erPaaMinListe && innloggetBrukerNavn && (
+                <p className="text-[11px] text-slate-400 leading-tight">{innloggetBrukerNavn}</p>
+              )}
+            </div>
+
+            {/* Right slot */}
+            <div className="w-10 flex items-center justify-end">
+              {erPaaMinListe && (
+                <button
+                  onClick={onOpprettNyListe}
+                  className="p-2 rounded-xl text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                  aria-label="Ny liste"
+                >
+                  <PlusSquare className="h-5 w-5" />
+                </button>
+              )}
+            </div>
           </div>
         </header>
 
-        {/* Drawer overlay */}
+        {/* Bottom navigation */}
+        {visNav && (
+          <nav
+            className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-100"
+            style={{ boxShadow: '0 -1px 12px rgba(0,0,0,0.06)' }}
+          >
+            <div className="flex items-stretch h-16">
+              {bottomNavItems.map(({ key, label, icon: Icon }) => {
+                const isActive = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => this.navigate(key)}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 relative transition-colors ${
+                      isActive ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary-600 rounded-b-full" />
+                    )}
+                    <Icon
+                      className="h-[22px] w-[22px]"
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                    />
+                    <span className={`text-[10px] leading-none tracking-wide ${isActive ? 'font-semibold' : 'font-normal'}`}>
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
+
+        {/* Overlay */}
         {drawerOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
             onClick={() => this.setState({ drawerOpen: false })}
           />
         )}
 
-        {/* Drawer */}
+        {/* Settings drawer (slides in from left) */}
         <aside
-          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ${
+          className={`fixed top-0 left-0 h-full w-60 bg-white z-50 flex flex-col transition-transform duration-300 ${
             drawerOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
+          style={drawerOpen ? { boxShadow: '4px 0 24px rgba(0,0,0,0.10)' } : undefined}
         >
-          <div className="flex items-center justify-between px-4 py-4 bg-primary-900 text-white">
-            <span className="font-bold text-lg">Ønskeliste</span>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <span className="font-semibold text-slate-700 text-sm">Meny</span>
             <button
               onClick={() => this.setState({ drawerOpen: false })}
-              className="p-1.5 rounded-lg hover:bg-primary-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <nav className="flex-1 py-2 overflow-y-auto">
-            {navItems.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => this.menyValgTrykket(key)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="py-2 border-t border-slate-100">
+          <nav className="flex-1 py-3">
             {(erAdmin || tilbakemeldingEnabled) && (
               <button
-                onClick={() => this.menyValgTrykket('tilbakemelding')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
+                onClick={() => this.navigate('tilbakemelding')}
+                className="w-full flex items-center gap-3 px-5 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors text-sm"
               >
-                <MessageSquare className="h-5 w-5 shrink-0" />
+                <MessageSquare className="h-4 w-4 shrink-0 text-slate-400" />
                 Tilbakemelding
                 {erAdmin && ulesteFeedback > 0 && (
                   <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
@@ -154,18 +198,21 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
             )}
             {erAdmin && (
               <button
-                onClick={() => this.menyValgTrykket('admin')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm font-medium"
+                onClick={() => this.navigate('admin')}
+                className="w-full flex items-center gap-3 px-5 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors text-sm"
               >
-                <Shield className="h-5 w-5 shrink-0" />
+                <Shield className="h-4 w-4 shrink-0 text-slate-400" />
                 Admin
               </button>
             )}
+          </nav>
+
+          <div className="border-t border-slate-100 py-3">
             <button
-              onClick={() => this.menyValgTrykket('loggUt')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-rose-600 hover:bg-rose-50 transition-colors text-sm font-medium"
+              onClick={() => this.navigate('loggUt')}
+              className="w-full flex items-center gap-3 px-5 py-3 text-left text-rose-500 hover:bg-rose-50 transition-colors text-sm font-medium"
             >
-              <LogOut className="h-5 w-5 shrink-0" />
+              <LogOut className="h-4 w-4 shrink-0" />
               Logg ut
             </button>
           </div>
