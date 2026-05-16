@@ -584,12 +584,23 @@ export const opprettNyBruker = (brukernavn: string, passord: string, firstName: 
                 .then(() => {
                     usersRef.push().set({ navn, firstName, lastName, email: brukernavn, uid: auth.currentUser!.uid });
                     dispatch(brukerLoggetInn(auth.currentUser));
-                    dispatch(push('/minliste'));
+                    dispatch(push('/onboarding'));
                 })
         })
         .catch(function (error: any) {
             alert(error);
         });
+};
+
+export const setOnboardingCompleted = () => async (dispatch: Dispatch) => {
+    const uid = myUid();
+    const snapshot = await usersRef.orderByChild('uid').equalTo(uid).once('value');
+    const val = snapshot.val();
+    if (val) {
+        const key = Object.keys(val)[0];
+        await usersRef.child(key).update({ onboardingCompleted: true });
+    }
+    dispatch(push('/minliste'));
 };
 
 // Feedback

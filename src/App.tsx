@@ -11,6 +11,7 @@ import MineKjoep from './minekjoep/MineKjoep';
 import Profil from './profil/Profil';
 import Admin from './admin/Admin';
 import Tilbakemelding from './tilbakemelding/Tilbakemelding';
+import Onboarding from './onboarding/Onboarding';
 import AppBar from './components/AppBarComponent';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
@@ -81,6 +82,7 @@ class App extends Component<AppProps> {
               <Route path="/profil" component={Profil} />
               <Route path="/admin" component={Admin} />
               <Route path="/tilbakemelding" component={Tilbakemelding} />
+              <Route path="/onboarding" component={Onboarding} />
             </Switch>
           </div>
         </div>

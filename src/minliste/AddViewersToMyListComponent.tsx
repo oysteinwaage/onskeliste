@@ -62,16 +62,17 @@ class AddViewersToMyListComponent extends Component<AddViewersProps, AddViewersS
 
         {/* Søkefelt med portal-dropdown */}
         <PopoverPrimitive.Root
-          open={soekApen && filtrert.length > 0}
+          open={soekApen && people.length > 0}
           onOpenChange={() => {}}
         >
-          <PopoverPrimitive.Trigger asChild onClick={e => e.preventDefault()}>
+          <PopoverPrimitive.Trigger asChild>
             <div className="w-full">
               <input
                 className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 hover:border-slate-400 transition-colors"
                 placeholder="Søk etter navn..."
                 value={soek}
                 onChange={e => this.setState({ soek: e.target.value, soekApen: true })}
+                onClick={() => this.setState({ soekApen: true })}
                 onFocus={() => this.setState({ soekApen: true })}
                 onBlur={() => setTimeout(() => this.setState({ soekApen: false }), 150)}
               />
