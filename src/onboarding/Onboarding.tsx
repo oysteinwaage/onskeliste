@@ -196,7 +196,7 @@ function Onboarding({ measurements, userDbKey, onComplete }: OnboardingProps) {
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">🛒</span>
-                  <p className="text-sm text-slate-700"><strong>Mine kjøp</strong> — hold oversikt over hva du har kjøpt og hvor mye du har brukt 💸</p>
+                  <p className="text-sm text-slate-700"><strong>Mine kjøp</strong> — hold oversikt over hva du har kjøpt og hvor mye du har brukt 💸 Kan også legge til ting kjøpt utenfor listene til folk for egen oversikt 🤓</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">👤</span>
