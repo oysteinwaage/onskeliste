@@ -299,7 +299,7 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
         }
         if (!meg && uid) {
             const currentUser = auth.currentUser;
-            if (currentUser?.providerData.some(p => p?.providerId === 'google.com')) {
+            if (currentUser?.providerData.some(p => ['google.com', 'microsoft.com'].includes(p?.providerId || ''))) {
                 const displayName = currentUser.displayName || '';
                 const parts = displayName.trim().split(/\s+/);
                 const firstName = parts[0] || '';

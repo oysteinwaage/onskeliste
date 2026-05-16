@@ -3,6 +3,7 @@ import { push } from "connected-react-router";
 import { connect } from 'react-redux';
 import firebase from "firebase/compat/app";
 import { loggInn, opprettNyBruker, resetPassord } from '../Api';
+import { usersRef } from '../config/firebase';
 import { endreHeaderTekst, lasterData, toggleVisOpprettBruker } from '../actions/actions';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
@@ -18,6 +19,15 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const MicrosoftIcon = () => (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+  </svg>
+);
+
 const logo = process.env.PUBLIC_URL + '/logo.svg';
 
 interface LoginState {
@@ -30,12 +40,15 @@ interface LoginState {
   firstNameMissing: boolean;
   lastNameMissing: boolean;
   resettPassordVisning: boolean;
-  googleLoading: boolean;
+  socialLoading: boolean;
   linkingModus: boolean;
   linkingEmail: string;
   linkingPassord: string;
-  pendingGoogleCredential: any;
-  googleFeil: string;
+  pendingCredential: any;
+  pendingProviderNavn: string;
+  socialFeil: string;
+  reverseLinkingModus: boolean;
+  reverseLinkingProviders: string[];
 }
 
 const initState: LoginState = {
@@ -48,12 +61,15 @@ const initState: LoginState = {
   firstNameMissing: false,
   lastNameMissing: false,
   resettPassordVisning: false,
-  googleLoading: false,
+  socialLoading: false,
   linkingModus: false,
   linkingEmail: '',
   linkingPassord: '',
-  pendingGoogleCredential: null,
-  googleFeil: '',
+  pendingCredential: null,
+  pendingProviderNavn: '',
+  socialFeil: '',
+  reverseLinkingModus: false,
+  reverseLinkingProviders: [],
 };
 
 interface LoginProps {
@@ -81,7 +97,7 @@ class Login extends Component<LoginProps, LoginState> {
     });
   }
 
-  innsendigKnappTrykket(): void {
+  async innsendigKnappTrykket(): Promise<void> {
     const { onSettLasterData, onSendResettPassordMail, visOpprettNyBruker, onRegistrerNyBruker, onLoggInn } = this.props;
     const { resettPassordVisning, username, firstName, lastName, password } = this.state;
     if (resettPassordVisning) {
@@ -92,6 +108,12 @@ class Login extends Component<LoginProps, LoginState> {
       if (firstNameMissing || lastNameMissing) {
         this.setState({ firstNameMissing: firstNameMissing, lastNameMissing: lastNameMissing });
       } else {
+        const methods = await firebase.auth().fetchSignInMethodsForEmail(username);
+        const oauthMethods = methods.filter(m => m !== 'password');
+        if (oauthMethods.length > 0) {
+          this.setState({ reverseLinkingModus: true, reverseLinkingProviders: oauthMethods });
+          return;
+        }
         onRegistrerNyBruker(username, password, firstName, lastName);
         this.setState(initState);
       }
@@ -118,49 +140,93 @@ class Login extends Component<LoginProps, LoginState> {
     this.setState({ resettPassordVisning: true });
   }
 
-  async loggInnMedGoogle(): Promise<void> {
-    this.setState({ googleLoading: true, googleFeil: '' });
+  async loggInnMedSosialLeverandor(provider: firebase.auth.AuthProvider, leverandorNavn: string): Promise<void> {
+    this.setState({ socialLoading: true, socialFeil: '' });
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await firebase.auth().signInWithPopup(provider);
+      const result = await firebase.auth().signInWithPopup(provider);
+
+      // Håndter tilfellet der leverandøren ikke kaster auth/account-exists-with-different-credential
+      // (f.eks. Microsoft), men oppretter en ny tom konto for en e-post som allerede finnes.
+      if (result.additionalUserInfo?.isNewUser && result.user?.email) {
+        const email = result.user.email;
+        const snapshot = await usersRef.orderByChild('email').equalTo(email).once('value');
+        if (snapshot.exists()) {
+          const credential = result.credential;
+          await firebase.auth().signOut();
+          this.setState({
+            linkingModus: true,
+            linkingEmail: email,
+            pendingCredential: credential,
+            pendingProviderNavn: leverandorNavn,
+            socialLoading: false,
+          });
+          return;
+        }
+      }
     } catch (error: any) {
       if (error.code === 'auth/account-exists-with-different-credential') {
         this.setState({
           linkingModus: true,
           linkingEmail: error.email || '',
-          pendingGoogleCredential: error.credential,
-          googleLoading: false,
+          pendingCredential: error.credential,
+          pendingProviderNavn: leverandorNavn,
+          socialLoading: false,
         });
       } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-        this.setState({ googleFeil: 'Pålogging med Google feilet. Prøv igjen.', googleLoading: false });
+        this.setState({ socialFeil: `Pålogging med ${leverandorNavn} feilet. Prøv igjen.`, socialLoading: false });
       } else {
-        this.setState({ googleLoading: false });
+        this.setState({ socialLoading: false });
       }
     }
   }
 
   async linkOgLoggInn(): Promise<void> {
-    const { linkingEmail, linkingPassord, pendingGoogleCredential } = this.state;
+    const { linkingEmail, linkingPassord, pendingCredential } = this.state;
     try {
       const userCredential = await firebase.auth().signInWithEmailAndPassword(linkingEmail, linkingPassord);
-      await userCredential.user!.linkWithCredential(pendingGoogleCredential);
-      this.setState({ linkingModus: false, pendingGoogleCredential: null, googleFeil: '' });
+      await userCredential.user!.linkWithCredential(pendingCredential);
+      this.setState({ linkingModus: false, pendingCredential: null, pendingProviderNavn: '', socialFeil: '' });
     } catch (error: any) {
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        this.setState({ googleFeil: 'Feil passord. Prøv igjen.' });
+        this.setState({ socialFeil: 'Feil passord. Prøv igjen.' });
       } else {
-        this.setState({ googleFeil: 'Noe gikk feil. Prøv igjen.' });
+        this.setState({ socialFeil: 'Noe gikk feil. Prøv igjen.' });
       }
     }
   }
 
   avbrytLinking(): void {
-    this.setState({ linkingModus: false, linkingEmail: '', linkingPassord: '', pendingGoogleCredential: null, googleFeil: '' });
+    this.setState({ linkingModus: false, linkingEmail: '', linkingPassord: '', pendingCredential: null, pendingProviderNavn: '', socialFeil: '' });
+  }
+
+  async kobleTilMedOAuth(providerNavn: string): Promise<void> {
+    const { username, password } = this.state;
+    const provider = providerNavn === 'google.com'
+      ? new firebase.auth.GoogleAuthProvider()
+      : new firebase.auth.OAuthProvider('microsoft.com');
+    this.setState({ socialLoading: true, socialFeil: '' });
+    try {
+      await firebase.auth().signInWithPopup(provider);
+      const emailCredential = firebase.auth.EmailAuthProvider.credential(username, password);
+      await firebase.auth().currentUser!.linkWithCredential(emailCredential);
+      // onAuthStateChanged håndterer navigasjon
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        this.setState({ socialFeil: 'Noe gikk feil. Prøv igjen.', socialLoading: false });
+      } else {
+        this.setState({ socialLoading: false });
+      }
+    }
+  }
+
+  avbrytReverseLinking(): void {
+    this.setState({ reverseLinkingModus: false, reverseLinkingProviders: [], socialFeil: '' });
   }
 
   render() {
     const { visOpprettNyBruker, infoResettMailSendt } = this.props;
-    const { resettPassordVisning, linkingModus, linkingEmail, googleLoading, googleFeil } = this.state;
+    const { resettPassordVisning, linkingModus, linkingEmail, socialLoading, socialFeil, pendingProviderNavn, reverseLinkingModus, reverseLinkingProviders, username } = this.state;
+    const providerVisningsnavn = (id: string) => id === 'google.com' ? 'Google' : 'Microsoft';
     const innsendingKnappTekst = resettPassordVisning ? 'Resett passord' : visOpprettNyBruker ? 'Registrer bruker' : 'Logg inn';
     const endreVisningKnappTekst = resettPassordVisning || visOpprettNyBruker ? 'Tilbake til login' : 'Opprett ny bruker';
 
@@ -172,11 +238,36 @@ class Login extends Component<LoginProps, LoginState> {
             <img src={logo} className="App-logo h-16" alt="logo" />
           </div>
 
-          {linkingModus ? (
+          {reverseLinkingModus ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
+              <div className="text-sm text-slate-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-3">
+                <p className="font-medium text-amber-800 mb-1">E-posten er allerede i bruk</p>
+                <p><strong>{username}</strong> er allerede registrert med {reverseLinkingProviders.map(providerVisningsnavn).join(' og ')}. Logg inn med {reverseLinkingProviders.length > 1 ? 'en av leverandørene' : providerVisningsnavn(reverseLinkingProviders[0])} for å legge til passord-innlogging på kontoen.</p>
+              </div>
+              {socialFeil && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{socialFeil}</p>
+              )}
+              {reverseLinkingProviders.map(providerId => (
+                <Button
+                  key={providerId}
+                  variant="outline"
+                  className="w-full flex items-center gap-2 justify-center"
+                  onClick={() => this.kobleTilMedOAuth(providerId)}
+                  disabled={socialLoading}
+                >
+                  {providerId === 'google.com' ? <GoogleIcon /> : <MicrosoftIcon />}
+                  {socialLoading ? 'Venter...' : `Logg inn med ${providerVisningsnavn(providerId)} og koble kontoer`}
+                </Button>
+              ))}
+              <Button variant="ghost" className="w-full text-slate-600" onClick={() => this.avbrytReverseLinking()}>
+                Avbryt
+              </Button>
+            </div>
+          ) : linkingModus ? (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
               <div className="text-sm text-slate-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-3">
                 <p className="font-medium text-amber-800 mb-1">Konto finnes allerede</p>
-                <p>En konto med <strong>{linkingEmail}</strong> er registrert med epost og passord. Skriv inn passordet ditt for å koble Google-innlogging til kontoen.</p>
+                <p>En konto med <strong>{linkingEmail}</strong> er registrert med epost og passord. Skriv inn passordet ditt for å koble {pendingProviderNavn}-innlogging til kontoen.</p>
               </div>
               <Input
                 id="linkingEmailFelt"
@@ -190,11 +281,11 @@ class Login extends Component<LoginProps, LoginState> {
                 type="password"
                 label="Passord"
                 placeholder="••••••••"
-                onChange={(e) => this.setState({ linkingPassord: e.target.value, googleFeil: '' })}
+                onChange={(e) => this.setState({ linkingPassord: e.target.value, socialFeil: '' })}
                 onKeyDown={(e) => { if (e.key === 'Enter') this.linkOgLoggInn(); }}
               />
-              {googleFeil && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{googleFeil}</p>
+              {socialFeil && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{socialFeil}</p>
               )}
               <Button className="w-full mt-2" onClick={() => this.linkOgLoggInn()}>
                 Koble kontoer og logg inn
@@ -266,25 +357,39 @@ class Login extends Component<LoginProps, LoginState> {
                     <div className="flex-1 border-t border-slate-200" />
                   </div>
 
-                  {googleFeil && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{googleFeil}</p>
+                  {socialFeil && (
+                    <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{socialFeil}</p>
                   )}
 
                   <Button
                     variant="outline"
                     className="w-full flex items-center gap-2 justify-center"
-                    onClick={() => this.loggInnMedGoogle()}
-                    disabled={googleLoading}
+                    onClick={() => this.loggInnMedSosialLeverandor(new firebase.auth.GoogleAuthProvider(), 'Google')}
+                    disabled={socialLoading}
                   >
                     <GoogleIcon />
-                    {googleLoading ? 'Venter...' : 'Fortsett med Google'}
+                    {socialLoading ? 'Venter...' : 'Fortsett med Google'}
                   </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full flex items-center gap-2 justify-center"
+                    onClick={() => this.loggInnMedSosialLeverandor(new firebase.auth.OAuthProvider('microsoft.com'), 'Microsoft')}
+                    disabled={socialLoading}
+                  >
+                    <MicrosoftIcon />
+                    {socialLoading ? 'Venter...' : 'Fortsett med Microsoft'}
+                  </Button>
+
+                  <p className="text-xs text-slate-400 text-center leading-relaxed">
+                    Hvis du tidligere har logget inn med brukernavn/passord med en epost fra Microsoft eller Google kan du bruke hurtiginnlogging og fortsette på eksisterende konto.
+                  </p>
                 </>
               )}
             </div>
           )}
 
-          {!linkingModus && (
+          {!linkingModus && !reverseLinkingModus && (
             <div className="mt-4 flex flex-col items-center gap-2">
               <Button
                 variant="ghost"
