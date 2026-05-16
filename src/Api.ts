@@ -297,6 +297,24 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
         if (meg && !meg.onboardingCompleted && window.location.pathname !== '/onboarding') {
             dispatch(push('/onboarding?type=existing'));
         }
+        if (!meg && uid) {
+            const currentUser = auth.currentUser;
+            if (currentUser?.providerData.some(p => p?.providerId === 'google.com')) {
+                const displayName = currentUser.displayName || '';
+                const parts = displayName.trim().split(/\s+/);
+                const firstName = parts[0] || '';
+                const lastName = parts.slice(1).join(' ') || '';
+                usersRef.push().set({
+                    navn: displayName || currentUser.email || '',
+                    firstName,
+                    lastName,
+                    email: currentUser.email || '',
+                    uid: currentUser.uid,
+                }).then(() => {
+                    dispatch(push('/onboarding'));
+                });
+            }
+        }
     });
 };
 
