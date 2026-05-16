@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import confetti from 'canvas-confetti';
-import { setOnboardingCompleted } from '../Api';
+import { setOnboardingCompleted, updateMyMeasumentOnProfile } from '../Api';
 import { currentVersion } from '../utils/ChangesSinceLastLogin';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
@@ -9,16 +9,19 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { RootState } from '../types';
 import { Dispatch } from 'redux';
-import { Gift, Users, Target, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { Gift, Users, Target, ChevronRight, ChevronLeft, Sparkles, Zap } from 'lucide-react';
 
 interface OnboardingProps {
   measurements: Record<string, string>;
+  userDbKey: string;
   onComplete: (measurements: Record<string, string>, lastSeenVersion: number) => void;
 }
 
 const STEPS = 3;
 
-function Onboarding({ measurements, onComplete }: OnboardingProps) {
+function Onboarding({ measurements, userDbKey, onComplete }: OnboardingProps) {
+  const isExistingUser = new URLSearchParams(window.location.search).get('type') === 'existing';
+
   const [step, setStep] = useState(1);
   const [localMeasurements, setLocalMeasurements] = useState<Record<string, string>>({});
   const [completing, setCompleting] = useState(false);
@@ -38,14 +41,34 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
     }, 400);
   };
 
+  const saveMeasurements = () => {
+    Object.entries(localMeasurements).forEach(([sizeKey, value]) => {
+      if (value.trim()) {
+        updateMyMeasumentOnProfile(userDbKey, value, sizeKey);
+      }
+    });
+  };
+
+  const goToNextStep = () => {
+    if (step === 2) saveMeasurements();
+    setStep(s => s + 1);
+  };
+
   const handleComplete = () => {
     if (completing) return;
     setCompleting(true);
     fireConfetti();
+    const mergedMeasurements = { ...measurements, ...localMeasurements };
     setTimeout(() => {
-      onComplete(localMeasurements, currentVersion);
+      onComplete(mergedMeasurements, currentVersion);
     }, 1800);
   };
+
+  const step1Title = isExistingUser ? 'Velkommen til nye Ønskelisten!' : 'Hvem skal se listen din?';
+  const step3Title = isExistingUser ? 'Klar for den nye Ønskelisten!' : 'Velkommen til Ønskelisten!';
+  const step3Intro = isExistingUser
+    ? 'Du er nå inne på en ny og forbedret Ønskelisten. Alt du kjente fra før er der, pluss en rekke nye funksjoner. Her er en kort oppsummering av de forskjellige sidene og hva de kan brukes til'
+    : 'Med Ønskelisten kan du samle alt du ønsker deg på ett sted. Del listen med familie og venner, og hjelp dem med å finne den perfekte gaven — uten avsløringer om hva som allerede er kjøpt. 🎁';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-primary-50 flex flex-col items-center justify-center px-4 py-10">
@@ -55,12 +78,14 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
         <div className="bg-gradient-to-r from-primary-600 to-primary-500 px-8 pt-8 pb-6 text-white">
           <div className="flex items-center gap-3 mb-4">
             <Gift className="w-6 h-6 opacity-90" />
-            <span className="text-sm font-medium opacity-90">Kom i gang</span>
+            <span className="text-sm font-medium opacity-90">
+              {isExistingUser ? 'Ny og forbedret' : 'Kom i gang'}
+            </span>
           </div>
           <h1 className="text-2xl font-bold leading-tight">
-            {step === 1 && 'Hvem skal se listen din?'}
+            {step === 1 && step1Title}
             {step === 2 && 'Dine generelle mål'}
-            {step === 3 && 'Velkommen til Ønskelisten!'}
+            {step === 3 && step3Title}
           </h1>
 
           {/* Step dots */}
@@ -77,17 +102,46 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
         {/* Content */}
         <div className="px-8 py-7">
 
-          {/* Steg 1: Tilgang */}
+          {/* Steg 1 */}
           {step === 1 && (
-            <div>
-              <div className="flex items-start gap-3 bg-primary-50 rounded-xl p-4 mb-5">
-                <Users className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
-                <p className="text-sm text-primary-800 leading-relaxed">
-                  Velg hvem som skal ha tilgang til ønskelisten din. Kun de du velger her kan se hva du ønsker deg.
-                </p>
+            isExistingUser ? (
+              <div>
+                <div className="flex items-start gap-3 bg-primary-50 rounded-xl p-4 mb-5">
+                  <Zap className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-primary-800 leading-relaxed">
+                    Ønskelisten er flyttet til ny server og har fått seg en real facelift — med et friskt nytt utseende og en rekke nye funksjoner.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
+                    <span className="text-lg">📋</span>
+                    <p className="text-sm text-slate-700"><strong>Flere lister per bruker</strong> — opprett egne lister for ulike anledninger eller for barna dine</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
+                    <span className="text-lg">🤝</span>
+                    <p className="text-sm text-slate-700"><strong>Del lister med andre</strong> — samarbeid om felles ønskelister med familie eller venner</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
+                    <span className="text-lg">🏷️</span>
+                    <p className="text-sm text-slate-700"><strong>Prisjakt-integrasjon</strong> — legg enkelt til produkter med priser direkte fra Prisjakt.no</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
+                    <span className="text-lg">✨</span>
+                    <p className="text-sm text-slate-700"><strong>Og mye mer</strong> — ny design, bedre ytelse og jevnlige oppdateringer</p>
+                  </div>
+                </div>
               </div>
-              <AddViewersToMyListComponent />
-            </div>
+            ) : (
+              <div>
+                <div className="flex items-start gap-3 bg-primary-50 rounded-xl p-4 mb-5">
+                  <Users className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-primary-800 leading-relaxed">
+                    Velg hvem som skal ha tilgang til ønskelisten din. Kun de du velger her kan se hva du ønsker deg.
+                  </p>
+                </div>
+                <AddViewersToMyListComponent />
+              </div>
+            )
           )}
 
           {/* Steg 2: Mål */}
@@ -109,6 +163,7 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
                     type="text"
                     placeholder="—"
                     onChange={(e) => setLocalMeasurements(prev => ({ ...prev, [sizeKey]: e.target.value }))}
+                    onBlur={(e) => updateMyMeasumentOnProfile(userDbKey, e.target.value, sizeKey)}
                   />
                 ))}
               </div>
@@ -124,14 +179,16 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 text-primary-600 mb-5">
                 <Sparkles className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-slate-800 mb-3">Du er klar!</h2>
+              <h2 className="text-xl font-bold text-slate-800 mb-3">
+                {isExistingUser ? 'Velkommen tilbake!' : 'Du er klar!'}
+              </h2>
               <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                Med Ønskelisten kan du samle alt du ønsker deg på ett sted. Del listen med familie og venner, og hjelp dem med å finne den perfekte gaven din deg og dine 🎁
+                {step3Intro}
               </p>
               <div className="bg-slate-50 rounded-xl p-4 text-left space-y-3 mb-2">
                 <div className="flex items-start gap-3">
                   <span className="text-lg">🎁</span>
-                  <p className="text-sm text-slate-700"><strong>Min liste</strong> — legg til og rediger ønsker. Trykk på <strong>+</strong> øverst til høyre for å opprette ekstra lister for deg selv (eller dine barn?) eller som kan deles med andre — perfekt for felles ønsker!</p>
+                  <p className="text-sm text-slate-700"><strong>Min liste</strong> — legg til og rediger ønsker. Trykk på <strong>+</strong> øverst til høyre for å opprette ekstra lister for deg selv eller som kan deles med andre — perfekt for felles ønsker!</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">👀</span>
@@ -139,7 +196,7 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">🛒</span>
-                  <p className="text-sm text-slate-700"><strong>Mine kjøp</strong> — hold oversikt over hva du har kjøpt</p>
+                  <p className="text-sm text-slate-700"><strong>Mine kjøp</strong> — hold oversikt over hva du har kjøpt og hvor mye du har brukt 💸</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">👤</span>
@@ -169,14 +226,14 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
             {step > 1 && step < 3 && (
               <button
                 className="text-xs text-slate-400 hover:text-slate-600 transition-colors px-2"
-                onClick={() => setStep(s => s + 1)}
+                onClick={goToNextStep}
               >
                 Hopp over
               </button>
             )}
 
             {step < 3 ? (
-              <Button onClick={() => setStep(s => s + 1)} className="gap-1">
+              <Button onClick={goToNextStep} className="gap-1">
                 Neste
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -187,7 +244,7 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
                 className="gap-2 bg-primary-600 hover:bg-primary-700 px-5"
               >
                 <Sparkles className="w-4 h-4" />
-                {completing ? 'Starter...' : 'Ta i bruk Ønskelisten min'}
+                {completing ? 'Starter...' : isExistingUser ? 'Til den nye Ønskelisten!' : 'Ta i bruk Ønskelisten min'}
               </Button>
             )}
           </div>
@@ -200,6 +257,7 @@ function Onboarding({ measurements, onComplete }: OnboardingProps) {
 
 const mapStateToProps = (state: RootState) => ({
   measurements: state.innloggetBruker.measurements,
+  userDbKey: state.innloggetBruker.userDbKey,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

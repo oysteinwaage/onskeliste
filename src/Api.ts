@@ -294,6 +294,9 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
         if (meg?.erAdmin) {
             dispatch(subscribeTilFeedback() as any);
         }
+        if (meg && !meg.onboardingCompleted && window.location.pathname !== '/onboarding') {
+            dispatch(push('/onboarding?type=existing'));
+        }
     });
 };
 
@@ -639,6 +642,7 @@ export const setOnboardingCompleted = (measurements: Record<string, string>, las
         await usersRef.child(key).update(updates);
     }
     dispatch(push('/minliste'));
+    dispatch(fetchUsers() as any);
 };
 
 // Feedback

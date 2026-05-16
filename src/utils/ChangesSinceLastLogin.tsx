@@ -126,7 +126,7 @@ class ChangesSinceLastLogin extends Component<ChangesSinceLastLoginProps> {
   render() {
     const { lastSeenVersion } = this.props;
     const nyeEndringer = changes.filter(c => c.version > lastSeenVersion);
-    const erApen = nyeEndringer.length > 0 && window.location.pathname !== '/';
+    const erApen = nyeEndringer.length > 0 && window.location.pathname !== '/' && window.location.pathname !== '/onboarding';
 
     return (
       <Dialog open={erApen} onOpenChange={(o) => { if (!o) this.handleClose(); }}>
