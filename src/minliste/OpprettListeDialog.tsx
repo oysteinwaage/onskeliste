@@ -176,6 +176,7 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
                           value={soek}
                           onChange={e => this.setState({ soek: e.target.value, soekApen: true })}
                           onFocus={() => this.setState({ soekApen: true })}
+                          onClick={() => this.setState({ soekApen: true })}
                           onBlur={() => setTimeout(() => this.setState({ soekApen: false }), 150)}
                         />
                       </div>
