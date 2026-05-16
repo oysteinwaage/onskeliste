@@ -71,9 +71,9 @@
 }
 
 /* Prevent iOS Safari from zooming on input focus (triggered when font-size < 16px).
-   Must be outside @layer so it wins over Tailwind utility classes like text-sm. */
+   !important is required to beat Tailwind class selectors (text-sm etc.) regardless of @layer order. */
 input, textarea, select {
-  font-size: max(16px, 1em);
+  font-size: max(16px, 1em) !important;
 }
 
 /* App logo spin animation */
