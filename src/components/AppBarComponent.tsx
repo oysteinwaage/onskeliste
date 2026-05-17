@@ -20,6 +20,7 @@ interface AppBarComponentProps {
   innloggetBrukerNavn: string;
   ulesteFeedback: number;
   tilbakemeldingEnabled: boolean;
+  pathname: string;
   onAapneNySide: (id: string) => void;
   onLogOut: () => void;
   onOpprettNyListe: () => void;
@@ -60,16 +61,15 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   }
 
   render() {
-    const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled } = this.props;
+    const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled, pathname } = this.props;
     const { drawerOpen } = this.state;
 
     const erPaaLoginSide = LOGIN_HEADERS.includes(headerTekst);
-    const erPaaOnboarding = window.location.pathname === '/onboarding';
+    const erPaaOnboarding = pathname === '/onboarding';
     const visNav = !erPaaLoginSide && !erPaaOnboarding;
     const erPaaMinListe = headerTekst === 'Rediger ønskeliste';
     const visSettings = visNav && (erAdmin || tilbakemeldingEnabled);
 
-    const pathname = window.location.pathname;
     const activeTab = pathname === '/minliste' ? 'minliste'
       : pathname === '/vennelister' ? 'vennelister'
       : pathname === '/minekjoep' ? 'minekjoep'
@@ -109,7 +109,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
 
             {/* Right slot */}
             <div className="w-10 flex items-center justify-end">
-              {erPaaMinListe && (
+              {erPaaMinListe && !erPaaOnboarding && (
                 <button
                   onClick={onOpprettNyListe}
                   className="p-2 rounded-xl text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
@@ -228,6 +228,7 @@ const mapStateToProps = (state: RootState) => ({
   innloggetBrukerNavn: state.innloggetBruker.navn,
   ulesteFeedback: state.innloggetBruker.ulesteFeedback,
   tilbakemeldingEnabled: state.config.tilbakemeldingEnabled,
+  pathname: (state.router as any)?.location?.pathname || window.location.pathname,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
