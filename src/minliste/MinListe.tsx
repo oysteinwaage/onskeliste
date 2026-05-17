@@ -6,6 +6,8 @@ import {
   removeWishFromMyList,
   removeWishFromExtraList,
   updateFavorittWithSortOrder,
+  slettKjopteOnsker,
+  slettKjopteOnskerPaaEkstraListe,
 } from '../Api';
 import { toggleLenkeDialog, endreHeaderTekst, settAktivListeId, settOpprettListeDialogOpen } from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
@@ -29,6 +31,7 @@ interface MinListeProps {
   innloggetBrukerNavn: string;
   myUid: string;
   mineOnsker: Onske[];
+  slettKjopteOnskerEnabled: boolean;
   mineEkstraLister: ExtraListMetadata[];
   alleEkstraListeOnsker: Record<string, Onske[]>;
   opprettListeDialogOpen: boolean;
@@ -90,7 +93,7 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
 
   render() {
     const {
-      myUid, mineOnsker,
+      myUid, mineOnsker, slettKjopteOnskerEnabled,
       mineEkstraLister, alleEkstraListeOnsker,
       opprettListeDialogOpen, onLukkOpprettListeDialog, alleBrukere, mainListName,
     } = this.props;
@@ -103,10 +106,17 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-800">{mainListName || 'Min ønskeliste'}</h2>
-              <Button size="sm" onClick={() => this.aapneDialog(null, null)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Ønske
-              </Button>
+              <div className="flex items-center gap-2">
+                {slettKjopteOnskerEnabled && (
+                  <Button variant="outline-destructive" size="sm" onClick={() => slettKjopteOnsker(mineOnsker)}>
+                    Slett kjøpte ønsker
+                  </Button>
+                )}
+                <Button size="sm" onClick={() => this.aapneDialog(null, null)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Ønske
+                </Button>
+              </div>
             </div>
           </div>
           <div>
@@ -137,6 +147,11 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {slettKjopteOnskerEnabled && (
+                      <Button variant="outline-destructive" size="sm" onClick={() => slettKjopteOnskerPaaEkstraListe(liste.key, onsker)}>
+                        Slett kjøpte ønsker
+                      </Button>
+                    )}
                     <Button size="sm" onClick={() => this.aapneDialog(null, liste.key)} className="gap-2">
                       <Plus className="h-4 w-4" />
                       Ønske
@@ -190,6 +205,7 @@ const mapStateToProps = (state: RootState) => ({
   innloggetBrukerNavn: state.innloggetBruker.navn,
   myUid: state.innloggetBruker.uid || '',
   mineOnsker: state.innloggetBruker.mineOnsker,
+  slettKjopteOnskerEnabled: state.config.slettKjopteOnskerEnabled,
   mineEkstraLister: state.innloggetBruker.mineEkstraLister,
   alleEkstraListeOnsker: state.innloggetBruker.alleEkstraListeOnsker,
   opprettListeDialogOpen: state.innloggetBruker.opprettListeDialogOpen,
