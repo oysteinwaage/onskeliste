@@ -13,6 +13,7 @@ import Admin from './admin/Admin';
 import Tilbakemelding from './tilbakemelding/Tilbakemelding';
 import Onboarding from './onboarding/Onboarding';
 import AppBar from './components/AppBarComponent';
+import InstallBanner from './components/InstallBanner';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
 import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste } from "./Api";
@@ -73,6 +74,7 @@ class App extends Component<AppProps> {
           )}
           {!isLoading && <ChangesSinceLastLogin />}
           <AppBar />
+          <InstallBanner />
           <div className="flex-1 bg-slate-50 pb-16">
             <Switch>
               <Route exact path="/" component={Login} />
