@@ -3,8 +3,9 @@ import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
 import {
   List, Gift, ShoppingCart, User, LogOut,
-  X, PlusSquare, Shield, MessageSquare, Settings,
+  X, PlusSquare, Shield, MessageSquare, Settings, Share2,
 } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { logOut } from '../Api';
 import { settOpprettListeDialogOpen } from '../actions/actions';
 import { RootState } from '../types';
@@ -12,6 +13,7 @@ import { Dispatch } from 'redux';
 
 interface AppBarState {
   drawerOpen: boolean;
+  qrOpen: boolean;
 }
 
 interface AppBarComponentProps {
@@ -38,7 +40,7 @@ const LOGIN_HEADERS = ['Innlogging', 'Opprett ny bruker', 'Resett passord'];
 class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   constructor(props: AppBarComponentProps) {
     super(props);
-    this.state = { drawerOpen: false };
+    this.state = { drawerOpen: false, qrOpen: false };
   }
 
   navigate(valg: string): void {
@@ -62,7 +64,8 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
 
   render() {
     const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled, pathname } = this.props;
-    const { drawerOpen } = this.state;
+    const { drawerOpen, qrOpen } = this.state;
+    const appUrl = 'https://onskeliste-one.vercel.app/';
 
     const erPaaLoginSide = LOGIN_HEADERS.includes(headerTekst);
     const erPaaOnboarding = pathname === '/onboarding';
@@ -182,6 +185,13 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
           </div>
 
           <nav className="flex-1 py-3">
+            <button
+              onClick={() => this.setState({ drawerOpen: false, qrOpen: true })}
+              className="w-full flex items-center gap-3 px-5 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors text-sm"
+            >
+              <Share2 className="h-4 w-4 shrink-0 text-slate-400" />
+              Del app
+            </button>
             {(erAdmin || tilbakemeldingEnabled) && (
               <button
                 onClick={() => this.navigate('tilbakemelding')}
@@ -217,6 +227,35 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
             </button>
           </div>
         </aside>
+        {/* QR-kode dialog */}
+        {qrOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
+              onClick={() => this.setState({ qrOpen: false })}
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6 flex flex-col items-center gap-4">
+                <div className="flex items-center justify-between w-full">
+                  <h2 className="font-semibold text-slate-800 text-base">Del app</h2>
+                  <button
+                    onClick={() => this.setState({ qrOpen: false })}
+                    className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-sm text-slate-500 text-center">
+                  Scan QR-koden for å åpne appen
+                </p>
+                <div className="bg-white p-3 rounded-xl border border-slate-100">
+                  <QRCode value={appUrl} size={180} />
+                </div>
+                <p className="text-xs text-slate-400 text-center break-all">{appUrl}</p>
+              </div>
+            </div>
+          </>
+        )}
       </>
     );
   }
