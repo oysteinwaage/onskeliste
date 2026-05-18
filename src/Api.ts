@@ -325,6 +325,12 @@ export const updateLastSeenVersion = (newVersion: number, userDbKey: string) => 
     dispatch(setLastSeenVersion(newVersion));
 };
 
+export const incrementIosInstallBannerCount = (userDbKey: string, currentCount: number): void => {
+    if (userDbKey) {
+        usersRef.child(userDbKey).update({ iosInstallBannerCount: currentCount + 1 });
+    }
+};
+
 export const updateMainListName = (userDbKey: string, navn: string) => async (dispatch: Dispatch) => {
     if (userDbKey) {
         await usersRef.child(userDbKey).update({ mainListName: navn || null });

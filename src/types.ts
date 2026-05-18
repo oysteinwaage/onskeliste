@@ -33,6 +33,7 @@ export interface Bruker {
   lastSeenVersion?: number;
   mainListName?: string;
   onboardingCompleted?: boolean;
+  iosInstallBannerCount?: number;
 }
 
 export interface Viewer {
@@ -75,6 +76,7 @@ export interface InnloggetBrukerState {
   mineEkstraKjoep: Record<string, Onske[]>;
   mineEkstraListeKjoep: Record<string, { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[] }[]>;
   erAdmin?: boolean;
+  iosInstallBannerCount?: number;
   mineEkstraLister: ExtraListMetadata[];
   aktiveListeId: string | null;
   alleEkstraListeOnsker: Record<string, Onske[]>;

@@ -1,44 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { connect } from 'react-redux';
 import { X, MoreHorizontal, Share, PlusSquare } from 'lucide-react';
+import { incrementIosInstallBannerCount } from '../Api';
+import { RootState } from '../types';
 
-function isIosSafari(): boolean {
-  const ua = window.navigator.userAgent;
-  const isIphone = /iphone/i.test(ua);
-  // Chrome on iOS includes "CriOS", Firefox includes "FxiOS"
-  const isNativeSafari = !/CriOS|FxiOS|OPiOS|EdgiOS/i.test(ua);
-  // Must be a real touch device (rules out desktop browsers with spoofed UA)
-  const isTouchDevice = navigator.maxTouchPoints > 0;
-  return isIphone && isNativeSafari && isTouchDevice;
+const MAX_SHOW_COUNT = 5;
+
+// navigator.standalone is only defined in iOS Safari.
+// false = running in Safari browser (not yet installed).
+// true = already running as installed home screen app.
+// undefined = any other browser/platform.
+function isIosSafariInBrowser(): boolean {
+  return (window.navigator as any).standalone === false;
 }
 
-function isInStandaloneMode(): boolean {
-  return (
-    (window.navigator as any).standalone === true ||
-    window.matchMedia('(display-mode: standalone)').matches
-  );
+interface Props {
+  userDbKey: string;
+  iosInstallBannerCount: number;
 }
 
-const DISMISSED_KEY = 'install-banner-dismissed';
-
-export default function InstallBanner() {
-  const [visible, setVisible] = useState(false);
+function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
+  const hasIncremented = useRef(false);
+  const shouldShow =
+    !!userDbKey &&
+    isIosSafariInBrowser() &&
+    iosInstallBannerCount < MAX_SHOW_COUNT;
 
   useEffect(() => {
-    if (
-      isIosSafari() &&
-      !isInStandaloneMode() &&
-      !localStorage.getItem(DISMISSED_KEY)
-    ) {
-      setVisible(true);
+    if (shouldShow && !hasIncremented.current) {
+      hasIncremented.current = true;
+      incrementIosInstallBannerCount(userDbKey, iosInstallBannerCount);
     }
-  }, []);
+  }, [shouldShow, userDbKey, iosInstallBannerCount]);
 
-  if (!visible) return null;
+  const [dismissed, setDismissed] = React.useState(false);
 
-  function dismiss() {
-    localStorage.setItem(DISMISSED_KEY, '1');
-    setVisible(false);
-  }
+  if (!shouldShow || dismissed) return null;
 
   return (
     <div className="fixed bottom-16 left-0 right-0 z-30 px-3 pb-2 pointer-events-none">
@@ -56,13 +53,13 @@ export default function InstallBanner() {
           </p>
           <ol className="text-[12px] text-slate-500 mt-1 leading-snug space-y-0.5 list-none">
             <li><span className="font-medium text-slate-700">1.</span> Trykk <span className="font-medium text-slate-700">«···»</span> nederst til høyre i Safari</li>
-            <li><span className="font-medium text-slate-700">2.</span> Velg <span className="font-medium text-slate-700">Del</span> <Share className="h-3 w-3 inline align-middle mx-0.5 -translate-y-[2px]" strokeWidth={2.5} /></li>
-            <li><span className="font-medium text-slate-700">3.</span> Scroll ned og trykk <PlusSquare className="h-3 w-3 inline align-middle mx-0.5 -translate-y-[2px]" strokeWidth={2.5} /><span className="font-medium text-slate-700">«Legg til på Hjem-skjerm»</span></li>
+            <li><span className="font-medium text-slate-700">2.</span> Velg <span className="font-medium text-slate-700">Del</span> <Share className="h-3 w-3 inline align-middle -translate-y-[2px] mx-0.5" strokeWidth={2.5} /></li>
+            <li><span className="font-medium text-slate-700">3.</span> Scroll ned og trykk <PlusSquare className="h-3 w-3 inline align-middle -translate-y-[2px] mx-0.5" strokeWidth={2.5} /><span className="font-medium text-slate-700">«Legg til på Hjem-skjerm»</span></li>
           </ol>
         </div>
 
         <button
-          onClick={dismiss}
+          onClick={() => setDismissed(true)}
           className="shrink-0 p-1 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors -mr-1 -mt-0.5"
           aria-label="Lukk"
         >
@@ -72,3 +69,10 @@ export default function InstallBanner() {
     </div>
   );
 }
+
+const mapStateToProps = (state: RootState) => ({
+  userDbKey: state.innloggetBruker.userDbKey,
+  iosInstallBannerCount: state.innloggetBruker.iosInstallBannerCount ?? 0,
+});
+
+export default connect(mapStateToProps)(InstallBanner);
