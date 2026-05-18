@@ -6,10 +6,14 @@ import { RootState } from '../types';
 
 const MAX_SHOW_COUNT = 5;
 
-function isMobileInBrowser(): boolean {
-  const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
-  const isMobile = window.innerWidth <= 768;
-  return !isInstalled && isMobile;
+// macOS Safari (Ventura+) also supports PWAs and sets navigator.standalone,
+// so we must check iOS user-agent first before trusting the standalone flag.
+function isIosInBrowser(): boolean {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!isIOS) return false;
+  // standalone: true = installed PWA, false = Safari browser, undefined = iOS Chrome/Firefox
+  const standalone = (window.navigator as any).standalone;
+  return standalone !== true;
 }
 
 interface Props {
@@ -21,7 +25,7 @@ function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
   const hasIncremented = useRef(false);
   const shouldShow =
     !!userDbKey &&
-    isMobileInBrowser() &&
+    isIosInBrowser() &&
     iosInstallBannerCount < MAX_SHOW_COUNT;
 
   useEffect(() => {
@@ -47,7 +51,7 @@ function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
 
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-slate-800 leading-tight">
-            Tips: Legg til som app på Hjem-skjerm
+            iPhone-tips: Legg til som app på Hjem-skjerm
           </p>
           <ol className="text-[12px] text-slate-500 mt-1 leading-snug space-y-0.5 list-none">
             <li><span className="font-medium text-slate-700">1.</span> Trykk <span className="font-medium text-slate-700">«···»</span> nederst til høyre i Safari</li>
