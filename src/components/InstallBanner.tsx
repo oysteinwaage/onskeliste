@@ -6,12 +6,14 @@ import { RootState } from '../types';
 
 const MAX_SHOW_COUNT = 5;
 
-// navigator.standalone is only defined in iOS Safari.
-// false = running in Safari browser (not yet installed).
-// true = already running as installed home screen app.
-// undefined = any other browser/platform.
-function isIosSafariInBrowser(): boolean {
-  return (window.navigator as any).standalone === false;
+// macOS Safari (Ventura+) also supports PWAs and sets navigator.standalone,
+// so we must check iOS user-agent first before trusting the standalone flag.
+function isIosInBrowser(): boolean {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!isIOS) return false;
+  // standalone: true = installed PWA, false = Safari browser, undefined = iOS Chrome/Firefox
+  const standalone = (window.navigator as any).standalone;
+  return standalone !== true;
 }
 
 interface Props {
@@ -23,7 +25,7 @@ function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
   const hasIncremented = useRef(false);
   const shouldShow =
     !!userDbKey &&
-    isIosSafariInBrowser() &&
+    isIosInBrowser() &&
     iosInstallBannerCount < MAX_SHOW_COUNT;
 
   useEffect(() => {
