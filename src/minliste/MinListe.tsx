@@ -213,6 +213,7 @@ const mapStateToProps = (state: RootState) => ({
   mainListName: state.innloggetBruker.mainListName,
 });
 
+
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onToggleLenkeDialog: (index: Partial<Onske> | undefined) => dispatch(toggleLenkeDialog(index)),
   onEndreHeaderTekst: (nyTekst: string) => dispatch(endreHeaderTekst(nyTekst)),
