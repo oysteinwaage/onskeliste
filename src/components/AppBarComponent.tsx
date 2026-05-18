@@ -5,7 +5,7 @@ import {
   List, Gift, ShoppingCart, User, LogOut,
   X, PlusSquare, Shield, MessageSquare, Settings, Share2,
 } from 'lucide-react';
-import QRCode from 'react-qr-code';
+import qrOnskeliste from '../img/qr-onskeliste.jpg';
 import { logOut } from '../Api';
 import { settOpprettListeDialogOpen } from '../actions/actions';
 import { RootState } from '../types';
@@ -65,7 +65,6 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   render() {
     const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled, pathname } = this.props;
     const { drawerOpen, qrOpen } = this.state;
-    const appUrl = 'https://onskeliste-one.vercel.app/';
 
     const erPaaLoginSide = LOGIN_HEADERS.includes(headerTekst);
     const erPaaOnboarding = pathname === '/onboarding';
@@ -249,9 +248,9 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                   Scan QR-koden for å åpne appen
                 </p>
                 <div className="bg-white p-3 rounded-xl border border-slate-100">
-                  <QRCode value={appUrl} size={180} />
+                  <img src={qrOnskeliste} alt="QR-kode til onskeliste" className="w-44 h-44 object-contain" />
                 </div>
-                <p className="text-xs text-slate-400 text-center break-all">{appUrl}</p>
+                <p className="text-xs text-slate-400 text-center break-all">https://onskeliste-one.vercel.app/</p>
               </div>
             </div>
           </>
