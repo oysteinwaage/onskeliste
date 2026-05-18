@@ -79,17 +79,14 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
     return (
       <>
         {/* Top header */}
-        <header
-          className="bg-primary-600 z-40 relative"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
+        <header className="bg-white border-b border-slate-100 z-40 relative">
           <div className="flex items-center h-14 px-3">
             {/* Left slot */}
             <div className="w-10 flex items-center justify-start">
               {visSettings && (
                 <button
                   onClick={() => this.setState({ drawerOpen: true })}
-                  className="relative p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                  className="relative p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                   aria-label="Innstillinger og mer"
                 >
                   <Settings className="h-5 w-5" />
@@ -104,9 +101,9 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
 
             {/* Center: title */}
             <div className="flex-1 text-center">
-              <h1 className="text-[15px] font-semibold text-white leading-tight">{headerTekst}</h1>
+              <h1 className="text-[15px] font-semibold text-slate-800 leading-tight">{headerTekst}</h1>
               {erPaaMinListe && innloggetBrukerNavn && (
-                <p className="text-[11px] text-white/70 leading-tight">{innloggetBrukerNavn}</p>
+                <p className="text-[11px] text-slate-400 leading-tight">{innloggetBrukerNavn}</p>
               )}
             </div>
 
@@ -115,7 +112,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
               {erPaaMinListe && !erPaaOnboarding && (
                 <button
                   onClick={onOpprettNyListe}
-                  className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-xl text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                   aria-label="Ny liste"
                 >
                   <PlusSquare className="h-5 w-5" />
@@ -129,7 +126,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
         {visNav && (
           <nav
             className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-100"
-            style={{ boxShadow: '0 -1px 12px rgba(0,0,0,0.06)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+            style={{ boxShadow: '0 -1px 12px rgba(0,0,0,0.06)' }}
           >
             <div className="flex items-stretch h-16">
               {bottomNavItems.map(({ key, label, icon: Icon }) => {
@@ -174,14 +171,11 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
           }`}
           style={drawerOpen ? { boxShadow: '4px 0 24px rgba(0,0,0,0.10)' } : undefined}
         >
-          <div
-            className="flex items-center justify-between px-5 pb-4 border-b border-slate-100 bg-primary-600"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
-          >
-            <span className="font-semibold text-white text-sm">Meny</span>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <span className="font-semibold text-slate-700 text-sm">Meny</span>
             <button
               onClick={() => this.setState({ drawerOpen: false })}
-              className="p-1.5 rounded-lg text-white/70 hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
