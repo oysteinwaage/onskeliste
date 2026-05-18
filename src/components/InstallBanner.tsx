@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
-import { X, MoreHorizontal, Share, PlusSquare } from 'lucide-react';
+import { X, Share, PlusSquare } from 'lucide-react';
 import { incrementIosInstallBannerCount } from '../Api';
 import { RootState } from '../types';
 
@@ -45,9 +45,11 @@ function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
         className="pointer-events-auto bg-white border border-slate-200 rounded-2xl shadow-lg px-4 py-3 flex items-start gap-3"
         style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.10)' }}
       >
-        <div className="mt-0.5 shrink-0 bg-primary-50 rounded-xl p-2">
-          <MoreHorizontal className="h-5 w-5 text-primary-600" strokeWidth={2} />
-        </div>
+        <img
+          src="/apple-touch-icon.png"
+          alt="Ønskelisten"
+          className="mt-0.5 shrink-0 rounded-xl h-9 w-9"
+        />
 
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-slate-800 leading-tight">
