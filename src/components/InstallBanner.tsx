@@ -6,14 +6,10 @@ import { RootState } from '../types';
 
 const MAX_SHOW_COUNT = 5;
 
-// macOS Safari (Ventura+) also supports PWAs and sets navigator.standalone,
-// so we must check iOS user-agent first before trusting the standalone flag.
-function isIosInBrowser(): boolean {
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  if (!isIOS) return false;
-  // standalone: true = installed PWA, false = Safari browser, undefined = iOS Chrome/Firefox
-  const standalone = (window.navigator as any).standalone;
-  return standalone !== true;
+function isMobileInBrowser(): boolean {
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+  const isMobile = window.innerWidth <= 768;
+  return !isInstalled && isMobile;
 }
 
 interface Props {
@@ -25,7 +21,7 @@ function InstallBanner({ userDbKey, iosInstallBannerCount }: Props) {
   const hasIncremented = useRef(false);
   const shouldShow =
     !!userDbKey &&
-    isIosInBrowser() &&
+    isMobileInBrowser() &&
     iosInstallBannerCount < MAX_SHOW_COUNT;
 
   useEffect(() => {
