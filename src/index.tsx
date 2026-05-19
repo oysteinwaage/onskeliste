@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Analytics } from '@vercel/analytics/react'
+import { inject } from '@vercel/analytics';
 // import * as serviceWorker from './serviceWorker';
 import './css/index.css';
 
+inject();
 import { Provider } from 'react-redux';
 import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
@@ -17,7 +18,6 @@ ReactDOM.render(
     <ConnectedRouter history={history}>
       <Route path="/" component={App} />
     </ConnectedRouter>
-      <Analytics/>
   </Provider>, document.getElementById('root'),
 );
 
