@@ -63,6 +63,7 @@ export interface InnloggetBrukerState {
   email: string;
   navn: string;
   uid?: string;
+  photoURL?: string;
   mainListName?: string;
   onboardingCompleted?: boolean;
   mineOnsker: Onske[];

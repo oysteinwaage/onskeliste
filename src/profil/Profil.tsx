@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
-import { Trash2 } from 'lucide-react';
+import { Trash2, User } from 'lucide-react';
 
 interface ProfilState {
   sko: string | null;
@@ -29,6 +29,9 @@ interface ProfilState {
 
 interface ProfilProps {
   myUserDbKey: string;
+  navn: string;
+  email: string;
+  photoURL?: string;
   onEndreHeaderTekst: () => void;
   measurements: Record<string, string>;
   mainListName?: string;
@@ -64,11 +67,24 @@ class Profil extends Component<ProfilProps, ProfilState> {
   };
 
   render() {
-    const { measurements, mainListName, myUserDbKey, onUpdateMainListName } = this.props;
+    const { measurements, mainListName, myUserDbKey, onUpdateMainListName, navn, email, photoURL } = this.props;
     const { slettDialogApen, sletter } = this.state;
 
     return (
       <div className="max-w-xl mx-auto px-4 py-6">
+        <div className="flex items-center gap-4 mb-6 p-4 bg-white rounded-2xl shadow-sm border border-slate-200">
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
+            {photoURL
+              ? <img src={photoURL} alt={navn} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              : <User className="w-6 h-6 text-slate-500" />
+            }
+          </div>
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-slate-900 truncate">{navn}</p>
+            <p className="text-sm text-slate-500 truncate">{email}</p>
+          </div>
+        </div>
+
         <Accordion type="multiple" defaultValue={['maal']} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden divide-y divide-slate-100">
           {/* Navn på ønskeliste */}
           <AccordionItem value="listenavn" className="border-none px-4">
@@ -172,6 +188,9 @@ class Profil extends Component<ProfilProps, ProfilState> {
 
 const mapStateToProps = (state: RootState) => ({
   myUserDbKey: state.innloggetBruker.userDbKey,
+  navn: state.innloggetBruker.navn,
+  email: state.innloggetBruker.email,
+  photoURL: state.innloggetBruker.photoURL,
   measurements: state.innloggetBruker.measurements,
   mainListName: state.innloggetBruker.mainListName,
 });

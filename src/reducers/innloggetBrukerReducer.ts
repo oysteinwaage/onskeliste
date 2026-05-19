@@ -32,7 +32,8 @@ export default function innloggetBruker(
             return Object.assign({}, state, {
                 email: action.user.email,
                 navn: action.user.displayName,
-                uid: action.user.uid
+                uid: action.user.uid,
+                photoURL: action.user.photoURL || undefined,
             });
         case MOTTA_MIN_ONSKELISTE:
             return Object.assign({}, state, {

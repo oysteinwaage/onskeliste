@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { inject } from '@vercel/analytics';
-// import * as serviceWorker from './serviceWorker';
-import './css/index.css';
-
-inject();
 import { Provider } from 'react-redux';
 import { Route } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import App from './App';
 import { configureStore, history } from './store/configureStore';
+// import * as serviceWorker from './serviceWorker';
+import './css/index.css';
+
+inject();
 (window as any).__MUI_USE_NEXT_TYPOGRAPHY_VARIANTS__ = true;
 
 const store = configureStore();
