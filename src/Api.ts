@@ -269,12 +269,43 @@ USERS
 export const loggInn = (brukernavn: string, passord: string) => async (dispatch: Dispatch) => {
     auth.signInWithEmailAndPassword(brukernavn, passord)
         .then(user => {
+            markerHarPassord(user.user!.uid);
+            sendVerifiseringsEpostHvisNodvendig(user.user!);
             dispatch(brukerLoggetInn(user.user));
             dispatch(push('/minliste'));
         })
         .catch(function (error: any) {
             alert(error);
         });
+};
+
+// harPassord i databasen forteller om kontoen skal ha passord-innlogging, slik at vi
+// kan oppdage og reparere kontoen hvis Firebase kobler fra passordet ved Google-innlogging.
+export const oppdaterHarPassord = async (uid: string, harPassord: boolean): Promise<void> => {
+    const snapshot = await usersRef.orderByChild('uid').equalTo(uid).once('value');
+    const val = snapshot.val();
+    if (val) {
+        const key = Object.keys(val)[0];
+        if (val[key].harPassord !== harPassord) {
+            usersRef.child(key).update({ harPassord });
+        }
+    }
+};
+
+const markerHarPassord = (uid: string): void => {
+    oppdaterHarPassord(uid, true).catch(() => {});
+};
+
+// Firebase kobler fra passord-innloggingen hvis man logger inn med Google på en
+// konto med uverifisert e-post. Verifisert e-post gjør at metodene lenkes i stedet.
+const sendVerifiseringsEpostHvisNodvendig = (user: any): void => {
+    if (user.emailVerified) return;
+    const lsKey = `verifiseringsEpostSendt_${user.uid}`;
+    const sistSendt = Number(localStorage.getItem(lsKey) || 0);
+    if (Date.now() - sistSendt < 7 * 24 * 60 * 60 * 1000) return;
+    user.sendEmailVerification()
+        .then(() => localStorage.setItem(lsKey, String(Date.now())))
+        .catch(() => {});
 };
 
 export const resetPassord = (mail: string) => async (dispatch: Dispatch) => {
@@ -310,6 +341,7 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
                     lastName,
                     email: currentUser.email || '',
                     uid: currentUser.uid,
+                    harPassord: false,
                 }).then(() => {
                     dispatch(push('/onboarding'));
                 });
@@ -641,9 +673,10 @@ export const opprettNyBruker = (brukernavn: string, passord: string, firstName: 
     const navn = firstName + " " + lastName;
     auth.createUserWithEmailAndPassword(brukernavn, passord)
         .then(() => {
+            auth.currentUser!.sendEmailVerification().catch(() => {});
             auth.currentUser!.updateProfile({ displayName: navn, photoURL: null })
                 .then(() => {
-                    usersRef.push().set({ navn, firstName, lastName, email: brukernavn, uid: auth.currentUser!.uid });
+                    usersRef.push().set({ navn, firstName, lastName, email: brukernavn, uid: auth.currentUser!.uid, harPassord: true });
                     dispatch(brukerLoggetInn(auth.currentUser));
                     dispatch(push('/onboarding'));
                 })

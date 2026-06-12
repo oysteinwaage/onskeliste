@@ -86,6 +86,11 @@ export interface InnloggetBrukerState {
   ulesteFeedback: number;
 }
 
+export interface PassordReparasjonInfo {
+  providerNavn: string;
+  kjentPassordBruker: boolean;
+}
+
 export interface ConfigState {
   headerTekst: string;
   visOpprettNyBruker: boolean;
@@ -94,6 +99,7 @@ export interface ConfigState {
   isLoading: boolean;
   slettKjopteOnskerEnabled: boolean;
   tilbakemeldingEnabled: boolean;
+  passordReparasjon: PassordReparasjonInfo | null;
 }
 
 export interface VennersListerState {

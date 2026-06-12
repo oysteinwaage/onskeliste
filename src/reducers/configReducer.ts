@@ -10,7 +10,8 @@ import {
     SETT_IS_LOADING,
     MOTTA_MIN_ONSKELISTE,
     SET_SLETT_KJOPTE_ONSKER_ENABLED,
-    SET_TILBAKEMELDING_ENABLED
+    SET_TILBAKEMELDING_ENABLED,
+    SETT_PASSORD_REPARASJON
 } from '../actions/actions';
 
 export default function config(
@@ -56,6 +57,11 @@ export default function config(
             return {
                 ...state,
                 tilbakemeldingEnabled: action.enabled,
+            };
+        case SETT_PASSORD_REPARASJON:
+            return {
+                ...state,
+                passordReparasjon: action.info,
             };
         default:
             return state;

@@ -1,4 +1,4 @@
-import { Onske, Bruker, Viewer, ExtraListMetadata, Feedback } from '../types';
+import { Onske, Bruker, Viewer, ExtraListMetadata, Feedback, PassordReparasjonInfo } from '../types';
 
 // Min ønskeliste
 export const MOTTA_MIN_ONSKELISTE = 'MOTTA_MIN_ONSKELISTE';
@@ -116,6 +116,11 @@ export function setSlettKjopteOnskerEnabled(enabled: boolean) {
 export const SET_TILBAKEMELDING_ENABLED = 'SET_TILBAKEMELDING_ENABLED';
 export function setTilbakemeldingEnabled(enabled: boolean) {
   return { type: SET_TILBAKEMELDING_ENABLED as typeof SET_TILBAKEMELDING_ENABLED, enabled };
+}
+
+export const SETT_PASSORD_REPARASJON = 'SETT_PASSORD_REPARASJON';
+export function settPassordReparasjon(info: PassordReparasjonInfo | null) {
+  return { type: SETT_PASSORD_REPARASJON as typeof SETT_PASSORD_REPARASJON, info };
 }
 
 //Profil
@@ -280,4 +285,5 @@ export type AppAction =
   | ReturnType<typeof settHovedListeNavn>
   | ReturnType<typeof mottaFeedback>
   | ReturnType<typeof settUlesteFeedback>
-  | ReturnType<typeof setTilbakemeldingEnabled>;
+  | ReturnType<typeof setTilbakemeldingEnabled>
+  | ReturnType<typeof settPassordReparasjon>;

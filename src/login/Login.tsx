@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import { push } from "connected-react-router";
 import { connect } from 'react-redux';
 import firebase from "firebase/compat/app";
-import { loggInn, opprettNyBruker, resetPassord } from '../Api';
+import { loggInn, opprettNyBruker, resetPassord, oppdaterHarPassord } from '../Api';
 import { usersRef } from '../config/firebase';
-import { endreHeaderTekst, lasterData, toggleVisOpprettBruker } from '../actions/actions';
-import { RootState } from '../types';
+import { endreHeaderTekst, lasterData, settPassordReparasjon, toggleVisOpprettBruker } from '../actions/actions';
+import { RootState, PassordReparasjonInfo } from '../types';
 import { Dispatch } from 'redux';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -80,18 +80,23 @@ interface LoginProps {
   onSendResettPassordMail: (mail: string) => void;
   onSendTilHovedside: () => void;
   onSettLasterData: (isLoading: boolean) => void;
+  onVisPassordReparasjon: (info: PassordReparasjonInfo) => void;
   visOpprettNyBruker: boolean;
   infoResettMailSendt: string;
 }
 
 class Login extends Component<LoginProps, LoginState> {
+  // Settes mens en sosial innloggingsflyt pågår, slik at onAuthStateChanged
+  // ikke navigerer bort før vi har sjekket om kontoen trenger reparasjon.
+  private socialFlytPaagaar = false;
+
   constructor(props: LoginProps) {
     super(props);
     this.state = initState;
 
     const { onSendTilHovedside } = this.props;
-    firebase.auth().onAuthStateChanged(function (user) {
-      if (user) {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user && !this.socialFlytPaagaar) {
         onSendTilHovedside();
       }
     });
@@ -142,6 +147,7 @@ class Login extends Component<LoginProps, LoginState> {
 
   async loggInnMedSosialLeverandor(provider: firebase.auth.AuthProvider, leverandorNavn: string): Promise<void> {
     this.setState({ socialLoading: true, socialFeil: '' });
+    this.socialFlytPaagaar = true;
     try {
       const result = await firebase.auth().signInWithPopup(provider);
 
@@ -153,6 +159,7 @@ class Login extends Component<LoginProps, LoginState> {
         if (snapshot.exists()) {
           const credential = result.credential;
           await firebase.auth().signOut();
+          this.socialFlytPaagaar = false;
           this.setState({
             linkingModus: true,
             linkingEmail: email,
@@ -163,7 +170,28 @@ class Login extends Component<LoginProps, LoginState> {
           return;
         }
       }
+
+      // Firebase kobler fra passord-innloggingen når man logger inn med Google på en
+      // konto med uverifisert e-post. Oppdag det og la brukeren sette passordet på nytt,
+      // slik at begge innloggingsmetoder fortsetter å fungere. Dialogen rendres på
+      // app-nivå slik at den overlever navigasjonen som skjer etter innlogging.
+      const user = result.user;
+      if (user && !user.providerData.some(p => p?.providerId === 'password')) {
+        const snapshot = await usersRef.orderByChild('uid').equalTo(user.uid).once('value');
+        const val = snapshot.val();
+        const dbBruker = val ? (Object.values(val)[0] as any) : null;
+        const kjentPassordBruker = dbBruker?.harPassord === true;
+        // Brukere fra før harPassord-feltet fantes spørres én gang ("Hopp over" setter feltet).
+        const ukjentPassordStatus = dbBruker != null && dbBruker.harPassord === undefined && !result.additionalUserInfo?.isNewUser;
+        if (kjentPassordBruker || ukjentPassordStatus) {
+          this.props.onVisPassordReparasjon({ providerNavn: leverandorNavn, kjentPassordBruker });
+        }
+      }
+
+      this.socialFlytPaagaar = false;
+      this.props.onSendTilHovedside();
     } catch (error: any) {
+      this.socialFlytPaagaar = false;
       if (error.code === 'auth/account-exists-with-different-credential') {
         this.setState({
           linkingModus: true,
@@ -185,6 +213,7 @@ class Login extends Component<LoginProps, LoginState> {
     try {
       const userCredential = await firebase.auth().signInWithEmailAndPassword(linkingEmail, linkingPassord);
       await userCredential.user!.linkWithCredential(pendingCredential);
+      oppdaterHarPassord(userCredential.user!.uid, true).catch(() => {});
       this.setState({ linkingModus: false, pendingCredential: null, pendingProviderNavn: '', socialFeil: '' });
     } catch (error: any) {
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -209,6 +238,7 @@ class Login extends Component<LoginProps, LoginState> {
       await firebase.auth().signInWithPopup(provider);
       const emailCredential = firebase.auth.EmailAuthProvider.credential(username, password);
       await firebase.auth().currentUser!.linkWithCredential(emailCredential);
+      oppdaterHarPassord(firebase.auth().currentUser!.uid, true).catch(() => {});
       // onAuthStateChanged håndterer navigasjon
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -428,6 +458,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onSendResettPassordMail: (mail: string) => dispatch(resetPassord(mail) as any),
   onSendTilHovedside: () => dispatch(push('/minliste')),
   onSettLasterData: (isLoading: boolean) => dispatch(lasterData(isLoading)),
+  onVisPassordReparasjon: (info: PassordReparasjonInfo) => dispatch(settPassordReparasjon(info)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

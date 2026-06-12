@@ -5,6 +5,7 @@ import { Route, Switch } from 'react-router';
 import firebase from "firebase/compat/app";
 import { Loader2 } from 'lucide-react';
 import Login from './login/Login';
+import PassordReparasjonDialog from './login/PassordReparasjonDialog';
 import MinListe from './minliste/MinListe';
 import Vennelister from './vennelister/VenneLister';
 import MineKjoep from './minekjoep/MineKjoep';
@@ -73,6 +74,7 @@ class App extends Component<AppProps> {
             </div>
           )}
           {!isLoading && <ChangesSinceLastLogin />}
+          <PassordReparasjonDialog />
           <AppBar />
           <InstallBanner />
           <div className="flex-1 bg-slate-50 pb-16">

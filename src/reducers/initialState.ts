@@ -37,6 +37,7 @@ const initialState: InitialState = {
     isLoading: false,
     slettKjopteOnskerEnabled: false,
     tilbakemeldingEnabled: false,
+    passordReparasjon: null,
   },
   vennersLister: {
     allowedListsForMe: [],
