@@ -626,24 +626,120 @@ export const slettKjopteOnskerPaaEkstraListe = (listId: string, onsker: Onske[])
     });
 };
 
+// Fjerner alle spor av brukeren i databasen: egne noder, kjøpsmarkeringer på andres
+// ønsker, viewer-/delingsreferanser hos andre, ekstrakjøp i begge retninger og feedback.
+// Alt samles i ett multi-location update slik at oppryddingen skjer atomisk.
+const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void> => {
+    const updates: Record<string, any> = {};
+
+    const fjernFraKjoptAvListe = (sti: string, onske: any) => {
+        const kjoptAvListe = onske?.kjoptAvListe;
+        if (!Array.isArray(kjoptAvListe)) return;
+        const filtrert = kjoptAvListe.filter((entry: any) => entry && entry.kjoptAv !== uid);
+        if (filtrert.length !== kjoptAvListe.length) {
+            updates[`${sti}/kjoptAvListe`] = filtrert.length > 0 ? filtrert : null;
+        }
+    };
+
+    const [wishlistsSnap, allowedViewersSnap, extraListsSnap, userExtraListsSnap, ekstraKjoepSnap, feedbackSnap] = await Promise.all([
+        db.ref('wishlists').once('value'),
+        allowedViewsRef.once('value'),
+        db.ref('extraLists').once('value'),
+        db.ref('userExtraLists').once('value'),
+        db.ref('ekstraKjoep').once('value'),
+        feedbackRef.orderByChild('brukerUid').equalTo(uid).once('value'),
+    ]);
+
+    // Kjøpsmarkeringer på andres hovedlister + brukerens egen liste.
+    // Egen liste hoppes over i skanningen siden hele noden slettes (update()
+    // godtar ikke at én sti er forelder til en annen).
+    const alleWishlists = wishlistsSnap.val() || {};
+    Object.keys(alleWishlists).forEach(ownerUid => {
+        if (ownerUid === uid) return;
+        Object.keys(alleWishlists[ownerUid] || {}).forEach(wishKey => {
+            fjernFraKjoptAvListe(`wishlists/${ownerUid}/${wishKey}`, alleWishlists[ownerUid][wishKey]);
+        });
+    });
+    updates[`wishlists/${uid}`] = null;
+
+    // Brukeren som viewer hos andre + egen viewer-liste
+    const alleViewers = allowedViewersSnap.val() || {};
+    Object.keys(alleViewers).forEach(ownerUid => {
+        const viewers = alleViewers[ownerUid];
+        if (!Array.isArray(viewers)) return;
+        const filtrert = viewers.filter((v: any) => v && v.value !== uid);
+        if (filtrert.length !== viewers.length) {
+            updates[`allowedViewers/${ownerUid}`] = filtrert.length > 0 ? filtrert : null;
+        }
+    });
+    updates[`allowedViewers/${uid}`] = null;
+
+    // Ekstralister: slett egne, fjern brukeren som delingspartner og kjøper hos andre
+    const alleExtraLists = extraListsSnap.val() || {};
+    const slettedeListeIder = new Set<string>();
+    Object.keys(alleExtraLists).forEach(listId => {
+        const liste = alleExtraLists[listId];
+        if (liste.ownerUid === uid) {
+            updates[`extraLists/${listId}`] = null;
+            slettedeListeIder.add(listId);
+            return;
+        }
+        if (liste.sharedWithUid === uid) {
+            updates[`extraLists/${listId}/sharedWithUid`] = null;
+        }
+        Object.keys(liste.wishes || {}).forEach(wishKey => {
+            fjernFraKjoptAvListe(`extraLists/${listId}/wishes/${wishKey}`, liste.wishes[wishKey]);
+        });
+    });
+
+    // Andres referanser til brukerens slettede lister + brukerens egen referanse-node
+    const alleUserExtraLists = userExtraListsSnap.val() || {};
+    Object.keys(alleUserExtraLists).forEach(annenUid => {
+        if (annenUid === uid) return;
+        Object.keys(alleUserExtraLists[annenUid] || {}).forEach(listId => {
+            if (slettedeListeIder.has(listId)) {
+                updates[`userExtraLists/${annenUid}/${listId}`] = null;
+            }
+        });
+    });
+    updates[`userExtraLists/${uid}`] = null;
+
+    // Ekstrakjøp brukeren har gjort, og ekstrakjøp andre har gjort for brukeren
+    const alleEkstraKjoep = ekstraKjoepSnap.val() || {};
+    Object.keys(alleEkstraKjoep).forEach(kjoperUid => {
+        if (kjoperUid === uid) return;
+        if (alleEkstraKjoep[kjoperUid][uid]) {
+            updates[`ekstraKjoep/${kjoperUid}/${uid}`] = null;
+        }
+    });
+    updates[`ekstraKjoep/${uid}`] = null;
+
+    // Feedback brukeren har sendt
+    const feedbackVal = feedbackSnap.val() || {};
+    Object.keys(feedbackVal).forEach(key => {
+        updates[`feedback/${key}`] = null;
+    });
+
+    if (userDbKey) {
+        updates[`users/${userDbKey}`] = null;
+    }
+
+    await db.ref().update(updates);
+};
+
 export const deleteMyAccount = (userDbKey: string) => async (dispatch: Dispatch) => {
     const uid = myUid();
     if (!uid) return;
 
-    // Delete extra lists owned by this user
-    const extraListsSnap = await userExtraListsRef(uid).once('value');
-    const extraListVal = extraListsSnap.val();
-    if (extraListVal) {
-        await Promise.all(Object.keys(extraListVal).map(listId => extraListRef(listId).remove()));
+    // Firebase krever fersk innlogging for å slette kontoen. Sjekk det FØR vi rører
+    // databasen, ellers kan dataene bli slettet mens auth-kontoen blir stående igjen.
+    const lastSignInTime = auth.currentUser?.metadata.lastSignInTime;
+    if (lastSignInTime && Date.now() - new Date(lastSignInTime).getTime() > 5 * 60 * 1000) {
+        alert('Av sikkerhetsgrunner må du logge ut og inn igjen før du kan slette kontoen din.');
+        return;
     }
 
-    // Delete all user data nodes
-    await Promise.all([
-        userExtraListsRef(uid).remove(),
-        myWishlistRef().remove(),
-        myAllowedViewersRef().remove(),
-        userDbKey ? usersRef.child(userDbKey).remove() : Promise.resolve(),
-    ]);
+    await ryddOppEtterBruker(uid, userDbKey);
 
     // Delete Firebase Auth account (requires recent login)
     try {
