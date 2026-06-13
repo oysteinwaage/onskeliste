@@ -9,6 +9,8 @@ import {
     extraListWishesRef,
     feedbackRef,
     myAllowedViewersRef,
+    myIncomingAccessRequestsRef,
+    myOutgoingAccessRequestsRef,
     myEkstraKjoepRef,
     myUid,
     myUserExtraListsRef,
@@ -25,6 +27,8 @@ import {
     receiveMyFriendLists,
     resetAllData,
     updateAllowedViewers,
+    mottaInnkommendeTilgangsforesporsler,
+    mottaUtgaendeTilgangsforesporsler,
     resettPassordMailSendt,
     setLastSeenVersion,
     oppdaterMineKjoep,
@@ -44,7 +48,7 @@ import {
     settUlesteFeedback,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
-import { Onske, Viewer, ExtraListMetadata, Bruker, Feedback } from './types';
+import { Onske, Viewer, AccessRequest, ExtraListMetadata, Bruker, Feedback } from './types';
 import { Dispatch } from 'redux';
 
 const mapTolist = (res: firebase.default.database.DataSnapshot): any[] =>
@@ -156,6 +160,66 @@ export const fetchViewersToMyList = () => async (dispatch: Dispatch) => {
     myAllowedViewersRef()
         .on('value', res => {
             dispatch(updateAllowedViewers(res.val() && res.val().sort((a: Viewer, b: Viewer) => a.label.localeCompare(b.label))));
+        });
+};
+
+/*
+ACCESS REQUESTS (be om tilgang til andres lister)
+ */
+export const sendAccessRequests = (fromUid: string, fromNavn: string, targets: Viewer[]): void => {
+    if (!fromUid || targets.length === 0) return;
+    const updates: Record<string, any> = {};
+    targets.forEach(target => {
+        const request: AccessRequest = { uid: fromUid, navn: fromNavn, timestamp: Date.now() };
+        const mirror: AccessRequest = { uid: target.value, navn: target.label, timestamp: request.timestamp };
+        updates[`accessRequests/${target.value}/${fromUid}`] = request;
+        updates[`sentAccessRequests/${fromUid}/${target.value}`] = mirror;
+    });
+    db.ref().update(updates);
+};
+
+const fjernTilgangsforesporsel = (targetUid: string, requesterUid: string): Promise<any> =>
+    db.ref().update({
+        [`accessRequests/${targetUid}/${requesterUid}`]: null,
+        [`sentAccessRequests/${requesterUid}/${targetUid}`]: null,
+    });
+
+// Trekker tilbake en forespørsel jeg har sendt til targetUid.
+export const trekkTilbakeTilgangsforesporsel = (targetUid: string): void => {
+    const meg = myUid();
+    if (!meg) return;
+    fjernTilgangsforesporsel(targetUid, meg);
+};
+
+export const approveAccessRequest = (request: AccessRequest, currentViewers: Viewer[]): void => {
+    const meg = myUid();
+    if (!meg) return;
+    const alleredeViewer = currentViewers.some(v => v.value === request.uid);
+    if (!alleredeViewer) {
+        addViewersToMyList([...currentViewers, { value: request.uid, label: request.navn }]);
+    }
+    fjernTilgangsforesporsel(meg, request.uid);
+};
+
+export const rejectAccessRequest = (request: AccessRequest): void => {
+    const meg = myUid();
+    if (!meg) return;
+    fjernTilgangsforesporsel(meg, request.uid);
+};
+
+export const subscribeToIncomingAccessRequests = () => async (dispatch: Dispatch) => {
+    myIncomingAccessRequestsRef()
+        .on('value', res => {
+            const requests: AccessRequest[] = res.val() ? Object.values(res.val()) : [];
+            dispatch(mottaInnkommendeTilgangsforesporsler(requests.sort((a, b) => a.timestamp - b.timestamp)));
+        });
+};
+
+export const subscribeToOutgoingAccessRequests = () => async (dispatch: Dispatch) => {
+    myOutgoingAccessRequestsRef()
+        .on('value', res => {
+            const requests: AccessRequest[] = res.val() ? Object.values(res.val()) : [];
+            dispatch(mottaUtgaendeTilgangsforesporsler(requests.sort((a, b) => a.navn.localeCompare(b.navn))));
         });
 };
 
@@ -641,13 +705,16 @@ const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void>
         }
     };
 
-    const [wishlistsSnap, allowedViewersSnap, extraListsSnap, userExtraListsSnap, ekstraKjoepSnap, feedbackSnap] = await Promise.all([
+    const [wishlistsSnap, allowedViewersSnap, extraListsSnap, userExtraListsSnap, ekstraKjoepSnap, feedbackSnap, incomingRequestsSnap, outgoingRequestsSnap, usersSnap] = await Promise.all([
         db.ref('wishlists').once('value'),
         allowedViewsRef.once('value'),
         db.ref('extraLists').once('value'),
         db.ref('userExtraLists').once('value'),
         db.ref('ekstraKjoep').once('value'),
         feedbackRef.orderByChild('brukerUid').equalTo(uid).once('value'),
+        db.ref('accessRequests/' + uid).once('value'),
+        db.ref('sentAccessRequests/' + uid).once('value'),
+        usersRef.orderByChild('uid').equalTo(uid).once('value'),
     ]);
 
     // Kjøpsmarkeringer på andres hovedlister + brukerens egen liste.
@@ -714,12 +781,30 @@ const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void>
     });
     updates[`ekstraKjoep/${uid}`] = null;
 
+    // Tilgangsforespørsler: innkommende til brukeren + speil hos avsenderne
+    Object.keys(incomingRequestsSnap.val() || {}).forEach(requesterUid => {
+        updates[`sentAccessRequests/${requesterUid}/${uid}`] = null;
+    });
+    updates[`accessRequests/${uid}`] = null;
+
+    // Tilgangsforespørsler: utgående fra brukeren + speil hos mottakerne
+    Object.keys(outgoingRequestsSnap.val() || {}).forEach(targetUid => {
+        updates[`accessRequests/${targetUid}/${uid}`] = null;
+    });
+    updates[`sentAccessRequests/${uid}`] = null;
+
     // Feedback brukeren har sendt
     const feedbackVal = feedbackSnap.val() || {};
     Object.keys(feedbackVal).forEach(key => {
         updates[`feedback/${key}`] = null;
     });
 
+    // Slett alle User-objekter med samme uid (kan finnes duplikater, f.eks. en
+    // Google-opprettet post), ikke bare den ene userDbKey peker på.
+    const usersMedUid = usersSnap.val() || {};
+    Object.keys(usersMedUid).forEach(key => {
+        updates[`users/${key}`] = null;
+    });
     if (userDbKey) {
         updates[`users/${userDbKey}`] = null;
     }

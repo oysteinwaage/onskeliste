@@ -41,6 +41,12 @@ export interface Viewer {
   label: string;
 }
 
+export interface AccessRequest {
+  uid: string;
+  navn: string;
+  timestamp: number;
+}
+
 export interface ExtraListMetadata {
   key: string;
   name: string;
@@ -70,6 +76,8 @@ export interface InnloggetBrukerState {
   openLenkeDialog: boolean;
   openLenkeDialogOnske: Partial<Onske>;
   allowedViewers: Viewer[];
+  innkommendeTilgangsforesporsler: AccessRequest[];
+  utgaendeTilgangsforesporsler: AccessRequest[];
   lastSeenVersion: number;
   userDbKey: string;
   measurements: Record<string, string>;

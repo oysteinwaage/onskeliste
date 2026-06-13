@@ -15,6 +15,8 @@ const initialState: InitialState = {
     openLenkeDialog: false,
     openLenkeDialogOnske: {},
     allowedViewers: [],
+    innkommendeTilgangsforesporsler: [],
+    utgaendeTilgangsforesporsler: [],
     lastSeenVersion: 0,
     userDbKey: '',
     measurements: {},

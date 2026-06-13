@@ -79,6 +79,7 @@ interface LoginProps {
   onToggleVisOpprettBruker: () => void;
   onSendResettPassordMail: (mail: string) => void;
   onSendTilHovedside: () => void;
+  onSendTilOnboarding: () => void;
   onSettLasterData: (isLoading: boolean) => void;
   onVisPassordReparasjon: (info: PassordReparasjonInfo) => void;
   visOpprettNyBruker: boolean;
@@ -189,7 +190,11 @@ class Login extends Component<LoginProps, LoginState> {
       }
 
       this.socialFlytPaagaar = false;
-      this.props.onSendTilHovedside();
+      if (result.additionalUserInfo?.isNewUser) {
+        this.props.onSendTilOnboarding();
+      } else {
+        this.props.onSendTilHovedside();
+      }
     } catch (error: any) {
       this.socialFlytPaagaar = false;
       if (error.code === 'auth/account-exists-with-different-credential') {
@@ -457,6 +462,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onToggleVisOpprettBruker: () => dispatch(toggleVisOpprettBruker()),
   onSendResettPassordMail: (mail: string) => dispatch(resetPassord(mail) as any),
   onSendTilHovedside: () => dispatch(push('/minliste')),
+  onSendTilOnboarding: () => dispatch(push('/onboarding')),
   onSettLasterData: (isLoading: boolean) => dispatch(lasterData(isLoading)),
   onVisPassordReparasjon: (info: PassordReparasjonInfo) => dispatch(settPassordReparasjon(info)),
 });

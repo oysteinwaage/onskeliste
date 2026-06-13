@@ -108,6 +108,13 @@ const changes: ChangeEntry[] = [
     changes: [
       "Tilbakemelding: Det kan nå sendes inn endringsønsker, ønsker om ny funksjonalitet eller rapportere feil direkte i app'en. Se Tilbakemelding i sidemenyen 📬",
     ]
+  },
+  {
+    version: 4.3,
+    releaseDate: "13.06.2026",
+    changes: [
+      "Be om tilgang: Du kan nå be om å få tilgang til andre personers ønskelister direkte inne fra Profil-siden 🤝",
+    ]
   }
 ];
 

@@ -17,8 +17,9 @@ import AppBar from './components/AppBarComponent';
 import InstallBanner from './components/InstallBanner';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
-import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste } from "./Api";
+import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste, subscribeToIncomingAccessRequests, subscribeToOutgoingAccessRequests } from "./Api";
 import ChangesSinceLastLogin from "./utils/ChangesSinceLastLogin";
+import AccessRequestNotification from "./utils/AccessRequestNotification";
 import { RootState } from './types';
 import { Dispatch } from 'redux';
 import { TooltipProvider } from './components/ui/tooltip';
@@ -27,6 +28,8 @@ interface AppProps {
   onSendTilLogin: () => void;
   onAbonnerPaaMinOnskeliste: () => void;
   onSubscribeToMyAllowedViewers: () => void;
+  onSubscribeToIncomingAccessRequests: () => void;
+  onSubscribeToOutgoingAccessRequests: () => void;
   onBrukerLoggetInn: (user: any) => void;
   onFetchListsICanView: () => void;
   onFetchAllUsers: () => void;
@@ -40,6 +43,7 @@ class App extends Component<AppProps> {
 
   componentDidMount() {
     const { onSendTilLogin, onBrukerLoggetInn, onAbonnerPaaMinOnskeliste, onSubscribeToMyAllowedViewers,
+      onSubscribeToIncomingAccessRequests, onSubscribeToOutgoingAccessRequests,
       onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig, onFetchMineEkstraLister } = this.props;
     onSettLasterData(true);
     firebase.auth().onAuthStateChanged(function (user) {
@@ -49,6 +53,8 @@ class App extends Component<AppProps> {
         onFetchAllUsers();
         onAbonnerPaaMinOnskeliste();
         onSubscribeToMyAllowedViewers();
+        onSubscribeToIncomingAccessRequests();
+        onSubscribeToOutgoingAccessRequests();
         onFetchListsICanView();
         onFetchMineEkstraLister();
       } else {
@@ -74,6 +80,7 @@ class App extends Component<AppProps> {
             </div>
           )}
           {!isLoading && <ChangesSinceLastLogin />}
+          {!isLoading && <AccessRequestNotification />}
           <PassordReparasjonDialog />
           <AppBar />
           <InstallBanner />
@@ -102,6 +109,8 @@ const mapStateToProps = (state: RootState) => ({
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onAbonnerPaaMinOnskeliste: () => dispatch(fetdhMinOnskeliste() as any),
   onSubscribeToMyAllowedViewers: () => dispatch(fetchViewersToMyList() as any),
+  onSubscribeToIncomingAccessRequests: () => dispatch(subscribeToIncomingAccessRequests() as any),
+  onSubscribeToOutgoingAccessRequests: () => dispatch(subscribeToOutgoingAccessRequests() as any),
   onBrukerLoggetInn: (user: any) => dispatch(brukerLoggetInn(user)),
   onFetchListsICanView: () => dispatch(fetchListsIAmAllowedToView() as any),
   onFetchAllUsers: () => dispatch(fetchUsers() as any),

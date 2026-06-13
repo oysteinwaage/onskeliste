@@ -5,6 +5,7 @@ import { setOnboardingCompleted, updateMyMeasumentOnProfile } from '../Api';
 import { currentVersion } from '../utils/ChangesSinceLastLogin';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
+import RequestAccessComponent from '../minliste/RequestAccessComponent';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { RootState } from '../types';
@@ -140,6 +141,14 @@ function Onboarding({ measurements, userDbKey, onComplete }: OnboardingProps) {
                   </p>
                 </div>
                 <AddViewersToMyListComponent />
+
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-800 mb-1">Vil du følge noen andres lister?</h3>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Søk dem opp og send en forespørsel om å få se ønskelisten deres.
+                  </p>
+                  <RequestAccessComponent />
+                </div>
               </div>
             )
           )}

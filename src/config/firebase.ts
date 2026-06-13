@@ -21,6 +21,12 @@ export const allowedViewersRef = (listId: string) => db.ref('allowedViewers/' + 
 export const myAllowedViewersRef = () => db.ref('allowedViewers/' + myUid());
 export const allowedViewsRef = databaseRef.child('allowedViewers');
 
+// Access requests (be om tilgang til andres lister)
+export const accessRequestsRef = (targetUid: string) => db.ref('accessRequests/' + targetUid);
+export const myIncomingAccessRequestsRef = () => accessRequestsRef(myUid() as string);
+export const sentAccessRequestsRef = (uid: string) => db.ref('sentAccessRequests/' + uid);
+export const myOutgoingAccessRequestsRef = () => sentAccessRequestsRef(myUid() as string);
+
 // Ekstra kjøp (purchases outside the wishlist)
 export const ekstraKjoepRef = (ownerUid: string, targetUid: string) => db.ref(`ekstraKjoep/${ownerUid}/${targetUid}`);
 export const myEkstraKjoepRef = () => db.ref(`ekstraKjoep/${myUid()}`);

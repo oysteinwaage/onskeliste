@@ -1,4 +1,4 @@
-import { Onske, Bruker, Viewer, ExtraListMetadata, Feedback, PassordReparasjonInfo } from '../types';
+import { Onske, Bruker, Viewer, AccessRequest, ExtraListMetadata, Feedback, PassordReparasjonInfo } from '../types';
 
 // Min ønskeliste
 export const MOTTA_MIN_ONSKELISTE = 'MOTTA_MIN_ONSKELISTE';
@@ -22,6 +22,23 @@ export function updateAllowedViewers(viewers: Viewer[] | null) {
   return {
     type: UPDATE_ALLOWED_VIEWERS as typeof UPDATE_ALLOWED_VIEWERS,
     viewers,
+  };
+}
+
+// Tilgangsforespørsler
+export const MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER = 'MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER';
+export function mottaInnkommendeTilgangsforesporsler(requests: AccessRequest[]) {
+  return {
+    type: MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER as typeof MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER,
+    requests,
+  };
+}
+
+export const MOTTA_UTGAENDE_TILGANGSFORESPORSLER = 'MOTTA_UTGAENDE_TILGANGSFORESPORSLER';
+export function mottaUtgaendeTilgangsforesporsler(requests: AccessRequest[]) {
+  return {
+    type: MOTTA_UTGAENDE_TILGANGSFORESPORSLER as typeof MOTTA_UTGAENDE_TILGANGSFORESPORSLER,
+    requests,
   };
 }
 
@@ -259,6 +276,8 @@ export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
   | ReturnType<typeof toggleLenkeDialog>
   | ReturnType<typeof updateAllowedViewers>
+  | ReturnType<typeof mottaInnkommendeTilgangsforesporsler>
+  | ReturnType<typeof mottaUtgaendeTilgangsforesporsler>
   | ReturnType<typeof toggleVisOpprettBruker>
   | ReturnType<typeof mottaBrukere>
   | ReturnType<typeof brukerLoggetInn>

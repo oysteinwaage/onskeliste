@@ -8,6 +8,8 @@ import {
     RESET_ALL_DATA,
     TOGGLE_LENKE_DIALOG,
     UPDATE_ALLOWED_VIEWERS,
+    MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER,
+    MOTTA_UTGAENDE_TILGANGSFORESPORSLER,
     SET_LAST_SEEN_VERSION,
     OPPDATER_MINE_KJOEP,
     SETT_MINE_EKSTRA_KJOEP,
@@ -48,6 +50,16 @@ export default function innloggetBruker(
             return Object.assign({}, state, {
                 allowedViewers: action.viewers || [],
             });
+        case MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER:
+            return {
+                ...state,
+                innkommendeTilgangsforesporsler: action.requests,
+            };
+        case MOTTA_UTGAENDE_TILGANGSFORESPORSLER:
+            return {
+                ...state,
+                utgaendeTilgangsforesporsler: action.requests,
+            };
         case MOTTA_BRUKERE:
             const me = action.brukere.find(b => b.uid === state.uid);
             return me ? {
