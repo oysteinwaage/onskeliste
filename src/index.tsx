@@ -2,9 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { inject } from '@vercel/analytics';
 import { Provider } from 'react-redux';
-import { Route } from 'react-router';
+import { Route, Switch } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import App from './App';
+import LiverpoolTur from './liverpooltur/LiverpoolTur';
 import { configureStore, history } from './store/configureStore';
 // import * as serviceWorker from './serviceWorker';
 import './css/index.css';
@@ -16,7 +17,10 @@ const store = configureStore();
 ReactDOM.render(
   <Provider store={store}>
     <ConnectedRouter history={history}>
-      <Route path="/" component={App} />
+      <Switch>
+        <Route path="/liverpool-tur" component={LiverpoolTur} />
+        <Route path="/" component={App} />
+      </Switch>
     </ConnectedRouter>
   </Provider>, document.getElementById('root'),
 );
