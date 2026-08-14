@@ -44,11 +44,17 @@ function SortableOnskeItem({ onske, onSettFavoritt, onSlett, onEdit, lagAntallOg
   return (
     <div ref={setNodeRef} style={style}>
       <div
-        className={`flex items-start gap-2 py-3 px-2 cursor-grab active:cursor-grabbing touch-none select-none ${isDragging ? 'bg-slate-50 shadow-sm' : ''}`}
-        {...attributes}
-        {...listeners}
+        className={`flex items-start gap-2 py-3 px-2 select-none ${isDragging ? 'bg-slate-50 shadow-sm' : ''}`}
       >
-        <GripVertical className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="mt-1 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+          aria-label="Dra for å endre rekkefølge"
+        >
+          <GripVertical className="h-4 w-4 text-slate-300" />
+        </button>
 
         <button
           onClick={() => onSettFavoritt(onske, !onske.favoritt)}
