@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { push } from 'connected-react-router';
 import {
   List, Gift, ShoppingCart, User, LogOut,
-  X, PlusSquare, Shield, MessageSquare, Settings, Share2,
+  X, PlusSquare, Shield, MessageSquare, Settings, Share2, Info, Copy, Check,
 } from 'lucide-react';
 import qrOnskeliste from '../img/qr-onskeliste.jpg';
 import { logOut } from '../Api';
@@ -14,6 +14,7 @@ import { Dispatch } from 'redux';
 interface AppBarState {
   drawerOpen: boolean;
   qrOpen: boolean;
+  linkCopied: boolean;
 }
 
 interface AppBarComponentProps {
@@ -40,7 +41,14 @@ const LOGIN_HEADERS = ['Innlogging', 'Opprett ny bruker', 'Resett passord'];
 class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
   constructor(props: AppBarComponentProps) {
     super(props);
-    this.state = { drawerOpen: false, qrOpen: false };
+    this.state = { drawerOpen: false, qrOpen: false, linkCopied: false };
+  }
+
+  copyLink(): void {
+    navigator.clipboard.writeText('https://onskeliste-one.vercel.app/').then(() => {
+      this.setState({ linkCopied: true });
+      setTimeout(() => this.setState({ linkCopied: false }), 2000);
+    });
   }
 
   navigate(valg: string): void {
@@ -51,6 +59,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
       case 'minekjoep':
       case 'admin':
       case 'tilbakemelding':
+      case 'onboarding':
         this.props.onAapneNySide(valg);
         break;
       case 'loggUt':
@@ -64,7 +73,7 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
 
   render() {
     const { headerTekst, erAdmin, innloggetBrukerNavn, onOpprettNyListe, ulesteFeedback, tilbakemeldingEnabled, pathname } = this.props;
-    const { drawerOpen, qrOpen } = this.state;
+    const { drawerOpen, qrOpen, linkCopied } = this.state;
 
     const erPaaLoginSide = LOGIN_HEADERS.includes(headerTekst);
     const erPaaOnboarding = pathname === '/onboarding';
@@ -191,6 +200,13 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
               <Share2 className="h-4 w-4 shrink-0 text-slate-400" />
               Del app
             </button>
+            <button
+              onClick={() => this.navigate('onboarding')}
+              className="w-full flex items-center gap-3 px-5 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors text-sm"
+            >
+              <Info className="h-4 w-4 shrink-0 text-slate-400" />
+              App info
+            </button>
             {(erAdmin || tilbakemeldingEnabled) && (
               <button
                 onClick={() => this.navigate('tilbakemelding')}
@@ -251,6 +267,22 @@ class AppBarComponent extends Component<AppBarComponentProps, AppBarState> {
                   <img src={qrOnskeliste} alt="QR-kode til onskeliste" className="w-44 h-44 object-contain" />
                 </div>
                 <p className="text-xs text-slate-400 text-center break-all">https://onskeliste-one.vercel.app/</p>
+                <button
+                  onClick={() => this.copyLink()}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium"
+                >
+                  {linkCopied ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-500" />
+                      Kopiert!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      Kopier lenke
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </>
