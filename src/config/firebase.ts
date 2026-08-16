@@ -21,6 +21,11 @@ export const allowedViewersRef = (listId: string) => db.ref('allowedViewers/' + 
 export const myAllowedViewersRef = () => db.ref('allowedViewers/' + myUid());
 export const allowedViewsRef = databaseRef.child('allowedViewers');
 
+// AllowedAdmins (kan redigere andres liste, ikke bare se den)
+export const allowedAdminsRef = (ownerUid: string) => db.ref('allowedAdmins/' + ownerUid);
+export const myAllowedAdminsRef = () => allowedAdminsRef(myUid() as string);
+export const allowedAdminsRootRef = databaseRef.child('allowedAdmins');
+
 // Access requests (be om tilgang til andres lister)
 export const accessRequestsRef = (targetUid: string) => db.ref('accessRequests/' + targetUid);
 export const myIncomingAccessRequestsRef = () => accessRequestsRef(myUid() as string);

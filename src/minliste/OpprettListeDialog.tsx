@@ -12,12 +12,16 @@ import {
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
-interface OpprettListeDialogProps {
+interface OpprettListeDialogOwnProps {
   open: boolean;
   onClose: () => void;
+  actingAsUid?: string;
+  editListe?: ExtraListMetadata;
+}
+
+interface OpprettListeDialogProps extends OpprettListeDialogOwnProps {
   alleBrukere: Bruker[];
   myUid: string;
-  editListe?: ExtraListMetadata;
   onOpprett?: (name: string, sharedWithUid?: string) => void;
   onSlettListe?: (listId: string, sharedWithUid?: string) => void;
   onForlatListe?: (listId: string) => void;
@@ -95,13 +99,13 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
   };
 
   handleSlett = (): void => {
-    const { editListe, onSlettListe, onForlatListe, onClose, myUid: myUidValue } = this.props;
+    const { editListe, onSlettListe, onForlatListe, onClose, myUid: myUidValue, actingAsUid } = this.props;
     if (!editListe) return;
     if (!this.state.bekreftSlett) {
       this.setState({ bekreftSlett: true });
       return;
     }
-    const erEier = editListe.ownerUid === myUidValue;
+    const erEier = editListe.ownerUid === (actingAsUid || myUidValue);
     if (erEier && onSlettListe) {
       onSlettListe(editListe.key, editListe.sharedWithUid);
     } else if (!erEier && onForlatListe) {
@@ -111,12 +115,13 @@ class OpprettListeDialog extends Component<OpprettListeDialogProps, OpprettListe
   };
 
   render() {
-    const { open, onClose, alleBrukere, myUid: myUidValue, editListe } = this.props;
+    const { open, onClose, alleBrukere, myUid: myUidValue, actingAsUid, editListe } = this.props;
     const { navn, valgtDelingspartner, bekreftSlett, soek, soekApen } = this.state;
-    const erEier = !editListe || editListe.ownerUid === myUidValue;
+    const eierUid = actingAsUid || myUidValue;
+    const erEier = !editListe || editListe.ownerUid === eierUid;
     const erNy = !editListe;
 
-    const valgbareBrukere = alleBrukere.filter(b => b.uid !== myUidValue && !b.invisible);
+    const valgbareBrukere = alleBrukere.filter(b => b.uid !== eierUid && !b.invisible);
     const filtrerteBrukere = soek.trim()
       ? valgbareBrukere.filter(b => b.navn.toLowerCase().includes(soek.toLowerCase()))
       : valgbareBrukere;
@@ -254,11 +259,11 @@ const mapStateToProps = (state: RootState) => ({
   myUid: state.innloggetBruker.uid || myUid() || '',
 });
 
-const mapDispatchToProps = (dispatch: Dispatch) => ({
+const mapDispatchToProps = (dispatch: Dispatch, ownProps: OpprettListeDialogOwnProps) => ({
   onOpprett: (name: string, sharedWithUid?: string) =>
-    dispatch(opprettEkstraListe(name, sharedWithUid) as any),
+    dispatch(opprettEkstraListe(name, sharedWithUid, ownProps.actingAsUid) as any),
   onSlettListe: (listId: string, sharedWithUid?: string) =>
-    dispatch(slettEkstraListe(listId, sharedWithUid) as any),
+    dispatch(slettEkstraListe(listId, sharedWithUid, ownProps.actingAsUid) as any),
   onForlatListe: (_listId: string) => forlateEkstraListe(_listId),
   onOppdaterListeMetadata: (liste: ExtraListMetadata) => dispatch(oppdaterEkstraListeMetadata(liste)),
 });

@@ -4,6 +4,8 @@ import { endreHeaderTekst } from '../actions/actions';
 import { updateMyMeasumentOnProfile, updateMainListName, deleteMyAccount, approveAccessRequest, rejectAccessRequest, sendAccessRequests } from '../Api';
 import { finnLabelForStrl, measurementKeys } from '../utils/util';
 import AddViewersToMyListComponent from '../minliste/AddViewersToMyListComponent';
+import AddAdminsToMyListComponent from '../minliste/AddAdminsToMyListComponent';
+import AdministrerteListerComponent from '../minliste/AdministrerteListerComponent';
 import RequestAccessComponent from '../minliste/RequestAccessComponent';
 import { RootState, AccessRequest, Viewer } from '../types';
 import { Dispatch } from 'redux';
@@ -181,6 +183,18 @@ class Profil extends Component<ProfilProps, ProfilState> {
             </AccordionTrigger>
             <AccordionContent>
               <AddViewersToMyListComponent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Hvem kan administrere listen */}
+          <AccordionItem value="administrer" className="border-none px-4">
+            <AccordionTrigger className="text-sm font-semibold text-slate-800">
+              Hvem kan administrere listen din?
+            </AccordionTrigger>
+            <AccordionContent>
+              <AddAdminsToMyListComponent />
+              <div className="border-t border-slate-100 my-4" />
+              <AdministrerteListerComponent />
             </AccordionContent>
           </AccordionItem>
 

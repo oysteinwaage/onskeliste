@@ -25,6 +25,14 @@ export function updateAllowedViewers(viewers: Viewer[] | null) {
   };
 }
 
+export const UPDATE_ALLOWED_ADMINS = 'UPDATE_ALLOWED_ADMINS';
+export function updateAllowedAdmins(admins: Viewer[] | null) {
+  return {
+    type: UPDATE_ALLOWED_ADMINS as typeof UPDATE_ALLOWED_ADMINS,
+    admins,
+  };
+}
+
 // Tilgangsforespørsler
 export const MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER = 'MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER';
 export function mottaInnkommendeTilgangsforesporsler(requests: AccessRequest[]) {
@@ -197,10 +205,11 @@ export function mottaMineEkstraLister(lister: ExtraListMetadata[]) {
 }
 
 export const SETT_AKTIV_LISTE_ID = 'SETT_AKTIV_LISTE_ID';
-export function settAktivListeId(listId: string | null) {
+export function settAktivListeId(listId: string | null, ownerUid: string) {
   return {
     type: SETT_AKTIV_LISTE_ID as typeof SETT_AKTIV_LISTE_ID,
     listId,
+    ownerUid,
   };
 }
 
@@ -254,6 +263,81 @@ export function settHovedListeNavn(navn: string) {
   };
 }
 
+// Administrasjon (redigere andres liste på vegne av dem)
+export const RECEIVE_ADMIN_LISTS_FOR_ME = 'RECEIVE_ADMIN_LISTS_FOR_ME';
+export function receiveAdminListsForMe(uids: string[]) {
+  return {
+    type: RECEIVE_ADMIN_LISTS_FOR_ME as typeof RECEIVE_ADMIN_LISTS_FOR_ME,
+    uids,
+  };
+}
+
+export const START_ADMINISTRER_BRUKER = 'START_ADMINISTRER_BRUKER';
+export function startAdministrerBrukerAction(uid: string, navn: string, mainListName?: string) {
+  return {
+    type: START_ADMINISTRER_BRUKER as typeof START_ADMINISTRER_BRUKER,
+    uid,
+    navn,
+    mainListName,
+  };
+}
+
+export const AVSLUTT_ADMINISTRER_BRUKER = 'AVSLUTT_ADMINISTRER_BRUKER';
+export function avsluttAdministrerBrukerAction() {
+  return {
+    type: AVSLUTT_ADMINISTRER_BRUKER as typeof AVSLUTT_ADMINISTRER_BRUKER,
+  };
+}
+
+export const MOTTA_ADMINISTRERT_ONSKER = 'MOTTA_ADMINISTRERT_ONSKER';
+export function mottaAdministrertOnsker(onsker: Onske[]) {
+  return {
+    type: MOTTA_ADMINISTRERT_ONSKER as typeof MOTTA_ADMINISTRERT_ONSKER,
+    onsker,
+  };
+}
+
+export const MOTTA_ADMINISTRERT_EKSTRA_LISTER = 'MOTTA_ADMINISTRERT_EKSTRA_LISTER';
+export function mottaAdministrertEkstraLister(lister: ExtraListMetadata[]) {
+  return {
+    type: MOTTA_ADMINISTRERT_EKSTRA_LISTER as typeof MOTTA_ADMINISTRERT_EKSTRA_LISTER,
+    lister,
+  };
+}
+
+export const MOTTA_ADMINISTRERT_EKSTRA_LISTE_ONSKER = 'MOTTA_ADMINISTRERT_EKSTRA_LISTE_ONSKER';
+export function mottaAdministrertEkstraListeOnsker(listId: string, onsker: Onske[]) {
+  return {
+    type: MOTTA_ADMINISTRERT_EKSTRA_LISTE_ONSKER as typeof MOTTA_ADMINISTRERT_EKSTRA_LISTE_ONSKER,
+    listId,
+    onsker,
+  };
+}
+
+export const FJERN_ADMINISTRERT_EKSTRA_LISTE_ONSKER = 'FJERN_ADMINISTRERT_EKSTRA_LISTE_ONSKER';
+export function fjernAdministrertEkstraListeOnsker(listId: string) {
+  return {
+    type: FJERN_ADMINISTRERT_EKSTRA_LISTE_ONSKER as typeof FJERN_ADMINISTRERT_EKSTRA_LISTE_ONSKER,
+    listId,
+  };
+}
+
+export const OPPDATER_ADMINISTRERT_EKSTRA_LISTE_METADATA = 'OPPDATER_ADMINISTRERT_EKSTRA_LISTE_METADATA';
+export function oppdaterAdministrertEkstraListeMetadata(liste: ExtraListMetadata) {
+  return {
+    type: OPPDATER_ADMINISTRERT_EKSTRA_LISTE_METADATA as typeof OPPDATER_ADMINISTRERT_EKSTRA_LISTE_METADATA,
+    liste,
+  };
+}
+
+export const SETT_ADMINISTRERT_AKTIV_LISTE_ID = 'SETT_ADMINISTRERT_AKTIV_LISTE_ID';
+export function settAdministrertAktivListeId(listId: string | null) {
+  return {
+    type: SETT_ADMINISTRERT_AKTIV_LISTE_ID as typeof SETT_ADMINISTRERT_AKTIV_LISTE_ID,
+    listId,
+  };
+}
+
 // Feedback
 export const MOTTA_FEEDBACK = 'MOTTA_FEEDBACK';
 export function mottaFeedback(feedback: Feedback[]) {
@@ -276,6 +360,7 @@ export type AppAction =
   | ReturnType<typeof mottaMinOnskeliste>
   | ReturnType<typeof toggleLenkeDialog>
   | ReturnType<typeof updateAllowedViewers>
+  | ReturnType<typeof updateAllowedAdmins>
   | ReturnType<typeof mottaInnkommendeTilgangsforesporsler>
   | ReturnType<typeof mottaUtgaendeTilgangsforesporsler>
   | ReturnType<typeof toggleVisOpprettBruker>
@@ -305,4 +390,13 @@ export type AppAction =
   | ReturnType<typeof mottaFeedback>
   | ReturnType<typeof settUlesteFeedback>
   | ReturnType<typeof setTilbakemeldingEnabled>
-  | ReturnType<typeof settPassordReparasjon>;
+  | ReturnType<typeof settPassordReparasjon>
+  | ReturnType<typeof receiveAdminListsForMe>
+  | ReturnType<typeof startAdministrerBrukerAction>
+  | ReturnType<typeof avsluttAdministrerBrukerAction>
+  | ReturnType<typeof mottaAdministrertOnsker>
+  | ReturnType<typeof mottaAdministrertEkstraLister>
+  | ReturnType<typeof mottaAdministrertEkstraListeOnsker>
+  | ReturnType<typeof fjernAdministrertEkstraListeOnsker>
+  | ReturnType<typeof oppdaterAdministrertEkstraListeMetadata>
+  | ReturnType<typeof settAdministrertAktivListeId>;

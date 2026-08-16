@@ -132,13 +132,14 @@ function SortableOnskeItem({ onske, onSettFavoritt, onSlett, onEdit, lagAntallOg
 interface SectionProps {
   onsker: Onske[];
   listId: string | null;
+  ownerUid: string;
   onSettFavoritt: (onske: Onske, erFavoritt: boolean) => void;
   onSlett: (onske: Onske) => void;
   onEdit: (onske: Onske) => void;
   lagAntallOgStrlTekst: (onske: Onske) => string;
 }
 
-function SortableSection({ onsker, listId, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst }: SectionProps) {
+function SortableSection({ onsker, listId, ownerUid, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst }: SectionProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -155,7 +156,8 @@ function SortableSection({ onsker, listId, onSettFavoritt, onSlett, onEdit, lagA
     const reordered = arrayMove(onsker, oldIndex, newIndex);
     updateSortOrderBatch(
       reordered.map((o, idx) => ({ key: o.key, sortOrder: idx })),
-      listId
+      listId,
+      ownerUid
     );
   };
 
@@ -180,18 +182,19 @@ function SortableSection({ onsker, listId, onSettFavoritt, onSlett, onEdit, lagA
 export interface SortableOnskelisteProps {
   onsker: Onske[];
   listId: string | null;
+  ownerUid: string;
   onSettFavoritt: (onske: Onske, erFavoritt: boolean) => void;
   onSlett: (onske: Onske) => void;
   onEdit: (onske: Onske) => void;
   lagAntallOgStrlTekst: (onske: Onske) => string;
 }
 
-export function SortableOnskeliste({ onsker, listId, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst }: SortableOnskelisteProps) {
+export function SortableOnskeliste({ onsker, listId, ownerUid, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst }: SortableOnskelisteProps) {
   const sorted = sortWishes(onsker);
   const starred = sorted.filter(o => o.favoritt);
   const nonStarred = sorted.filter(o => !o.favoritt);
 
-  const sharedProps = { listId, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst };
+  const sharedProps = { listId, ownerUid, onSettFavoritt, onSlett, onEdit, lagAntallOgStrlTekst };
 
   return (
     <>

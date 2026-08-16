@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import { Loader2, Plus, X } from 'lucide-react';
 
 import {
-  addWishToMyList,
+  addWishToList,
   addWishToExtraList,
-  updateAntallOnMyList,
-  updateUrlsOnWishOnMyList,
-  updateSizeOnMyList,
-  updateWishTextOnMyList,
+  updateAntallOnList,
+  updateUrlsOnWishOnList,
+  updateSizeOnList,
+  updateWishTextOnList,
   updateWishFieldsOnExtraList,
 } from "../Api";
 import { connect } from 'react-redux';
@@ -58,6 +58,7 @@ interface LeggTilOnskeDialogProps {
   openLenkeDialogOnske: Partial<Onske>;
   onToggleLenkeDialog: () => void;
   aktiveListeId: string | null;
+  aktivListeEierUid: string;
   mineEkstraLister: import('../types').ExtraListMetadata[];
   myUid: string | undefined;
   alleBrukere: import('../types').Bruker[];
@@ -153,7 +154,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
   };
 
   saveChanges = (): void => {
-    const { openLenkeDialogOnske, onToggleLenkeDialog, aktiveListeId } = this.props;
+    const { openLenkeDialogOnske, onToggleLenkeDialog, aktiveListeId, aktivListeEierUid } = this.props;
     const effectiveUrls = this.getEffectiveUrls().filter(u => u.trim());
     const cleanedUrls = effectiveUrls.map(u => opprettUrlAv(u) as string).filter(Boolean);
 
@@ -167,7 +168,7 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
       if (aktiveListeId) {
         addWishToExtraList(aktiveListeId, newWish);
       } else {
-        addWishToMyList(newWish);
+        addWishToList(aktivListeEierUid, newWish);
       }
     } else {
       if (aktiveListeId) {
@@ -185,16 +186,16 @@ class LeggTilOnskeDialog extends Component<LeggTilOnskeDialogProps, DialogState>
         }
       } else {
         if (this.state.urlsChanged) {
-          updateUrlsOnWishOnMyList(effectiveUrls, openLenkeDialogOnske.key);
+          updateUrlsOnWishOnList(aktivListeEierUid, effectiveUrls, openLenkeDialogOnske.key);
         }
         if (this.state.textChanged && this.state.text) {
-          updateWishTextOnMyList(this.state.text, openLenkeDialogOnske.key);
+          updateWishTextOnList(aktivListeEierUid, this.state.text, openLenkeDialogOnske.key);
         }
         if (this.state.antallChanged) {
-          updateAntallOnMyList(this.state.antall, openLenkeDialogOnske.key);
+          updateAntallOnList(aktivListeEierUid, this.state.antall, openLenkeDialogOnske.key);
         }
         if (this.state.sizeChanged) {
-          updateSizeOnMyList(this.state.size, openLenkeDialogOnske.key);
+          updateSizeOnList(aktivListeEierUid, this.state.size, openLenkeDialogOnske.key);
         }
       }
     }
@@ -389,6 +390,7 @@ const mapStateToProps = (state: RootState) => ({
   openLenkeDialog: state.innloggetBruker.openLenkeDialog,
   openLenkeDialogOnske: state.innloggetBruker.openLenkeDialogOnske,
   aktiveListeId: state.innloggetBruker.aktiveListeId,
+  aktivListeEierUid: state.innloggetBruker.aktivListeEierUid || state.innloggetBruker.uid || '',
   mineEkstraLister: state.innloggetBruker.mineEkstraLister,
   myUid: state.innloggetBruker.uid,
   alleBrukere: state.config.brukere,

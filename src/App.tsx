@@ -17,7 +17,7 @@ import AppBar from './components/AppBarComponent';
 import InstallBanner from './components/InstallBanner';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
-import { fetchAdminConfig, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste, subscribeToIncomingAccessRequests, subscribeToOutgoingAccessRequests } from "./Api";
+import { fetchAdminConfig, fetchAdminsForMyList, fetchListsIAmAllowedToAdminister, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste, subscribeToIncomingAccessRequests, subscribeToOutgoingAccessRequests } from "./Api";
 import ChangesSinceLastLogin from "./utils/ChangesSinceLastLogin";
 import AccessRequestNotification from "./utils/AccessRequestNotification";
 import { RootState } from './types';
@@ -36,6 +36,8 @@ interface AppProps {
   onSettLasterData: (isLoading: boolean) => void;
   onFetchAdminConfig: () => void;
   onFetchMineEkstraLister: () => void;
+  onFetchAdminsForMyList: () => void;
+  onFetchListsICanAdminister: () => void;
   isLoading: boolean;
 }
 
@@ -44,7 +46,8 @@ class App extends Component<AppProps> {
   componentDidMount() {
     const { onSendTilLogin, onBrukerLoggetInn, onAbonnerPaaMinOnskeliste, onSubscribeToMyAllowedViewers,
       onSubscribeToIncomingAccessRequests, onSubscribeToOutgoingAccessRequests,
-      onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig, onFetchMineEkstraLister } = this.props;
+      onFetchListsICanView, onFetchAllUsers, onSettLasterData, onFetchAdminConfig, onFetchMineEkstraLister,
+      onFetchAdminsForMyList, onFetchListsICanAdminister } = this.props;
     onSettLasterData(true);
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) {
@@ -57,6 +60,8 @@ class App extends Component<AppProps> {
         onSubscribeToOutgoingAccessRequests();
         onFetchListsICanView();
         onFetchMineEkstraLister();
+        onFetchAdminsForMyList();
+        onFetchListsICanAdminister();
       } else {
         if (window.location.pathname === "/") {
           onSettLasterData(false);
@@ -118,6 +123,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onSettLasterData: (isLoading: boolean) => dispatch(lasterData(isLoading)),
   onFetchAdminConfig: () => dispatch(fetchAdminConfig() as any),
   onFetchMineEkstraLister: () => dispatch(fetchMineEkstraLister() as any),
+  onFetchAdminsForMyList: () => dispatch(fetchAdminsForMyList() as any),
+  onFetchListsICanAdminister: () => dispatch(fetchListsIAmAllowedToAdminister() as any),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

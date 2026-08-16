@@ -1,10 +1,11 @@
-import { InnloggetBrukerState, ConfigState, VennersListerState } from '../types';
+import { InnloggetBrukerState, ConfigState, VennersListerState, AdministrasjonState } from '../types';
 
 interface InitialState {
   innloggetBruker: InnloggetBrukerState;
   brukere: Record<string, never>;
   config: ConfigState;
   vennersLister: VennersListerState;
+  administrasjon: AdministrasjonState;
 }
 
 const initialState: InitialState = {
@@ -15,6 +16,7 @@ const initialState: InitialState = {
     openLenkeDialog: false,
     openLenkeDialogOnske: {},
     allowedViewers: [],
+    allowedAdmins: [],
     innkommendeTilgangsforesporsler: [],
     utgaendeTilgangsforesporsler: [],
     lastSeenVersion: 0,
@@ -25,6 +27,7 @@ const initialState: InitialState = {
     mineEkstraListeKjoep: {},
     mineEkstraLister: [],
     aktiveListeId: null,
+    aktivListeEierUid: '',
     alleEkstraListeOnsker: {},
     opprettListeDialogOpen: false,
     alleFeedback: [],
@@ -48,7 +51,16 @@ const initialState: InitialState = {
     valgtVennsEkstraLister: [],
     valgtVennsAktivListeId: null,
     valgtVennsAlleEkstraListeOnsker: {},
-  }
+  },
+  administrasjon: {
+    adminListsForMe: [],
+    aktivUid: null,
+    navn: '',
+    onsker: [],
+    ekstraLister: [],
+    alleEkstraListeOnsker: {},
+    aktivListeId: null,
+  },
 };
 
 export default initialState;

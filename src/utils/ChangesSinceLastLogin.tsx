@@ -115,6 +115,13 @@ const changes: ChangeEntry[] = [
     changes: [
       "Be om tilgang: Du kan nå be om å få tilgang til andre personers ønskelister direkte inne fra Profil-siden 🤝",
     ]
+  },
+  {
+    version: 4.4,
+    releaseDate: "17.08.2026",
+    changes: [
+      "Administrer andres liste: Du kan få tilgang til å administrere andres lister direkte inne fra din egen liste-side. Inne fra Profil-siden kan man legge til brukere som kan editere på ønskelisten din. Veldig nyttig for barn som har egne ønskeliste-kontoer f.eks 😃",
+    ]
   }
 ];
 

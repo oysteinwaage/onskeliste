@@ -8,6 +8,7 @@ import {
     RESET_ALL_DATA,
     TOGGLE_LENKE_DIALOG,
     UPDATE_ALLOWED_VIEWERS,
+    UPDATE_ALLOWED_ADMINS,
     MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER,
     MOTTA_UTGAENDE_TILGANGSFORESPORSLER,
     SET_LAST_SEEN_VERSION,
@@ -49,6 +50,10 @@ export default function innloggetBruker(
         case UPDATE_ALLOWED_VIEWERS:
             return Object.assign({}, state, {
                 allowedViewers: action.viewers || [],
+            });
+        case UPDATE_ALLOWED_ADMINS:
+            return Object.assign({}, state, {
+                allowedAdmins: action.admins || [],
             });
         case MOTTA_INNKOMMENDE_TILGANGSFORESPORSLER:
             return {
@@ -117,6 +122,7 @@ export default function innloggetBruker(
             return {
                 ...state,
                 aktiveListeId: action.listId,
+                aktivListeEierUid: action.ownerUid,
             };
         case MOTTA_EKSTRA_LISTE_ONSKER: {
             return {

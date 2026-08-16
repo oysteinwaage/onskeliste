@@ -76,6 +76,7 @@ export interface InnloggetBrukerState {
   openLenkeDialog: boolean;
   openLenkeDialogOnske: Partial<Onske>;
   allowedViewers: Viewer[];
+  allowedAdmins: Viewer[];
   innkommendeTilgangsforesporsler: AccessRequest[];
   utgaendeTilgangsforesporsler: AccessRequest[];
   lastSeenVersion: number;
@@ -88,6 +89,7 @@ export interface InnloggetBrukerState {
   iosInstallBannerCount?: number;
   mineEkstraLister: ExtraListMetadata[];
   aktiveListeId: string | null;
+  aktivListeEierUid: string;
   alleEkstraListeOnsker: Record<string, Onske[]>;
   opprettListeDialogOpen: boolean;
   alleFeedback: Feedback[];
@@ -119,9 +121,21 @@ export interface VennersListerState {
   valgtVennsAlleEkstraListeOnsker: Record<string, Onske[]>;
 }
 
+export interface AdministrasjonState {
+  adminListsForMe: string[];
+  aktivUid: string | null;
+  navn: string;
+  mainListName?: string;
+  onsker: Onske[];
+  ekstraLister: ExtraListMetadata[];
+  alleEkstraListeOnsker: Record<string, Onske[]>;
+  aktivListeId: string | null;
+}
+
 export interface RootState {
   innloggetBruker: InnloggetBrukerState;
   config: ConfigState;
   vennersLister: VennersListerState;
+  administrasjon: AdministrasjonState;
   router: any;
 }

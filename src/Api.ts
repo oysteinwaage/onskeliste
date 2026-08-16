@@ -2,6 +2,9 @@ import { push } from 'connected-react-router';
 import {
     adminConfigRef,
     allowedViewsRef,
+    allowedAdminsRef,
+    allowedAdminsRootRef,
+    myAllowedAdminsRef,
     auth,
     db,
     ekstraKjoepRef,
@@ -13,7 +16,6 @@ import {
     myOutgoingAccessRequestsRef,
     myEkstraKjoepRef,
     myUid,
-    myUserExtraListsRef,
     myWishlistRef,
     userExtraListsRef,
     usersRef,
@@ -27,6 +29,7 @@ import {
     receiveMyFriendLists,
     resetAllData,
     updateAllowedViewers,
+    updateAllowedAdmins,
     mottaInnkommendeTilgangsforesporsler,
     mottaUtgaendeTilgangsforesporsler,
     resettPassordMailSendt,
@@ -46,6 +49,14 @@ import {
     settHovedListeNavn,
     mottaFeedback,
     settUlesteFeedback,
+    receiveAdminListsForMe,
+    startAdministrerBrukerAction,
+    avsluttAdministrerBrukerAction,
+    mottaAdministrertOnsker,
+    mottaAdministrertEkstraLister,
+    mottaAdministrertEkstraListeOnsker,
+    fjernAdministrertEkstraListeOnsker,
+    oppdaterAdministrertEkstraListeMetadata,
 } from "./actions/actions";
 import { opprettUrlAv } from "./utils/util";
 import { Onske, Viewer, AccessRequest, ExtraListMetadata, Bruker, Feedback } from './types';
@@ -60,44 +71,55 @@ const mapTolist = (res: firebase.default.database.DataSnapshot): any[] =>
 /*
 WISHLIST MANIPULATIONS
  */
-export const addWishToMyList = (newWish: Omit<Onske, 'key'>): void => {
-    myWishlistRef().push().set(newWish);
+export const addWishToList = (ownerUid: string, newWish: Omit<Onske, 'key'>): void => {
+    wishlistRef(ownerUid).push().set(newWish);
 };
 
-export const removeWishFromMyList = (wishId: string): void => {
-    myWishlistRef().child(wishId).remove();
-};
+export const addWishToMyList = (newWish: Omit<Onske, 'key'>): void =>
+    addWishToList(myUid() as string, newWish);
 
-// brukes når du vil kunne slette ønsker fra andres lister
+// brukes når du vil kunne slette ønsker fra andres lister (også i admin-modus)
 export const removeWishFromCurrentList = (listId: string, wishKey: string): void => {
     wishlistRef(listId).child(wishKey).remove();
 };
+
+export const removeWishFromMyList = (wishId: string): void =>
+    removeWishFromCurrentList(myUid() as string, wishId);
 
 export const updateLinkOnWishOnMyList = (newLink: string | null, wishId: string): void => {
     const wishRef = myWishlistRef().child(wishId);
     wishRef.update({ url: opprettUrlAv(newLink) });
 };
 
-export const updateUrlsOnWishOnMyList = (urls: string[], wishId: string): void => {
-    const wishRef = myWishlistRef().child(wishId);
+export const updateUrlsOnWishOnList = (ownerUid: string, urls: string[], wishId: string): void => {
+    const wishRef = wishlistRef(ownerUid).child(wishId);
     const cleaned = urls.map(u => opprettUrlAv(u) as string).filter(Boolean);
     wishRef.update({ urls: cleaned.length > 0 ? cleaned : null, url: null });
 };
 
-export const updateWishTextOnMyList = (newText: string, wishId: string): void => {
-    const wishRef = myWishlistRef().child(wishId);
-    wishRef.update({ onskeTekst: newText });
+export const updateUrlsOnWishOnMyList = (urls: string[], wishId: string): void =>
+    updateUrlsOnWishOnList(myUid() as string, urls, wishId);
+
+export const updateWishTextOnList = (ownerUid: string, newText: string, wishId: string): void => {
+    wishlistRef(ownerUid).child(wishId).update({ onskeTekst: newText });
 };
 
-export const updateAntallOnMyList = (newAntall: number | string, wishId: string): void => {
-    const wishRef = myWishlistRef().child(wishId);
-    wishRef.update({ antall: newAntall });
+export const updateWishTextOnMyList = (newText: string, wishId: string): void =>
+    updateWishTextOnList(myUid() as string, newText, wishId);
+
+export const updateAntallOnList = (ownerUid: string, newAntall: number | string, wishId: string): void => {
+    wishlistRef(ownerUid).child(wishId).update({ antall: newAntall });
 };
 
-export const updateSizeOnMyList = (newSize: string | null, wishId: string): void => {
-    const wishRef = myWishlistRef().child(wishId);
-    wishRef.update({ onskeSize: newSize });
+export const updateAntallOnMyList = (newAntall: number | string, wishId: string): void =>
+    updateAntallOnList(myUid() as string, newAntall, wishId);
+
+export const updateSizeOnList = (ownerUid: string, newSize: string | null, wishId: string): void => {
+    wishlistRef(ownerUid).child(wishId).update({ onskeSize: newSize });
 };
+
+export const updateSizeOnMyList = (newSize: string | null, wishId: string): void =>
+    updateSizeOnList(myUid() as string, newSize, wishId);
 
 export const updateFavorittOnMyWish = (wishId: string, erFavoritt: boolean): void => {
     const wishRef = myWishlistRef().child(wishId);
@@ -108,24 +130,26 @@ export const updateFavorittWithSortOrder = (
     wishId: string,
     erFavoritt: boolean,
     sortOrder: number,
-    listId: string | null
+    listId: string | null,
+    ownerUid: string = myUid() as string
 ): void => {
     if (listId) {
         extraListWishesRef(listId).child(wishId).update({ favoritt: erFavoritt, sortOrder });
     } else {
-        myWishlistRef().child(wishId).update({ favoritt: erFavoritt, sortOrder });
+        wishlistRef(ownerUid).child(wishId).update({ favoritt: erFavoritt, sortOrder });
     }
 };
 
 export const updateSortOrderBatch = (
     wishes: Array<{ key: string; sortOrder: number }>,
-    listId: string | null
+    listId: string | null,
+    ownerUid: string = myUid() as string
 ): void => {
     wishes.forEach(({ key, sortOrder }) => {
         if (listId) {
             extraListWishesRef(listId).child(key).update({ sortOrder });
         } else {
-            myWishlistRef().child(key).update({ sortOrder });
+            wishlistRef(ownerUid).child(key).update({ sortOrder });
         }
     });
 };
@@ -161,6 +185,143 @@ export const fetchViewersToMyList = () => async (dispatch: Dispatch) => {
         .on('value', res => {
             dispatch(updateAllowedViewers(res.val() && res.val().sort((a: Viewer, b: Viewer) => a.label.localeCompare(b.label))));
         });
+};
+
+/*
+ALLOWED ADMINS (administrere andres liste uten å logge inn som dem)
+ */
+export const setAdminsForMyList = (admins: Viewer[]): void => {
+    const map: Record<string, { navn: string }> = {};
+    admins.forEach(admin => { map[admin.value] = { navn: admin.label }; });
+    myAllowedAdminsRef().set(map);
+};
+
+export const fetchAdminsForMyList = () => async (dispatch: Dispatch) => {
+    myAllowedAdminsRef()
+        .on('value', res => {
+            const val = res.val() || {};
+            const admins: Viewer[] = Object.keys(val)
+                .map(uid => ({ value: uid, label: val[uid].navn }))
+                .sort((a, b) => a.label.localeCompare(b.label));
+            dispatch(updateAllowedAdmins(admins));
+        });
+};
+
+export const fetchListsIAmAllowedToAdminister = () => async (dispatch: Dispatch) => {
+    allowedAdminsRootRef.once('value', res => {
+        const allLists = res.val() || {};
+        const uid = myUid();
+        const myAdminUids: string[] = Object.keys(allLists).filter(ownerUid => allLists[ownerUid] && allLists[ownerUid][uid as string]);
+        dispatch(receiveAdminListsForMe(myAdminUids));
+    });
+};
+
+// Trekk tilbake min egen adgang til å administrere ownerUid sin liste.
+export const fjernMinAdgangTilAAdministrere = (
+    ownerUid: string,
+    currentAdminListsForMe: string[],
+    aktivtAdministrertUid: string | null
+) => async (dispatch: Dispatch) => {
+    const meg = myUid();
+    if (!meg) return;
+    await allowedAdminsRef(ownerUid).child(meg).remove();
+    dispatch(receiveAdminListsForMe(currentAdminListsForMe.filter(uid => uid !== ownerUid)));
+    if (aktivtAdministrertUid === ownerUid) {
+        avsluttAdministrerBrukerSubscriptions();
+        dispatch(avsluttAdministrerBrukerAction());
+    }
+};
+
+const administrertListeSubscriptions: Record<string, boolean> = {};
+const administrertListeMetaSubscriptions: Record<string, boolean> = {};
+let administrertWishlistRef: any = null;
+let administrertUserExtraListsRef: any = null;
+
+export const startAdministrerBruker = (uid: string, navn: string, mainListName?: string) => async (dispatch: Dispatch) => {
+    avsluttAdministrerBrukerSubscriptions();
+    dispatch(startAdministrerBrukerAction(uid, navn, mainListName));
+
+    administrertWishlistRef = wishlistRef(uid);
+    administrertWishlistRef.on('value', (snapshot: any) => {
+        dispatch(mottaAdministrertOnsker(mapTolist(snapshot)));
+    });
+
+    administrertUserExtraListsRef = userExtraListsRef(uid);
+    administrertUserExtraListsRef.on('value', async (snapshot: any) => {
+        const listIds = snapshot.val() ? Object.keys(snapshot.val()) : [];
+        if (listIds.length === 0) {
+            Object.keys(administrertListeSubscriptions).forEach(id => {
+                extraListWishesRef(id).off('value');
+                delete administrertListeSubscriptions[id];
+                dispatch(fjernAdministrertEkstraListeOnsker(id));
+            });
+            dispatch(mottaAdministrertEkstraLister([]));
+            return;
+        }
+        const lists = await Promise.all(listIds.map(id =>
+            extraListRef(id).once('value').then(snap =>
+                snap.val() ? { ...snap.val(), key: id } as ExtraListMetadata : null
+            )
+        ));
+        const validLists = lists.filter(Boolean) as ExtraListMetadata[];
+        dispatch(mottaAdministrertEkstraLister(validLists));
+
+        validLists.forEach(liste => {
+            if (!administrertListeSubscriptions[liste.key]) {
+                administrertListeSubscriptions[liste.key] = true;
+                extraListWishesRef(liste.key).on('value', (snap: any) => {
+                    dispatch(mottaAdministrertEkstraListeOnsker(liste.key, mapTolist(snap)));
+                });
+            }
+            if (!administrertListeMetaSubscriptions[liste.key]) {
+                administrertListeMetaSubscriptions[liste.key] = true;
+                extraListRef(liste.key).on('value', (snap: any) => {
+                    if (snap.val()) {
+                        dispatch(oppdaterAdministrertEkstraListeMetadata({ ...snap.val(), key: liste.key }));
+                    }
+                });
+            }
+        });
+
+        const validIds = validLists.map(l => l.key);
+        Object.keys(administrertListeSubscriptions).forEach(id => {
+            if (!validIds.includes(id)) {
+                extraListWishesRef(id).off('value');
+                delete administrertListeSubscriptions[id];
+                dispatch(fjernAdministrertEkstraListeOnsker(id));
+            }
+        });
+        Object.keys(administrertListeMetaSubscriptions).forEach(id => {
+            if (!validIds.includes(id)) {
+                extraListRef(id).off('value');
+                delete administrertListeMetaSubscriptions[id];
+            }
+        });
+    });
+};
+
+const avsluttAdministrerBrukerSubscriptions = (): void => {
+    if (administrertWishlistRef) {
+        administrertWishlistRef.off('value');
+        administrertWishlistRef = null;
+    }
+    if (administrertUserExtraListsRef) {
+        administrertUserExtraListsRef.off('value');
+        administrertUserExtraListsRef = null;
+    }
+    Object.keys(administrertListeSubscriptions).forEach(id => {
+        extraListWishesRef(id).off('value');
+        delete administrertListeSubscriptions[id];
+    });
+    Object.keys(administrertListeMetaSubscriptions).forEach(id => {
+        extraListRef(id).off('value');
+        delete administrertListeMetaSubscriptions[id];
+    });
+};
+
+export const avsluttAdministrerBruker = () => async (dispatch: Dispatch) => {
+    avsluttAdministrerBrukerSubscriptions();
+    dispatch(avsluttAdministrerBrukerAction());
 };
 
 /*
@@ -469,7 +630,7 @@ export const setTilbakemeldingEnabledApi = (enabled: boolean) => (dispatch: Disp
     dispatch(setTilbakemeldingEnabled(enabled));
 };
 
-export const slettKjopteOnsker = (mineOnsker: Onske[]): void => {
+export const slettKjopteOnsker = (mineOnsker: Onske[], ownerUid: string = myUid() as string): void => {
     mineOnsker.forEach(onske => {
         const kjoptAvListe = onske.kjoptAvListe || [];
         if (kjoptAvListe.length === 0) return;
@@ -478,9 +639,9 @@ export const slettKjopteOnsker = (mineOnsker: Onske[]): void => {
         const antall = onske.antall || 1;
 
         if (totalKjopt >= antall) {
-            myWishlistRef().child(onske.key).remove();
+            wishlistRef(ownerUid).child(onske.key).remove();
         } else {
-            myWishlistRef().child(onske.key).update({
+            wishlistRef(ownerUid).child(onske.key).update({
                 antall: antall - totalKjopt,
                 kjoptAvListe: null,
             });
@@ -555,23 +716,21 @@ export const fetchMineEkstraLister = () => async (dispatch: Dispatch) => {
     });
 };
 
-export const opprettEkstraListe = (name: string, sharedWithUid?: string) => async (_dispatch: Dispatch) => {
-    const uid = myUid();
-    if (!uid) return;
+export const opprettEkstraListe = (name: string, sharedWithUid?: string, ownerUid: string = myUid() as string) => async (_dispatch: Dispatch) => {
+    if (!ownerUid) return;
     const newListRef = db.ref('extraLists').push();
     const listId = newListRef.key as string;
-    const metadata: Omit<ExtraListMetadata, 'key'> = { name, ownerUid: uid };
+    const metadata: Omit<ExtraListMetadata, 'key'> = { name, ownerUid };
     if (sharedWithUid) (metadata as any).sharedWithUid = sharedWithUid;
     await extraListRef(listId).set(metadata);
-    await myUserExtraListsRef().update({ [listId]: true });
+    await userExtraListsRef(ownerUid).update({ [listId]: true });
     if (sharedWithUid) {
         await userExtraListsRef(sharedWithUid).update({ [listId]: true });
     }
 };
 
-export const slettEkstraListe = (listId: string, sharedWithUid?: string) => async (_dispatch: Dispatch) => {
-    const uid = myUid();
-    if (!uid) return;
+export const slettEkstraListe = (listId: string, sharedWithUid?: string, ownerUid: string = myUid() as string) => async (_dispatch: Dispatch) => {
+    if (!ownerUid) return;
     if (extraListSubscriptions[listId]) {
         extraListWishesRef(listId).off('value');
         delete extraListSubscriptions[listId];
@@ -580,8 +739,16 @@ export const slettEkstraListe = (listId: string, sharedWithUid?: string) => asyn
         extraListRef(listId).off('value');
         delete extraListMetaSubscriptions[listId];
     }
+    if (administrertListeSubscriptions[listId]) {
+        extraListWishesRef(listId).off('value');
+        delete administrertListeSubscriptions[listId];
+    }
+    if (administrertListeMetaSubscriptions[listId]) {
+        extraListRef(listId).off('value');
+        delete administrertListeMetaSubscriptions[listId];
+    }
     await extraListRef(listId).remove();
-    await myUserExtraListsRef().child(listId).remove();
+    await userExtraListsRef(ownerUid).child(listId).remove();
     if (sharedWithUid) {
         await userExtraListsRef(sharedWithUid).child(listId).remove();
     }
@@ -705,9 +872,10 @@ const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void>
         }
     };
 
-    const [wishlistsSnap, allowedViewersSnap, extraListsSnap, userExtraListsSnap, ekstraKjoepSnap, feedbackSnap, incomingRequestsSnap, outgoingRequestsSnap, usersSnap] = await Promise.all([
+    const [wishlistsSnap, allowedViewersSnap, allowedAdminsSnap, extraListsSnap, userExtraListsSnap, ekstraKjoepSnap, feedbackSnap, incomingRequestsSnap, outgoingRequestsSnap, usersSnap] = await Promise.all([
         db.ref('wishlists').once('value'),
         allowedViewsRef.once('value'),
+        allowedAdminsRootRef.once('value'),
         db.ref('extraLists').once('value'),
         db.ref('userExtraLists').once('value'),
         db.ref('ekstraKjoep').once('value'),
@@ -740,6 +908,15 @@ const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void>
         }
     });
     updates[`allowedViewers/${uid}`] = null;
+
+    // Brukeren som admin hos andre + egen admin-liste
+    const alleAdmins = allowedAdminsSnap.val() || {};
+    Object.keys(alleAdmins).forEach(ownerUid => {
+        if (alleAdmins[ownerUid] && alleAdmins[ownerUid][uid]) {
+            updates[`allowedAdmins/${ownerUid}/${uid}`] = null;
+        }
+    });
+    updates[`allowedAdmins/${uid}`] = null;
 
     // Ekstralister: slett egne, fjern brukeren som delingspartner og kjøper hos andre
     const alleExtraLists = extraListsSnap.val() || {};
