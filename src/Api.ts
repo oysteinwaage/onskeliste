@@ -550,6 +550,9 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
         if (meg?.erAdmin) {
             dispatch(subscribeTilFeedback() as any);
         }
+        if (meg) {
+            usersRef.child(meg.key).update({ lastLogin: Date.now() });
+        }
         if (meg && !meg.onboardingCompleted && window.location.pathname !== '/onboarding') {
             dispatch(push('/onboarding?type=existing'));
         }
@@ -567,6 +570,8 @@ export const fetchUsers = () => async (dispatch: Dispatch) => {
                     email: currentUser.email || '',
                     uid: currentUser.uid,
                     harPassord: false,
+                    createdAt: Date.now(),
+                    lastLogin: Date.now(),
                 }).then(() => {
                     dispatch(push('/onboarding'));
                 });
@@ -989,6 +994,14 @@ const ryddOppEtterBruker = async (uid: string, userDbKey: string): Promise<void>
     await db.ref().update(updates);
 };
 
+// Admin sletter en annen brukers data. Kan ikke slette selve Firebase Auth-kontoen
+// (klient-SDK tillater kun sletting av innlogget bruker), så den auth-kontoen blir
+// stående igjen og må evt. fjernes manuelt i Firebase Console.
+export const deleteUserAsAdmin = (uid: string, userDbKey: string) => async (dispatch: Dispatch) => {
+    await ryddOppEtterBruker(uid, userDbKey);
+    dispatch(fetchUsers() as any);
+};
+
 export const deleteMyAccount = (userDbKey: string) => async (dispatch: Dispatch) => {
     const uid = myUid();
     if (!uid) return;
@@ -1034,7 +1047,7 @@ export const opprettNyBruker = (brukernavn: string, passord: string, firstName: 
             auth.currentUser!.sendEmailVerification().catch(() => {});
             auth.currentUser!.updateProfile({ displayName: navn, photoURL: null })
                 .then(() => {
-                    usersRef.push().set({ navn, firstName, lastName, email: brukernavn, uid: auth.currentUser!.uid, harPassord: true });
+                    usersRef.push().set({ navn, firstName, lastName, email: brukernavn, uid: auth.currentUser!.uid, harPassord: true, createdAt: Date.now(), lastLogin: Date.now() });
                     dispatch(brukerLoggetInn(auth.currentUser));
                     dispatch(push('/onboarding'));
                 })

@@ -34,6 +34,8 @@ export interface Bruker {
   mainListName?: string;
   onboardingCompleted?: boolean;
   iosInstallBannerCount?: number;
+  createdAt?: number;
+  lastLogin?: number;
 }
 
 export interface Viewer {
