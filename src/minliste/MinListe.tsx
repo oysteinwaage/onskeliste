@@ -14,6 +14,7 @@ import {
 import { toggleLenkeDialog, endreHeaderTekst, settAktivListeId, settOpprettListeDialogOpen } from '../actions/actions';
 import OnskeDialog from './LeggTilOnskeDialog';
 import OpprettListeDialog from './OpprettListeDialog';
+import TilbakemeldingModal from '../tilbakemelding/TilbakemeldingModal';
 import { SortableOnskeliste } from './SortableOnskeliste';
 import { RootState, Onske, ExtraListMetadata, Bruker } from '../types';
 import { Dispatch } from 'redux';
@@ -23,6 +24,7 @@ import { nextSortOrder, firstSortOrder } from '../utils/sortUtils';
 
 interface MinListeLocalState {
   administrerListe: ExtraListMetadata | null;
+  tilbakemeldingModalOpen: boolean;
 }
 
 interface MinListeProps {
@@ -51,7 +53,7 @@ interface MinListeProps {
 }
 
 class MinListe extends Component<MinListeProps, MinListeLocalState> {
-  state: MinListeLocalState = { administrerListe: null };
+  state: MinListeLocalState = { administrerListe: null, tilbakemeldingModalOpen: false };
 
   componentDidMount() {
     this.props.onEndreHeaderTekst('Rediger ønskeliste');
@@ -243,6 +245,21 @@ class MinListe extends Component<MinListeProps, MinListeLocalState> {
             </div>
           );
         })}
+
+        <p className="text-center text-xs text-slate-400 mt-2 mb-6">
+          Har du forslag til forbedringer, ny funksjonalitet eller vil melde en feil? Det kan du gjøre{' '}
+          <button
+            onClick={() => this.setState({ tilbakemeldingModalOpen: true })}
+            className="underline text-slate-500 hover:text-slate-700 transition-colors"
+          >
+            her
+          </button>.
+        </p>
+
+        <TilbakemeldingModal
+          open={this.state.tilbakemeldingModalOpen}
+          onClose={() => this.setState({ tilbakemeldingModalOpen: false })}
+        />
 
         <OnskeDialog />
 
