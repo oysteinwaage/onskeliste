@@ -32,6 +32,9 @@ const formaterDato = (timestamp?: number): string => {
   });
 };
 
+const formaterKortDato = (timestamp: number): string =>
+  new Date(timestamp).toLocaleDateString('nb-NO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
 class Admin extends Component<AdminProps, AdminState> {
   state: AdminState = { slettBruker: null, sletter: false };
 
@@ -79,7 +82,14 @@ class Admin extends Component<AdminProps, AdminState> {
             {alleBrukere.map(bruker => (
               <AccordionItem key={bruker.key} value={bruker.key} className="border-none">
                 <AccordionTrigger className={`text-sm font-medium py-3 ${bruker.onboardingCompleted ? 'text-slate-800' : 'text-red-600'}`}>
-                  {bruker.navn}
+                  <span className="flex flex-1 items-center justify-between gap-2 mr-2 text-left">
+                    <span>{bruker.navn}</span>
+                    {bruker.lastLogin && (
+                      <span className="text-xs font-normal text-slate-400 shrink-0" title="Siste innlogging">
+                        {formaterKortDato(bruker.lastLogin)}
+                      </span>
+                    )}
+                  </span>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="flex flex-col gap-2 text-sm text-slate-600">
