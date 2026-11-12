@@ -205,6 +205,14 @@ class Login extends Component<LoginProps, LoginState> {
           pendingProviderNavn: leverandorNavn,
           socialLoading: false,
         });
+      } else if (error.code === 'auth/missing-initial-state') {
+        // Skjer typisk når lenken åpnes i en app-intern nettleser (f.eks. Meldinger/Messenger),
+        // som ikke beholder sessionStorage gjennom innloggingsrundturen. Popup-innlogging
+        // faller da tilbake til redirect, og Firebase mister sporet av forespørselen.
+        this.setState({
+          socialFeil: `Pålogging med ${leverandorNavn} feilet fordi nettleseren ikke støtter dette. Åpne lenken i Safari eller Chrome (ikke inne i meldings- eller e-postappen) og prøv igjen.`,
+          socialLoading: false,
+        });
       } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         this.setState({ socialFeil: `Pålogging med ${leverandorNavn} feilet. Prøv igjen.`, socialLoading: false });
       } else {
