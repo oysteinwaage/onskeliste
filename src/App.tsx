@@ -15,6 +15,7 @@ import Tilbakemelding from './tilbakemelding/Tilbakemelding';
 import Onboarding from './onboarding/Onboarding';
 import AppBar from './components/AppBarComponent';
 import InstallBanner from './components/InstallBanner';
+import GlobalErrorHandler from './components/GlobalErrorHandler';
 
 import { brukerLoggetInn, lasterData } from "./actions/actions";
 import { fetchAdminConfig, fetchAdminsForMyList, fetchListsIAmAllowedToAdminister, fetchListsIAmAllowedToView, fetchMineEkstraLister, fetchUsers, fetchViewersToMyList, fetdhMinOnskeliste, subscribeToIncomingAccessRequests, subscribeToOutgoingAccessRequests } from "./Api";
@@ -75,33 +76,35 @@ class App extends Component<AppProps> {
     const { isLoading } = this.props;
     return (
       <TooltipProvider>
-        <div className="App flex flex-col min-h-screen">
-          {isLoading && (
-            <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center">
-              <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-primary-600" />
-                <p className="text-slate-600 text-sm font-medium">Laster...</p>
+        <GlobalErrorHandler>
+          <div className="App flex flex-col min-h-screen">
+            {isLoading && (
+              <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-3">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary-600" />
+                  <p className="text-slate-600 text-sm font-medium">Laster...</p>
+                </div>
               </div>
+            )}
+            {!isLoading && <ChangesSinceLastLogin />}
+            {!isLoading && <AccessRequestNotification />}
+            <PassordReparasjonDialog />
+            <AppBar />
+            <InstallBanner />
+            <div className="flex-1 bg-slate-50 pb-16">
+              <Switch>
+                <Route exact path="/" component={Login} />
+                <Route path="/minliste" component={MinListe} />
+                <Route path="/vennelister" component={Vennelister} />
+                <Route path="/minekjoep" component={MineKjoep} />
+                <Route path="/profil" component={Profil} />
+                <Route path="/admin" component={Admin} />
+                <Route path="/tilbakemelding" component={Tilbakemelding} />
+                <Route path="/onboarding" component={Onboarding} />
+              </Switch>
             </div>
-          )}
-          {!isLoading && <ChangesSinceLastLogin />}
-          {!isLoading && <AccessRequestNotification />}
-          <PassordReparasjonDialog />
-          <AppBar />
-          <InstallBanner />
-          <div className="flex-1 bg-slate-50 pb-16">
-            <Switch>
-              <Route exact path="/" component={Login} />
-              <Route path="/minliste" component={MinListe} />
-              <Route path="/vennelister" component={Vennelister} />
-              <Route path="/minekjoep" component={MineKjoep} />
-              <Route path="/profil" component={Profil} />
-              <Route path="/admin" component={Admin} />
-              <Route path="/tilbakemelding" component={Tilbakemelding} />
-              <Route path="/onboarding" component={Onboarding} />
-            </Switch>
           </div>
-        </div>
+        </GlobalErrorHandler>
       </TooltipProvider>
     );
   }
