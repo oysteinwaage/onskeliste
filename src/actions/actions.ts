@@ -166,6 +166,14 @@ export function settMineEkstraKjoep(ekstraKjoep: Record<string, Onske[]>) {
   };
 }
 
+export const MOTTA_VENNS_EKSTRA_LISTE_META = 'MOTTA_VENNS_EKSTRA_LISTE_META';
+export function mottaVennsEkstraListeMeta(meta: ExtraListMetadata) {
+  return {
+    type: MOTTA_VENNS_EKSTRA_LISTE_META as typeof MOTTA_VENNS_EKSTRA_LISTE_META,
+    meta,
+  };
+}
+
 export const OPPDATER_MINE_EKSTRA_LISTE_KJOEP = 'OPPDATER_MINE_EKSTRA_LISTE_KJOEP';
 export function oppdaterMineEkstraListeKjoep(ownerUid: string, listId: string, listName: string, onsker: Onske[], sharedWithUid?: string) {
   return {
@@ -377,6 +385,7 @@ export type AppAction =
   | ReturnType<typeof oppdaterMineKjoep>
   | ReturnType<typeof settMineEkstraKjoep>
   | ReturnType<typeof oppdaterMineEkstraListeKjoep>
+  | ReturnType<typeof mottaVennsEkstraListeMeta>
   | ReturnType<typeof mottaMineEkstraLister>
   | ReturnType<typeof settAktivListeId>
   | ReturnType<typeof mottaEkstraListeOnsker>

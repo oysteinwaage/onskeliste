@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { endreHeaderTekst } from '../actions/actions';
 import { addEkstraKjoepForBruker, removeEkstraKjoepForBruker, updateEkstraKjoepPris, updateVanligKjoepPris, updateEkstraListeWishPris } from '../Api';
 import { finnNavnFraUid, antallAlleredeKjoptAvMeg, myWishlistId } from '../utils/util';
-import { RootState, Bruker, Onske } from '../types';
+import { RootState, Bruker, Onske, ExtraListMetadata } from '../types';
 import { Dispatch } from 'redux';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -31,6 +31,7 @@ interface MineKjoepState {
   addKjoepAntall: number;
   addKjoepUrl: string;
   addKjoepPris: string;
+  addKjoepListId: string;
   prisInput: Record<string, string>;
 }
 
@@ -41,7 +42,10 @@ interface MineKjoepProps {
   mineEkstraListeKjoep: Record<string, { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[] }[]>;
   alleBrukere: Bruker[];
   allowedListsForMe: string[];
+  vennersEkstraListeMeta: Record<string, ExtraListMetadata>;
 }
+
+const HOVEDLISTE = '__hovedliste__';
 
 class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
   state: MineKjoepState = {
@@ -51,6 +55,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     addKjoepAntall: 1,
     addKjoepUrl: '',
     addKjoepPris: '',
+    addKjoepListId: HOVEDLISTE,
     prisInput: {},
   };
 
@@ -59,15 +64,28 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
   }
 
   openAddKjoepDialog = (uid: string): void => {
-    this.setState({ addKjoepDialogOpen: true, addKjoepForUid: uid, addKjoepTekst: '', addKjoepAntall: 1, addKjoepUrl: '', addKjoepPris: '' });
+    this.setState({ addKjoepDialogOpen: true, addKjoepForUid: uid, addKjoepTekst: '', addKjoepAntall: 1, addKjoepUrl: '', addKjoepPris: '', addKjoepListId: HOVEDLISTE });
+  };
+
+  // Ekstralister som tilhører (eller er delt med) brukeren, men ikke lister jeg selv er med på
+  ekstraListerForBruker = (uid: string): ExtraListMetadata[] => {
+    const meg = myWishlistId();
+    return Object.values(this.props.vennersEkstraListeMeta)
+      .filter(l => (l.ownerUid === uid || l.sharedWithUid === uid) && l.ownerUid !== meg && l.sharedWithUid !== meg)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  };
+
+  hovedlisteNavn = (uid: string): string => {
+    const bruker = this.props.alleBrukere.find(b => b.uid === uid);
+    return bruker?.mainListName || `Ønskelisten til ${bruker?.navn || finnNavnFraUid(uid, this.props.alleBrukere)}`;
   };
 
   closeAddKjoepDialog = (): void => this.setState({ addKjoepDialogOpen: false });
 
   saveEkstraKjoep = (): void => {
-    const { addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris } = this.state;
+    const { addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris, addKjoepListId } = this.state;
     if (!addKjoepForUid || !addKjoepTekst.trim()) return;
-    const kjoep: { onskeTekst: string; antall: number; url?: string; pris?: number } = {
+    const kjoep: { onskeTekst: string; antall: number; url?: string; pris?: number; listId?: string } = {
       onskeTekst: addKjoepTekst.trim(),
       antall: addKjoepAntall,
     };
@@ -77,6 +95,9 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     if (addKjoepPris.trim()) {
       const pris = Number(addKjoepPris.replace(',', '.'));
       if (!isNaN(pris)) kjoep.pris = pris;
+    }
+    if (addKjoepListId !== HOVEDLISTE) {
+      kjoep.listId = addKjoepListId;
     }
     addEkstraKjoepForBruker(addKjoepForUid, kjoep);
     this.closeAddKjoepDialog();
@@ -137,6 +158,26 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     );
   };
 
+  renderEkstraKjoep = (brukerUid: string) => (kjoep: Onske): React.ReactNode => (
+    <div key={kjoep.key} className="flex items-center gap-2 px-3 py-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-slate-800 font-medium truncate">{kjoep.onskeTekst}</p>
+        <p className="text-xs text-slate-400">
+          Antall: {kjoep.antall || 1}
+          {kjoep.url && <> · <a href={kjoep.url} target="_blank" rel="noopener noreferrer" className="text-primary-500 underline">Lenke</a></>}
+        </p>
+      </div>
+      {this.renderPrisInput(brukerUid, kjoep, true)}
+      <button
+        onClick={() => removeEkstraKjoepForBruker(brukerUid, kjoep.key)}
+        className="p-1 rounded text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
+        aria-label="Slett kjøp"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+
   renderPersonGruppe = (brukerUid: string, colorClass: string): React.ReactNode => {
     const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere } = this.props;
     const kjoepListe = mineKjoep[brukerUid] || [];
@@ -144,6 +185,22 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     const ekstraListeLister = mineEkstraListeKjoep[brukerUid] || [];
     const harNoe = kjoepListe.length > 0 || ekstraListe.length > 0 || ekstraListeLister.some(l => l.onsker.length > 0);
     if (!harNoe) return null;
+
+    // Manuelle kjøp knyttet til en kjent ekstraliste vises under den listen, resten under hovedlisten
+    const brukersEkstraLister = this.ekstraListerForBruker(brukerUid);
+    const kjenteListeIder = new Set(brukersEkstraLister.map(l => l.key));
+    const ekstraKjoepHoved = ekstraListe.filter(k => !k.listId || !kjenteListeIder.has(k.listId));
+    const ekstraKjoepPerListe: Record<string, Onske[]> = {};
+    ekstraListe
+      .filter(k => k.listId && kjenteListeIder.has(k.listId))
+      .forEach(k => { (ekstraKjoepPerListe[k.listId!] = ekstraKjoepPerListe[k.listId!] || []).push(k); });
+    const listeGrupper: { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[]; manuelle: Onske[] }[] =
+      ekstraListeLister.map(l => ({ ...l, manuelle: ekstraKjoepPerListe[l.listId] || [] }));
+    Object.keys(ekstraKjoepPerListe).forEach(listId => {
+      if (listeGrupper.some(g => g.listId === listId)) return;
+      const meta = brukersEkstraLister.find(l => l.key === listId)!;
+      listeGrupper.push({ listId, listName: meta.name, sharedWithUid: meta.sharedWithUid, onsker: [], manuelle: ekstraKjoepPerListe[listId] });
+    });
 
     const kjoepSum = kjoepListe.reduce((acc, k) => acc + ((k.kjoptAvListe || []).find(e => e.kjoptAv === myWishlistId())?.pris || 0), 0);
     const ekstraSum = ekstraListe.reduce((acc, k) => acc + (k.pris || 0), 0);
@@ -185,26 +242,8 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                 {this.renderPrisInput(brukerUid, kjoep, false)}
               </div>
             ))}
-            {ekstraListe.map((kjoep) => (
-              <div key={kjoep.key} className="flex items-center gap-2 px-3 py-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-800 font-medium truncate">{kjoep.onskeTekst}</p>
-                  <p className="text-xs text-slate-400">
-                    Antall: {kjoep.antall || 1}
-                    {kjoep.url && <> · <a href={kjoep.url} target="_blank" rel="noopener noreferrer" className="text-primary-500 underline">Lenke</a></>}
-                  </p>
-                </div>
-                {this.renderPrisInput(brukerUid, kjoep, true)}
-                <button
-                  onClick={() => removeEkstraKjoepForBruker(brukerUid, kjoep.key)}
-                  className="p-1 rounded text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
-                  aria-label="Slett kjøp"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-            {ekstraListeLister.map((listGruppe, _lgIdx) => {
+            {ekstraKjoepHoved.map(this.renderEkstraKjoep(brukerUid))}
+            {listeGrupper.map((listGruppe) => {
               const deltMedBruker = listGruppe.sharedWithUid
                 ? alleBrukere.find(b => b.uid === listGruppe.sharedWithUid)
                 : null;
@@ -227,6 +266,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                       {this.renderPrisInput(brukerUid, kjoep, false, listGruppe.listId)}
                     </div>
                   ))}
+                  {listGruppe.manuelle.map(this.renderEkstraKjoep(brukerUid))}
                 </div>
               );
             })}
@@ -238,7 +278,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
 
   render() {
     const { mineKjoep, mineEkstraKjoep, mineEkstraListeKjoep, alleBrukere, allowedListsForMe } = this.props;
-    const { addKjoepDialogOpen, addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris } = this.state;
+    const { addKjoepDialogOpen, addKjoepForUid, addKjoepTekst, addKjoepAntall, addKjoepUrl, addKjoepPris, addKjoepListId } = this.state;
 
     const allUids = Array.from(new Set([
       ...Object.keys(mineKjoep),
@@ -263,6 +303,7 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
     }, 0);
 
     const personNavn = finnNavnFraUid(addKjoepForUid, alleBrukere);
+    const valgbareEkstraLister = addKjoepForUid ? this.ekstraListerForBruker(addKjoepForUid) : [];
 
     return (
       <div className="max-w-xl mx-auto px-4 py-6 flex flex-col gap-4">
@@ -321,6 +362,25 @@ class MineKjoep extends Component<MineKjoepProps, MineKjoepState> {
                 onChange={(e) => this.setState({ addKjoepTekst: e.target.value })}
                 onKeyDown={(e) => { if (e.key === 'Enter' && addKjoepTekst.trim()) this.saveEkstraKjoep(); }}
               />
+              {valgbareEkstraLister.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-1">Liste</label>
+                  <Select
+                    value={addKjoepListId}
+                    onValueChange={(val) => this.setState({ addKjoepListId: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={HOVEDLISTE}>{this.hovedlisteNavn(addKjoepForUid)}</SelectItem>
+                      {valgbareEkstraLister.map(l => (
+                        <SelectItem key={l.key} value={l.key}>{l.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium text-slate-700 block mb-1">Antall</label>
                 <Select
@@ -377,6 +437,7 @@ const mapStateToProps = (state: RootState) => ({
   mineEkstraListeKjoep: state.innloggetBruker.mineEkstraListeKjoep,
   alleBrukere: state.config.brukere,
   allowedListsForMe: state.vennersLister.allowedListsForMe,
+  vennersEkstraListeMeta: state.innloggetBruker.vennersEkstraListeMeta,
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
