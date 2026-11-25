@@ -25,6 +25,7 @@ const initialState: InitialState = {
     mineKjoep: {},
     mineEkstraKjoep: {},
     mineEkstraListeKjoep: {},
+    vennersEkstraListeMeta: {},
     mineEkstraLister: [],
     aktiveListeId: null,
     aktivListeEierUid: '',

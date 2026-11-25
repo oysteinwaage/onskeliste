@@ -46,6 +46,7 @@ import {
     mottaValgtVennsEkstraListeOnsker,
     settValgtVennsListeId,
     oppdaterMineEkstraListeKjoep,
+    mottaVennsEkstraListeMeta,
     settHovedListeNavn,
     mottaFeedback,
     settUlesteFeedback,
@@ -384,7 +385,7 @@ export const subscribeToOutgoingAccessRequests = () => async (dispatch: Dispatch
         });
 };
 
-export const addEkstraKjoepForBruker = (targetUid: string, kjoep: { onskeTekst: string; antall: number; url?: string; pris?: number }): void => {
+export const addEkstraKjoepForBruker = (targetUid: string, kjoep: { onskeTekst: string; antall: number; url?: string; pris?: number; listId?: string }): void => {
     const uid = myUid();
     if (!uid) return;
     ekstraKjoepRef(uid, targetUid).push().set(kjoep);
@@ -467,6 +468,7 @@ export const fetchEkstraListeKjoepForFriends = (friendUids: string[]) => async (
             const ownerUid: string = meta.ownerUid;
             const listName: string = meta.name;
             const sharedWithUid: string | undefined = meta.sharedWithUid;
+            dispatch(mottaVennsEkstraListeMeta({ ...meta, key: listId }));
 
             extraListWishesRef(listId).on('value', (wishSnap: any) => {
                 const alle = mapTolist(wishSnap);

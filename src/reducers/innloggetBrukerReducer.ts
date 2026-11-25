@@ -15,6 +15,7 @@ import {
     OPPDATER_MINE_KJOEP,
     SETT_MINE_EKSTRA_KJOEP,
     OPPDATER_MINE_EKSTRA_LISTE_KJOEP,
+    MOTTA_VENNS_EKSTRA_LISTE_META,
     MOTTA_MINE_EKSTRA_LISTER,
     OPPDATER_EKSTRA_LISTE_METADATA,
     SETT_AKTIV_LISTE_ID,
@@ -91,6 +92,14 @@ export default function innloggetBruker(
             return {
                 ...state,
                 mineEkstraKjoep: action.ekstraKjoep,
+            };
+        case MOTTA_VENNS_EKSTRA_LISTE_META:
+            return {
+                ...state,
+                vennersEkstraListeMeta: {
+                    ...state.vennersEkstraListeMeta,
+                    [action.meta.key]: action.meta,
+                },
             };
         case OPPDATER_MINE_EKSTRA_LISTE_KJOEP: {
             const eksisterende = state.mineEkstraListeKjoep[action.ownerUid] || [];

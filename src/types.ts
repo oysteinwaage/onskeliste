@@ -18,6 +18,7 @@ export interface Onske {
   kjoptAvListe?: KjoptAv[];
   pris?: number;
   sortOrder?: number;
+  listId?: string;
 }
 
 export interface Bruker {
@@ -87,6 +88,7 @@ export interface InnloggetBrukerState {
   mineKjoep: Record<string, Onske[]>;
   mineEkstraKjoep: Record<string, Onske[]>;
   mineEkstraListeKjoep: Record<string, { listId: string; listName: string; sharedWithUid?: string; onsker: Onske[] }[]>;
+  vennersEkstraListeMeta: Record<string, ExtraListMetadata>;
   erAdmin?: boolean;
   iosInstallBannerCount?: number;
   mineEkstraLister: ExtraListMetadata[];
